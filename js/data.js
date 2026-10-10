@@ -15,6 +15,7 @@
 //   videoRatios     width ÷ height of each video, e.g. 16/9 → 1.777, 9/16 → 0.5625
 //   youtube         optional YouTube embed URL (replaces local videos)
 //   externalVideo   optional Vimeo link (embedded + "Open film on Vimeo" link)
+//   autoplay        true = a single video starts playing (muted) when the page opens
 //
 // The order of `projects` is the order of the "Next project" links.
 // `filmOrder` and `visualsOrder` decide what appears in each section, in order.
@@ -71,7 +72,11 @@ export const projects = [
       "Malik Cross /məˈliːk krɔs/ — a short cinematic story about resilience and ambition.\n\nIt's the story of continuing to do what you love, beyond the outcome: the drive that keeps you going when nobody is keeping score.\n\nCreated side by side with Adrián Vicén as our entry for the Bionic Awards, and made entirely with the Freepik AI suite.\n\nJust do it.",
     cover: "/assets/malik-cross-header.webp",
     images: [],
-    videos: [],
+    videos: ["/assets/malik-cross-film.webm"],
+    videoPosters: ["/assets/malik-cross-film-poster.webp"],
+    videoThumbnails: ["/assets/malik-cross-film-thumb.webp"],
+    videoRatios: [2.3443],
+    autoplay: true,
     youtube: null,
   },
   {
@@ -261,7 +266,7 @@ export const projects = [
     title: "666",
     type: "Music Video · Edit & VFX",
     description:
-      'Edit and VFX for "666" by Pratzo ft. Sato, a music video produced by Wichita Production.\n\nI cut the videoclip and created its visual effects, shaping the pace and the look of the final film in close collaboration with the Wichita team.',
+      'Edit and VFX for "666" by Pratzo ft. Sato, a music video produced by Wichita Production.\n\nEdited the music video and in charge of the VFX, shaping the visuals and final look of the film in close collaboration with the Wichita team.',
     cover: "/assets/wichita-666-header.webp",
     images: [],
     videos: [],

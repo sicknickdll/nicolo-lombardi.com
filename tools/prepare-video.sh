@@ -34,8 +34,8 @@ done
 cat <<EOF
 
 Done ($size). Add to the project in js/data.js:
-  videos:          "assets/$name.webm"
-  videoPosters:    "assets/$name-poster.webp"
-  videoThumbnails: "assets/$name-thumb.webp"
+  videos:          "/assets/$name.webm"
+  videoPosters:    "/assets/$name-poster.webp"
+  videoThumbnails: "/assets/$name-thumb.webp"
   videoRatios:     $ratio
 EOF

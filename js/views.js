@@ -17,14 +17,14 @@ export const projectURL = (p) => `/work/${p.id}/`;
 export const fullName = (p) => (p.title === p.brand ? p.brand : `${p.brand} — ${p.title}`);
 
 export function homeMarkup() {
-  const name = "Nicoló Lombardi";
+  const name = "NICOLÓ LOMBARDI";
   const letters = [...name]
     .map(
       (letter, i) =>
         `<span class="name-letter" style="--letter:${i}" aria-hidden="true">${letter === " " ? "&nbsp;" : esc(letter)}</span>`,
     )
     .join("");
-  return `<section class="home" aria-label="Portfolio introduction"><img class="poster" src="${heroPoster}" alt=""><video id="entrance-video" poster="${heroPoster}" autoplay loop muted playsinline preload="auto" aria-hidden="true">${videoSources(hero)}</video><a class="home-entry" href="/film/" aria-label="Explore films by Nicoló Lombardi"><h1 class="animated-name" aria-label="Nicoló Lombardi">${letters}</h1><span class="down" aria-hidden="true"></span></a><button class="home-pause" aria-label="Pause background video">pause</button></section>${listMarkup(film, "Selected films")}`;
+  return `<section class="home" aria-label="Portfolio introduction"><img class="poster" src="${heroPoster}" alt=""><video id="entrance-video" poster="${heroPoster}" autoplay loop muted playsinline preload="auto" aria-hidden="true">${videoSources(hero)}</video><a class="home-entry" href="/film/" aria-label="Explore films by Nicoló Lombardi"><h1 class="animated-name" aria-label="Nicoló Lombardi">${letters}</h1><p class="home-tagline">AI Production Specialist</p><span class="down" aria-hidden="true"></span></a><button class="home-pause" aria-label="Pause background video">pause</button></section>${listMarkup(film, "Selected films")}`;
 }
 
 // Full-screen scrolling covers. `heading` adds a screen-reader/search heading.
@@ -35,7 +35,7 @@ export function listMarkup(list, label, heading) {
 export function projectMarkup(p, backHref = "/film/") {
   const local =
     p.videos.length === 1
-      ? `<section class="single-film" aria-label="${esc(p.brand)} film"><video controls playsinline preload="metadata" poster="${p.videoPosters?.[0] || p.cover}" aria-label="${esc(fullName(p))}">${videoSources(p.videos[0])}</video></section>`
+      ? `<section class="single-film" aria-label="${esc(p.brand)} film"><video controls playsinline ${p.autoplay ? "autoplay muted preload=\"auto\"" : "preload=\"metadata\""} poster="${p.videoPosters?.[0] || p.cover}" aria-label="${esc(fullName(p))}">${videoSources(p.videos[0])}</video></section>`
       : p.videos.length > 1
         ? videoGalleryMarkup(p, esc)
         : "";
