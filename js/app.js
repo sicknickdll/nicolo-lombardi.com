@@ -4,6 +4,7 @@
 // previous/next logo hover, carousels, the About panel.
 import { projects } from "./data.js";
 import { bindGalleries } from "./galleries.js";
+import { pixelCurtain } from "./pixels.js";
 import { projectLogoMarkup } from "./project-logos.js";
 import { film, visuals, homeMarkup, listMarkup, projectMarkup, projectURL } from "./views.js";
 const main = document.querySelector("#main");
@@ -366,12 +367,12 @@ about.insertAdjacentHTML(
   "afterbegin",
   '<button id="about-close" aria-label="Close about">close</button>',
 );
-aboutToggle.onclick = () => (about.hidden ? openAbout() : closeOverlay());
-document.querySelector("#about-close").onclick = closeOverlay;
+aboutToggle.onclick = () => pixelCurtain(() => (about.hidden ? openAbout() : closeOverlay()));
+document.querySelector("#about-close").onclick = () => pixelCurtain(closeOverlay);
 window.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && isOverlayOpen()) {
     e.preventDefault();
-    closeOverlay();
+    pixelCurtain(closeOverlay);
   }
   if (e.key === "Tab" && isOverlayOpen()) {
     const els = [...about.querySelectorAll("a,button")],

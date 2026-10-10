@@ -35,7 +35,7 @@ export function listMarkup(list, label, heading) {
 export function projectMarkup(p, backHref = "/film/") {
   const local =
     p.videos.length === 1
-      ? `<section class="single-film" aria-label="${esc(p.brand)} film"><video controls playsinline ${p.autoplay ? "autoplay muted preload=\"auto\"" : "preload=\"metadata\""} poster="${p.videoPosters?.[0] || p.cover}" aria-label="${esc(fullName(p))}">${videoSources(p.videos[0])}</video></section>`
+      ? `<section class="single-film" aria-label="${esc(p.brand)} film"><video controls playsinline ${p.autoplay ? 'autoplay muted preload="auto"' : 'preload="metadata"'} poster="${p.videoPosters?.[0] || p.cover}" aria-label="${esc(fullName(p))}">${videoSources(p.videos[0])}</video></section>`
       : p.videos.length > 1
         ? videoGalleryMarkup(p, esc)
         : "";

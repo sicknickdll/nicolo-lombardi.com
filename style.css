@@ -806,3 +806,21 @@ body:has(#about:not([hidden])) .header nav {
     opacity: 1;
   }
 }
+
+/* About: keep "close" on screen while the panel scrolls */
+#about-close {
+  position: fixed;
+  text-shadow: 0 1px 12px #000;
+}
+/* Pixel transition canvas (js/pixels.js), above everything */
+.pixel-curtain {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 300;
+}
+/* While About is open the header sits above it: let clicks reach "close" */
+body:has(#about:not([hidden])) .header {
+  pointer-events: none;
+}
