@@ -261,7 +261,7 @@ export const projects = [
     title: "666",
     type: "Music Video · Edit & VFX",
     description:
-      'Edit and VFX for "666", a music video by Wichita Production.\n\nI cut the videoclip and created its visual effects, shaping the pace and the look of the final film in close collaboration with the Wichita team.',
+      'Edit and VFX for "666" by Pratzo ft. Sato, a music video produced by Wichita Production.\n\nI cut the videoclip and created its visual effects, shaping the pace and the look of the final film in close collaboration with the Wichita team.',
     cover: "/assets/wichita-666-header.webp",
     images: [],
     videos: [],
