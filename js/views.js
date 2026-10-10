@@ -1,7 +1,7 @@
 // Page markup, shared by the browser (js/app.js) and the page generator
 // (tools/build.mjs), so the pre-built HTML Google reads is exactly what visitors see.
 // Pure string functions: no DOM access here.
-import { projects, filmOrder, visualsOrder, hero, heroPoster } from "./data.js";
+import { projects, filmOrder, visualsOrder, hero, heroPoster, clients } from "./data.js";
 import { videoGalleryMarkup, imageGalleryMarkup, videoSources } from "./galleries.js";
 import { logoFilters } from "./project-logos.js";
 
@@ -54,4 +54,16 @@ export function projectMarkup(p, backHref = "/film/") {
       : "";
   const next = projects[(projects.indexOf(p) + 1) % projects.length];
   return `<article class="detail"><a class="back" href="${backHref}">back</a>${media}${images}${fallback}<header class="detail-heading"><h1>${esc(p.brand)}${p.title === p.brand ? "" : "<br>" + esc(p.title)}</h1><p>${esc(p.type)}</p></header><div class="detail-text"><h2>About the project</h2><p>${esc(p.description)}</p></div>${p.externalVideo ? `<p class="media-note"><a href="${esc(p.externalVideo)}" target="_blank" rel="noopener noreferrer">Open film on Vimeo</a></p>` : ""}<a class="next-project" href="${projectURL(next)}"><span>Next project</span><strong>${esc(next.brand)}</strong></a></article>`;
+}
+
+// "Selected clients" strip. Each logo gets the same visual area whatever its shape:
+// width = √(area × ratio), so wide wordmarks don't dwarf square emblems.
+export function clientsMarkup() {
+  const area = 56 * 56;
+  return `<div class="clients"><p>Selected clients</p><ul class="client-logos">${clients
+    .map((c) => {
+      const h = Math.min(56, Math.sqrt(area / c.ratio));
+      return `<li><img src="${c.logo}" alt="${esc(c.name)}" title="${esc(c.name)}" width="${Math.round(h * c.ratio)}" height="${Math.round(h)}" loading="lazy" decoding="async"></li>`;
+    })
+    .join("")}</ul></div>`;
 }

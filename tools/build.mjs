@@ -14,6 +14,7 @@ import {
   visuals,
   fullName,
   homeMarkup,
+  clientsMarkup,
   listMarkup,
   projectMarkup,
 } from "../js/views.js";
@@ -84,7 +85,13 @@ function head({ title, description, path, image, imageAlt, schema, preload }) {
 function write(path, headHTML, mainHTML) {
   const file = join(root, path, "index.html");
   mkdirSync(dirname(file), { recursive: true });
-  writeFileSync(file, template.replace("{{HEAD}}", headHTML).replace("{{MAIN}}", mainHTML));
+  writeFileSync(
+    file,
+    template
+      .replace("{{HEAD}}", headHTML)
+      .replace("{{MAIN}}", mainHTML)
+      .replace("{{CLIENTS}}", clientsMarkup()),
+  );
 }
 
 const breadcrumbs = (items) => ({

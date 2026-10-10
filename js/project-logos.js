@@ -11,6 +11,8 @@ const marks = {
   wichita: { size: [2560, 1350], box: [0.444, 0.353, 0.115, 0.29] },
   anaya: { size: [2560, 1429], box: [0.35, 0.425, 0.3, 0.14] },
   soapandglory: { size: [1024, 1280], box: [0.233, 0.435, 0.536, 0.094] },
+  // `src`: use a ready-made white logo instead of cropping the cover.
+  "wichita-666": { src: "/assets/clients/wichita.webp" },
 };
 const whiteKey =
   '<feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 14 14 14 0 -38" result="whiteInk"/>';
@@ -25,6 +27,8 @@ export function projectLogoMarkup(project, slot = "mark") {
   // New projects without a cropped logo simply show their brand name.
   if (!mark)
     return `<span class="landing-logo" aria-hidden="true">${project.brand.replace(/[&<>"']/g, "")}</span>`;
+  if (mark.src)
+    return `<img class="project-logo" src="${mark.src}" alt="" aria-hidden="true" style="object-fit:contain">`;
   const [w, h] = mark.size,
     [x, y, bw, bh] = mark.box;
   return `<svg class="project-logo" aria-hidden="true" focusable="false" viewBox="${x * w} ${y * h} ${bw * w} ${bh * h}" preserveAspectRatio="xMidYMid meet"><image href="${project.cover}" width="${w}" height="${h}" filter="url(#project-${mark.gold ? "gold" : "white"}-ink)"/></svg>`;

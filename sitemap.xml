@@ -9,6 +9,7 @@
     <loc>https://nicolo-lombardi.com/film/</loc>
     <lastmod>2026-10-10</lastmod>
     <image:image><image:loc>https://nicolo-lombardi.com/assets/uncommonsense-header.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/malik-cross-header.webp</image:loc></image:image>
     <image:image><image:loc>https://nicolo-lombardi.com/assets/toyota-header.webp</image:loc></image:image>
     <image:image><image:loc>https://nicolo-lombardi.com/assets/lexus-header.webp</image:loc></image:image>
     <image:image><image:loc>https://nicolo-lombardi.com/assets/elaguila-header.webp</image:loc></image:image>
@@ -16,6 +17,7 @@
     <image:image><image:loc>https://nicolo-lombardi.com/assets/wichita-header.webp</image:loc></image:image>
     <image:image><image:loc>https://nicolo-lombardi.com/assets/anaya-header.webp</image:loc></image:image>
     <image:image><image:loc>https://nicolo-lombardi.com/assets/wppproduction-header.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/wichita-666-header.webp</image:loc></image:image>
   </url>
   <url>
     <loc>https://nicolo-lombardi.com/visuals/</loc>
@@ -30,6 +32,11 @@
     <loc>https://nicolo-lombardi.com/work/uncommonsense/</loc>
     <lastmod>2026-10-10</lastmod>
     <image:image><image:loc>https://nicolo-lombardi.com/assets/uncommonsense-header.webp</image:loc></image:image>
+  </url>
+  <url>
+    <loc>https://nicolo-lombardi.com/work/malik-cross/</loc>
+    <lastmod>2026-10-10</lastmod>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/malik-cross-header.webp</image:loc></image:image>
   </url>
   <url>
     <loc>https://nicolo-lombardi.com/work/toyota/</loc>
@@ -88,5 +95,10 @@
     <image:image><image:loc>https://nicolo-lombardi.com/assets/WPCII4Q6wfoAC5QLMGvrtZzfiMg.webp</image:loc></image:image>
     <image:image><image:loc>https://nicolo-lombardi.com/assets/ZNevGqjeZtnNwmtIkJQYvFLGwNI.webp</image:loc></image:image>
     <image:image><image:loc>https://nicolo-lombardi.com/assets/qxYVszQfCWqf8VjXjMmMxJaTd9I.webp</image:loc></image:image>
+  </url>
+  <url>
+    <loc>https://nicolo-lombardi.com/work/wichita-666/</loc>
+    <lastmod>2026-10-10</lastmod>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/wichita-666-header.webp</image:loc></image:image>
   </url>
 </urlset>

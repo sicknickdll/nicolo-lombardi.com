@@ -63,6 +63,18 @@ export const projects = [
     ],
   },
   {
+    id: "malik-cross",
+    brand: "Malik Cross",
+    title: "Malik Cross",
+    type: "Short Film · Bionic Awards Entry",
+    description:
+      "Malik Cross /məˈliːk krɔs/ — a short cinematic story about resilience and ambition.\n\nIt's the story of continuing to do what you love, beyond the outcome: the drive that keeps you going when nobody is keeping score.\n\nCreated side by side with Adrián Vicén as our entry for the Bionic Awards, and made entirely with the Freepik AI suite.\n\nJust do it.",
+    cover: "/assets/malik-cross-header.webp",
+    images: [],
+    videos: [],
+    youtube: null,
+  },
+  {
     id: "toyota",
     brand: "Toyota",
     title: "Ma Toyota est Fantastique",
@@ -243,12 +255,26 @@ export const projects = [
     videos: [],
     youtube: null,
   },
+  {
+    id: "wichita-666",
+    brand: "Wichita Production",
+    title: "666",
+    type: "Music Video · Edit & VFX",
+    description:
+      'Edit and VFX for "666", a music video by Wichita Production.\n\nI cut the videoclip and created its visual effects, shaping the pace and the look of the final film in close collaboration with the Wichita team.',
+    cover: "/assets/wichita-666-header.webp",
+    images: [],
+    videos: [],
+    youtube:
+      "https://www.youtube.com/embed/Bg-ywjQUpUk?iv_load_policy=3&rel=0&modestbranding=1&playsinline=1&color=white",
+  },
 ];
 
 // Sections shown in the top navigation, as lists of project ids.
 // The landing page shows the hero video followed by the film list.
 export const filmOrder = [
   "uncommonsense",
+  "malik-cross",
   "toyota",
   "lexus",
   "elaguila",
@@ -256,8 +282,28 @@ export const filmOrder = [
   "wichita",
   "anaya",
   "wppproduction",
+  "wichita-666",
 ];
 export const visualsOrder = ["soapandglory", "toyota", "elaguila", "anaya", "wppproduction"];
+
+// "Selected clients" logo strip in the About panel, in this order.
+// ratio = logo width ÷ height (used to give every logo the same visual weight).
+export const clients = [
+  { name: "Coca-Cola", logo: "/assets/clients/cocacola.webp", ratio: 3.184 },
+  { name: "Heineken", logo: "/assets/clients/heineken.webp", ratio: 1.986 },
+  { name: "Lexus", logo: "/assets/clients/lexus.webp", ratio: 2.228 },
+  { name: "Toyota", logo: "/assets/clients/toyota.webp", ratio: 7.639 },
+  { name: "Boots", logo: "/assets/clients/boots.webp", ratio: 1.885 },
+  { name: "Soap & Glory", logo: "/assets/clients/soapglory.webp", ratio: 4.624 },
+  { name: "Meliá Hotels & Resorts", logo: "/assets/clients/melia.webp", ratio: 2.077 },
+  { name: "El Águila", logo: "/assets/clients/aguila.webp", ratio: 1.062 },
+  { name: "Osborne", logo: "/assets/clients/osborne.webp", ratio: 7.289 },
+  { name: "Anaya", logo: "/assets/clients/anaya.webp", ratio: 4.306 },
+  { name: "WPP Production", logo: "/assets/clients/wpp.webp", ratio: 9.475 },
+  { name: "Wichita Production", logo: "/assets/clients/wichita.webp", ratio: 0.712 },
+  { name: "Graphomedia", logo: "/assets/clients/graphomedia.webp", ratio: 1.792 },
+  { name: "UNCOMMONSENSE", logo: "/assets/clients/uncommonsense.webp", ratio: 13.03 },
+];
 
 // Landing page background loop (an .mp4 with the same name is the Safari fallback).
 export const hero = "/assets/anime-eye.webm";
