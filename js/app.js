@@ -47,6 +47,30 @@ function showHome() {
     if (v.paused) v.play().catch(() => setPaused(true));
     else v.pause();
   };
+  // Easter egg: 5 quick clicks on the name open "Nicoló OS". A single click still
+  // goes to Film (after a short pause, to tell it apart from a multi-click).
+  const name = main.querySelector(".animated-name");
+  let clicks = 0,
+    clickTimer;
+  name.style.cursor = "pointer";
+  name.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    clearTimeout(clickTimer);
+    clicks++;
+    name.classList.toggle("tease", clicks >= 3);
+    if (clicks >= 5) {
+      clicks = 0;
+      name.classList.remove("tease");
+      import("./win7.js").then((m) => m.launch());
+      return;
+    }
+    clickTimer = setTimeout(() => {
+      if (clicks === 1) location.href = "/film/";
+      clicks = 0;
+      name.classList.remove("tease");
+    }, 420);
+  });
   const scrollCleanup = bindProjectScroll(film);
   cleanup = () => {
     v.pause();

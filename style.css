@@ -824,3 +824,16 @@ body:has(#about:not([hidden])) .header nav {
 body:has(#about:not([hidden])) .header {
   pointer-events: none;
 }
+
+/* Hint while clicking the name repeatedly (Easter egg, see js/win7.js) */
+.animated-name.tease .name-letter {
+  animation: name-tease 0.18s steps(2) infinite;
+}
+@keyframes name-tease {
+  50% {
+    transform: translate(1px, -1px);
+    text-shadow:
+      -2px 0 #00f0ff,
+      2px 0 #ff2bd6;
+  }
+}
