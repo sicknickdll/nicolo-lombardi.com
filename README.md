@@ -66,6 +66,14 @@ Keep every file under 24 MB so it fits all free hosts.
    profiles. Ask collaborators and press to link to the project pages.
 4. Test link previews: paste a project address into LinkedIn's Post Inspector.
 
+## Easter egg: Nicoló OS
+
+Click the name on the landing page 5 times: the page glitches into **Nicoló OS**, a
+Windows XP–inspired desktop (original artwork, no Microsoft assets). Code lives in `js/xp/`
+(`os.js` desktop + small apps, `solitaire.js`, `pinball.js`, `paint.js`) and `xp.css`, and is
+only downloaded when someone triggers it. Projects and videos come from `js/data.js`
+automatically.
+
 ## Hosting (GitHub Pages + OVH domain)
 
 GitHub Pages is free, includes HTTPS, and redeploys automatically on every push.

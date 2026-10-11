@@ -62,7 +62,7 @@ function showHome() {
     if (clicks >= 5) {
       clicks = 0;
       name.classList.remove("tease");
-      import("./win7.js").then((m) => m.launch());
+      import("./xp/os.js").then((m) => m.launch());
       return;
     }
     clickTimer = setTimeout(() => {
