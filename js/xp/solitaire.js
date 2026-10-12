@@ -33,8 +33,10 @@ export function mount(el, api, windowEl) {
     render();
   }
   const snapshot = () => history.push(JSON.stringify(s));
+  // XP-style score: 10 points per card on the foundations.
+  const score = () => s.found.reduce((n, p) => n + p.length * 10, 0);
   const status = () => {
-    el.querySelector(".sol-score").textContent = `Moves: ${moves}`;
+    el.querySelector(".sol-score").textContent = `Score: ${score()}`;
     const t = Math.floor((Date.now() - started) / 1000);
     el.querySelector(".sol-time").textContent =
       `Time: ${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
@@ -58,10 +60,12 @@ export function mount(el, api, windowEl) {
       fanDown: Math.max(6, ch * 0.09),
     };
   }
+  // Card art: "Vectorized Playing Cards" (LGPL, assets/xp/cards).
+  const FILE_SUIT = ["S", "H", "D", "C"];
   const cardHTML = (c) =>
     c.up
-      ? `<span class="sol-c ${red(c) ? "red" : ""}"><b>${RANKS[c.rank]}<i>${SUITS[c.suit]}</i></b><em>${SUITS[c.suit]}</em><b class="sol-flip">${RANKS[c.rank]}<i>${SUITS[c.suit]}</i></b></span>`
-      : `<span class="sol-back"></span>`;
+      ? `<img class="sol-img" src="/assets/xp/cards/${RANKS[c.rank]}${FILE_SUIT[c.suit]}.svg" alt="${RANKS[c.rank]}${SUITS[c.suit]}" draggable="false">`
+      : `<img class="sol-img" src="/assets/xp/cards/Blue_Back.svg" alt="" draggable="false">`;
 
   function render() {
     layout();
@@ -253,7 +257,7 @@ export function mount(el, api, windowEl) {
       () =>
         api.messageBox(
           "Solitaire",
-          `🎉 You won in ${moves} moves and ${Math.floor(t / 60)}m ${t % 60}s!<br>Game ▸ Deal to play again.`,
+          `🎉 You won! Score ${score()}, ${moves} moves and ${Math.floor(t / 60)}m ${t % 60}s!<br>Game ▸ Deal to play again.`,
           "cards",
         ),
       400,

@@ -68,11 +68,16 @@ Keep every file under 24 MB so it fits all free hosts.
 
 ## Easter egg: Nicoló OS
 
-Click the name on the landing page 5 times: the page glitches into **Nicoló OS**, a
-Windows XP–inspired desktop (original artwork, no Microsoft assets). Code lives in `js/xp/`
-(`os.js` desktop + small apps, `solitaire.js`, `pinball.js`, `paint.js`) and `xp.css`, and is
-only downloaded when someone triggers it. Projects and videos come from `js/data.js`
-automatically.
+Click the name on the landing page 5 times: the page glitches into a Windows XP desktop.
+Code: `js/xp/` (`os.js` desktop + small apps, `solitaire.js`, `paint.js`) and `xp.css`, only
+downloaded when someone triggers it. Projects and videos come from `js/data.js` automatically.
+
+Third-party material used there:
+- Windows XP icons, Bliss wallpaper and Minesweeper sprites (`assets/xp/`), taken from the
+  open-source [winXP](https://github.com/ShizukuIchi/winXP) recreation. They are Microsoft's.
+- Card art: Vectorized Playing Cards (LGPL, licence in `assets/xp/cards/`).
+- 3D Pinball Space Cadet is embedded from the [98.js.org](https://98.js.org) web port, so it
+  needs that site to be online.
 
 ## Hosting (GitHub Pages + OVH domain)
 

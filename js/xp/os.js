@@ -13,48 +13,33 @@ const byId = (id) => projects.find((p) => p.id === id);
 const nameOf = (p) => (p.title === p.brand ? p.brand : `${p.brand} — ${p.title}`);
 const isSmall = () => innerWidth < 760;
 const touchOnly = () => matchMedia("(hover: none)").matches;
-const store = {
-  get(k, d) {
-    try {
-      return JSON.parse(localStorage.getItem(k)) ?? d;
-    } catch {
-      return d;
-    }
-  },
-  set(k, v) {
-    try {
-      localStorage.setItem(k, JSON.stringify(v));
-    } catch {}
-  },
-};
 
 // ── Icons (original SVGs) ───────────────────────────────────────────────────
 const svg = (body) => `<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">${body}</svg>`;
+// Original Windows XP icons (assets/xp/icons). The Command Prompt uses Nicoló's eye.
+const img = (src) => `<img class="xp-ico" src="${src}" alt="" draggable="false">`;
+const xp = (f) => img(`/assets/xp/icons/${f}.png`);
 export const ICONS = {
-  computer: svg(
-    `<rect x="5" y="6" width="38" height="28" rx="3" fill="#d9dde3" stroke="#6d7783"/><rect x="9" y="10" width="30" height="20" fill="#2a7de1"/><path d="M9 10h30L9 24z" fill="#fff" opacity=".3"/><path d="M17 34h14l3 6H14z" fill="#b9c0c9" stroke="#6d7783"/><rect x="10" y="40" width="28" height="3" rx="1.5" fill="#8a939e"/>`,
-  ),
-  folder: svg(
-    `<path d="M4 12a3 3 0 0 1 3-3h11l4 4h19a3 3 0 0 1 3 3v3H4z" fill="#e0a92a"/><path d="M4 18h40v20a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3z" fill="#fcd66a"/><path d="M4 18h40v5H4z" fill="#fff" opacity=".4"/>`,
-  ),
-  notepad: svg(
-    `<rect x="9" y="5" width="30" height="38" rx="2" fill="#fff" stroke="#7d8a99"/><rect x="9" y="5" width="30" height="7" fill="#3a8be0"/><g stroke="#a9bfd6" stroke-width="1.5"><path d="M14 19h20M14 24h20M14 29h20M14 34h14"/></g>`,
-  ),
-  media: svg(
-    `<circle cx="24" cy="24" r="19" fill="#1d4fa8"/><circle cx="24" cy="24" r="15" fill="#f39a1e"/><path d="M19 15l14 9-14 9z" fill="#fff"/><ellipse cx="20" cy="13" rx="10" ry="4" fill="#fff" opacity=".35"/>`,
-  ),
-  mine: svg(
-    `<rect x="4" y="4" width="40" height="40" rx="3" fill="#c0c0c0" stroke="#7b7b7b"/><g stroke="#111" stroke-width="3" stroke-linecap="round"><path d="M24 11v26M11 24h26M15 15l18 18M33 15L15 33"/></g><circle cx="24" cy="24" r="9" fill="#111"/><circle cx="21" cy="21" r="2.5" fill="#fff"/>`,
-  ),
-  bin: svg(
-    `<path d="M12 14h24l-3 28H15z" fill="#e3edf7" stroke="#6f8aa8"/><rect x="10" y="9" width="28" height="5" rx="2" fill="#a9c1da" stroke="#6f8aa8"/><g stroke="#6f8aa8"><path d="M19 18l1 20M24 18v20M29 18l-1 20"/></g>`,
-  ),
-  globe: svg(
-    `<circle cx="24" cy="24" r="18" fill="#2e8de6"/><path d="M10 18c6-2 9 3 14 1s5-8 12-6c-2 6 2 10-4 13s-4 9-12 9c1-6-6-8-10-17z" fill="#43b649"/><circle cx="24" cy="24" r="18" fill="none" stroke="#14549e" stroke-width="2"/><ellipse cx="18" cy="14" rx="9" ry="4" fill="#fff" opacity=".35"/>`,
-  ),
-  mail: svg(
-    `<rect x="5" y="11" width="38" height="26" rx="3" fill="#fffbe8" stroke="#a88a3a"/><path d="M6 13l18 14 18-14" fill="none" stroke="#2f7ad8" stroke-width="2.5"/>`,
-  ),
+  computer: xp("computer"),
+  folder: xp("pictures"),
+  notepad: xp("notepad"),
+  media: xp("wmp"),
+  mine: img("/assets/xp/mines/mine-icon.png"),
+  bin: xp("recycle"),
+  globe: xp("ie"),
+  mail: xp("outlook"),
+  cards: xp("solitaire"),
+  pinball: xp("pinball"),
+  paint: xp("paint"),
+  cmd: img("/assets/anime-eye-icon-64.png"),
+  help: xp("help"),
+  power: xp("turnoff"),
+  logoff: xp("logoff"),
+  restart: xp("restart"),
+  back: xp("back"),
+  forward: xp("forward"),
+  search: xp("search"),
+  error: xp("error"),
   instagram: svg(
     `<rect x="6" y="6" width="36" height="36" rx="10" fill="#d6336c"/><rect x="14" y="14" width="20" height="20" rx="6" fill="none" stroke="#fff" stroke-width="3"/><circle cx="24" cy="24" r="4.5" fill="none" stroke="#fff" stroke-width="3"/><circle cx="33" cy="15" r="1.8" fill="#fff"/>`,
   ),
@@ -63,33 +48,6 @@ export const ICONS = {
   ),
   file: svg(
     `<path d="M11 5h18l8 8v30H11z" fill="#fff" stroke="#7d8a99"/><path d="M29 5v8h8" fill="#e6edf4" stroke="#7d8a99"/>`,
-  ),
-  cards: svg(
-    `<rect x="6" y="10" width="22" height="30" rx="3" fill="#fff" stroke="#555" transform="rotate(-12 17 25)"/><rect x="18" y="8" width="22" height="30" rx="3" fill="#fff" stroke="#555" transform="rotate(10 29 23)"/><path d="M30 17c-3-4-8-1-5 4l5 5 5-5c3-5-2-8-5-4z" fill="#d61f26" transform="rotate(10 29 23)"/>`,
-  ),
-  pinball: svg(
-    `<rect x="10" y="4" width="28" height="40" rx="6" fill="#20124d" stroke="#7b5cff"/><circle cx="18" cy="15" r="4" fill="#ff3ea5"/><circle cx="30" cy="15" r="4" fill="#33d6ff"/><circle cx="24" cy="24" r="4" fill="#ffd23e"/><path d="M14 38l7-3M34 38l-7-3" stroke="#fff" stroke-width="3" stroke-linecap="round"/><circle cx="24" cy="31" r="2.5" fill="#e8e8e8"/>`,
-  ),
-  paint: svg(
-    `<path d="M24 6C12 6 5 14 5 23c0 8 6 12 11 11 4-1 3-5 6-6s5 2 8 2c9 0 13-5 13-11C43 12 35 6 24 6z" fill="#f2d7a6" stroke="#9a7a45"/><circle cx="14" cy="19" r="3" fill="#e5312b"/><circle cx="22" cy="13" r="3" fill="#f6c21c"/><circle cx="31" cy="14" r="3" fill="#27a844"/><circle cx="36" cy="22" r="3" fill="#2f6fe0"/><path d="M27 44l14-20 3 2-12 21z" fill="#7a4a1d"/>`,
-  ),
-  sticky: svg(
-    `<path d="M8 6h32v26l-10 10H8z" fill="#fff47a" stroke="#c9b52a"/><path d="M30 42V32h10" fill="#e8d84e" stroke="#c9b52a"/><g stroke="#b9a62a" stroke-width="1.5"><path d="M13 15h22M13 21h22M13 27h14"/></g>`,
-  ),
-  cmd: svg(
-    `<rect x="4" y="8" width="40" height="32" rx="2" fill="#000" stroke="#7d8a99"/><rect x="4" y="8" width="40" height="6" fill="#3a8be0"/><path d="M10 21l6 4-6 4" fill="none" stroke="#c0c0c0" stroke-width="2.5"/><path d="M19 30h9" stroke="#c0c0c0" stroke-width="2.5"/>`,
-  ),
-  help: svg(
-    `<circle cx="24" cy="24" r="18" fill="#2f7ad8"/><text x="24" y="32" text-anchor="middle" font-family="Arial" font-weight="700" font-size="24" fill="#fff">?</text>`,
-  ),
-  power: svg(
-    `<rect x="4" y="4" width="40" height="40" rx="6" fill="#e2552a"/><path d="M24 12v12" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M16 16a11 11 0 1 0 16 0" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>`,
-  ),
-  logoff: svg(
-    `<rect x="4" y="4" width="40" height="40" rx="6" fill="#f0a830"/><path d="M14 24h18M26 17l7 7-7 7" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`,
-  ),
-  restart: svg(
-    `<rect x="4" y="4" width="40" height="40" rx="6" fill="#3bab3b"/><path d="M33 22a10 10 0 1 1-4-7" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M30 9l1 7-7 0" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`,
   ),
 };
 // Clappy: an original clapperboard assistant.
@@ -162,15 +120,14 @@ function boot() {
   desktop.setAttribute("role", "application");
   desktop.setAttribute("aria-label", "Nicoló OS desktop");
   desktop.innerHTML = `
-    <div class="xp-boot"><div class="xp-boot-logo"><img src="/assets/anime-eye-icon-64.png" alt=""><div><b>Nicoló</b><span>OS</span></div></div><div class="xp-boot-bar"><i></i><i></i><i></i></div><p>Portfolio Edition</p></div>
+    <div class="xp-boot"><div class="xp-boot-logo"><img src="/assets/xp/icons/windows.png" alt=""><div><small>Microsoft<sup>®</sup></small><b>Windows<sup>xp</sup></b></div></div><div class="xp-boot-bar"><i></i><i></i><i></i></div><p>Copyright © Microsoft Corporation</p></div>
     <div class="xp-wallpaper"></div>
     <ul class="xp-icons"></ul>
-    <div class="xp-notes"></div>
     <div class="xp-windows"></div>
     <div class="xp-start" hidden></div>
     <div class="xp-clappy" hidden></div>
     <div class="xp-taskbar">
-      <button class="xp-start-btn" aria-label="Start"><img src="/assets/anime-eye-icon-64.png" alt=""><span>start</span></button>
+      <button class="xp-start-btn" aria-label="Start"><img src="/assets/xp/icons/start.png" alt="start" draggable="false"></button>
       <div class="xp-tasks"></div>
       <div class="xp-tray"><button class="xp-tray-clappy" aria-label="Show Clappy" title="Clappy">${ICONS.help}</button><time class="xp-clock"></time></div>
     </div>`;
@@ -182,7 +139,6 @@ function boot() {
   bindTaskbar();
   tickClock();
   desktop._clock = setInterval(tickClock, 15000);
-  restoreNotes();
   setTimeout(() => desktop && clappy.show(), 2900);
 }
 
@@ -202,7 +158,7 @@ function turnOffDialog() {
   const veil = document.createElement("div");
   veil.className = "xp-turnoff";
   veil.innerHTML = `<div class="xp-turnoff-box" role="dialog" aria-label="Turn off computer">
-      <header><span>Turn off computer</span><img src="/assets/anime-eye-icon-64.png" alt=""></header>
+      <header><span>Turn off computer</span><img src="/assets/xp/icons/windows.png" alt=""></header>
       <div class="xp-turnoff-actions">
         <button data-act="standby"><span class="xp-big">${ICONS.logoff}</span>Stand By</button>
         <button data-act="off"><span class="xp-big">${ICONS.power}</span>Turn Off</button>
@@ -232,10 +188,10 @@ function turnOffDialog() {
     }
   });
 }
-function shutdownScreen(after, text = "Nicoló OS is shutting down…") {
+function shutdownScreen(after, text = "Windows is shutting down…") {
   const s = document.createElement("div");
   s.className = "xp-shutdown";
-  s.innerHTML = `<div class="xp-boot-logo"><img src="/assets/anime-eye-icon-64.png" alt=""><div><b>Nicoló</b><span>OS</span></div></div><p>${text}</p>`;
+  s.innerHTML = `<div class="xp-boot-logo"><img src="/assets/xp/icons/windows.png" alt=""><div><small>Microsoft<sup>®</sup></small><b>Windows<sup>xp</sup></b></div></div><p>${text}</p>`;
   desktop.append(s);
   setTimeout(after, 1400);
 }
@@ -261,16 +217,21 @@ const APPS = {
     }),
   },
   pinball: {
-    title: "Nicoló Pinball",
+    title: "3D Pinball",
     icon: "pinball",
-    open: lazy("pinball", {
-      key: "pinball",
-      title: "Nicoló Pinball",
-      icon: "pinball",
-      width: 400,
-      height: 660,
-      className: "xp-pinball",
-    }),
+    // The real "3D Pinball for Windows – Space Cadet", via the 98.js.org web port.
+    open: () =>
+      openWindow({
+        key: "pinball",
+        title: "3D Pinball for Windows - Space Cadet",
+        icon: "pinball",
+        width: 640,
+        height: 520,
+        className: "xp-pinball",
+        body(el) {
+          el.innerHTML = `<iframe src="https://98.js.org/programs/pinball/space-cadet.html" title="3D Pinball for Windows – Space Cadet" allow="autoplay; fullscreen; gamepad" loading="eager"></iframe>`;
+        },
+      }),
   },
   paint: {
     title: "Paint",
@@ -284,7 +245,6 @@ const APPS = {
       className: "xp-paint",
     }),
   },
-  sticky: { title: "Sticky Notes", icon: "sticky", open: () => newNote() },
   mines: { title: "Minesweeper", icon: "mine", open: () => openMinesweeper() },
   about: { title: "About me.txt", icon: "notepad", open: () => openNotepad() },
   cmd: { title: "Command Prompt", icon: "cmd", open: () => openCmd() },
@@ -314,7 +274,6 @@ const DESKTOP_ICONS = [
   "solitaire",
   "pinball",
   "paint",
-  "sticky",
   "about",
   "cmd",
   "mines",
@@ -354,11 +313,11 @@ function buildStart() {
   const link = (k, label) =>
     `<li><button data-app="${k}"><span class="xp-mini">${ICONS[APPS[k].icon]}</span>${esc(label)}</button></li>`;
   start.innerHTML = `
-    <header><img src="/assets/anime-eye-touch-180.png" alt=""><span>Nicoló</span></header>
+    <header><img src="/assets/xp/icons/user.png" alt=""><span>Nicoló</span></header>
     <div class="xp-start-cols">
       <div class="xp-start-left">
         <ul class="xp-pinned">${item("computer", "Films & projects")}${item("browser", "nicolo-lombardi.com")}</ul>
-        <ul>${["solitaire", "pinball", "paint", "sticky", "media", "cmd", "mines"].map((k) => item(k)).join("")}</ul>
+        <ul>${["solitaire", "pinball", "paint", "media", "cmd", "mines"].map((k) => item(k)).join("")}</ul>
         <ul class="xp-results"></ul>
       </div>
       <div class="xp-start-right">
@@ -809,7 +768,7 @@ function openCmd() {
       const cmds = {
         help: () =>
           print(
-            "ABOUT      Who is Nicoló\nPROJECTS   List all projects (alias: DIR)\nOPEN <id>  Open a project, e.g. OPEN lexus\nCONTACT    How to reach me\nPLAY <x>   solitaire | pinball | mines\nPAINT      Open Paint\nNOTE       New sticky note\nDATE       Show the date\nCOLOR      Change colours\nCLS        Clear the screen\nEXIT       Close this window\nSHUTDOWN   Turn off Nicoló OS",
+            "ABOUT      Who is Nicoló\nPROJECTS   List all projects (alias: DIR)\nOPEN <id>  Open a project, e.g. OPEN lexus\nCONTACT    How to reach me\nPLAY <x>   solitaire | pinball | mines\nPAINT      Open Paint\nDATE       Show the date\nCOLOR      Change colours\nCLS        Clear the screen\nEXIT       Close this window\nSHUTDOWN   Turn off Nicoló OS",
           ),
         about: () =>
           print(
@@ -840,7 +799,6 @@ function openCmd() {
             ? APPS[g].open()
             : print("Usage: PLAY solitaire | pinball | mines"),
         paint: () => APPS.paint.open(),
-        note: () => newNote(),
         date: () => print(new Date().toString()),
         color: () => el.classList.toggle("xp-cmd-green"),
         cls: () => (out.textContent = ""),
@@ -869,72 +827,13 @@ function openCmd() {
   });
 }
 
-// ── Sticky notes (saved in this browser) ────────────────────────────────────
-const NOTES_KEY = "nicolo-os-notes";
-const saveNotes = () =>
-  store.set(
-    NOTES_KEY,
-    [...desktop.querySelectorAll(".xp-note")].map((n) => ({
-      x: n.offsetLeft,
-      y: n.offsetTop,
-      text: n.querySelector("textarea").value,
-    })),
-  );
-function restoreNotes() {
-  const notes = store.get(NOTES_KEY, null);
-  if (notes === null)
-    newNote(
-      "Welcome to Nicoló OS!\n\n• Try Solitaire & Pinball\n• Draw something in Paint\n• Type HELP in Command Prompt\n\n(Notes are saved in your browser)",
-      innerWidth - 250,
-      20,
-    );
-  else notes.forEach((n) => newNote(n.text, n.x, n.y));
-}
-function newNote(text = "", x, y) {
-  const n = document.createElement("div");
-  n.className = "xp-note";
-  const count = desktop.querySelectorAll(".xp-note").length;
-  n.style.left = (x ?? Math.min(innerWidth - 230, 140 + count * 24)) + "px";
-  n.style.top = (y ?? 60 + count * 24) + "px";
-  n.innerHTML = `<header><button class="xp-note-add" aria-label="New note">+</button><button class="xp-note-del" aria-label="Delete note">×</button></header><textarea aria-label="Sticky note" placeholder="Write a note…"></textarea>`;
-  n.querySelector("textarea").value = text;
-  desktop.querySelector(".xp-notes").append(n);
-  n.querySelector(".xp-note-add").onclick = () => newNote();
-  n.querySelector(".xp-note-del").onclick = () => {
-    n.remove();
-    saveNotes();
-  };
-  n.querySelector("textarea").addEventListener("input", saveNotes);
-  n.addEventListener("pointerdown", () => (n.style.zIndex = ++zTop));
-  const head = n.querySelector("header");
-  let start = null;
-  head.addEventListener("pointerdown", (e) => {
-    if (e.target.closest("button")) return;
-    start = { x: e.clientX, y: e.clientY, left: n.offsetLeft, top: n.offsetTop };
-    head.setPointerCapture(e.pointerId);
-  });
-  head.addEventListener("pointermove", (e) => {
-    if (!start) return;
-    n.style.left = Math.min(innerWidth - 60, Math.max(0, start.left + e.clientX - start.x)) + "px";
-    n.style.top = Math.min(innerHeight - 80, Math.max(0, start.top + e.clientY - start.y)) + "px";
-  });
-  head.addEventListener("pointerup", () => {
-    start = null;
-    saveNotes();
-  });
-  if (!text) setTimeout(() => n.querySelector("textarea").focus(), 30);
-  saveNotes();
-  return n;
-}
-
 // ── Clappy, the assistant ───────────────────────────────────────────────────
 const TIPS = [
   "Double-click <b>My Portfolio</b> to browse every project like files on a computer.",
   "Can you beat Solitaire in under 5 minutes? I've never seen it happen. 🎬",
-  "In <b>Pinball</b>, use Z and / (or ← →) for the flippers and hold Space to launch.",
+  "In <b>3D Pinball</b>: Z and / are the flippers, hold Space to launch the ball.",
   "Type <b>HELP</b> in the Command Prompt. There are a few hidden commands…",
   "Paint saves your masterpiece as a PNG. Send it to Nicoló!",
-  "Sticky notes stay here even if you leave and come back.",
   "When you're done, use <b>start → Turn Off Computer</b> to go back to the website.",
 ];
 const clappy = {
@@ -1013,17 +912,28 @@ function openMinesweeper() {
     key: "mines",
     title: "Minesweeper",
     icon: "mine",
-    width: 280,
-    height: 370,
+    width: 268,
+    height: 352,
     resizable: false,
     className: "xp-mines",
     body(el) {
       const N = 9,
         MINES = 10;
       let cells, over, opened, flags, timer, seconds, first;
-      el.innerHTML = `<div class="xp-menubar"><span>Game</span><span>Help</span></div><div class="xp-ms"><div class="xp-ms-top"><span class="xp-ms-count"></span><button class="xp-ms-face" aria-label="New game">🙂</button><span class="xp-ms-time"></span></div><div class="xp-ms-grid" role="grid"></div></div>`;
+      const S = (f) => `/assets/xp/mines/${f}.png`;
+      const digits = (n) =>
+        String(Math.max(-99, Math.min(999, n)))
+          .padStart(3, "0")
+          .split("")
+          .map((d) => `<img src="${S("digit" + d)}" alt="">`)
+          .join("");
+      el.innerHTML = `<div class="xp-menubar"><span>Game</span><span>Help</span></div><div class="xp-ms"><div class="xp-ms-top"><span class="xp-ms-count"></span><button class="xp-ms-face" aria-label="New game"><img alt=""></button><span class="xp-ms-time"></span></div><div class="xp-ms-grid" role="grid"></div></div>`;
       const grid = el.querySelector(".xp-ms-grid"),
         face = el.querySelector(".xp-ms-face");
+      const setFace = (f) => (face.querySelector("img").src = S(f));
+      grid.addEventListener("pointerdown", () => !over && setFace("ohh"));
+      grid.addEventListener("pointerup", () => !over && setFace("smile"));
+      grid.addEventListener("pointerleave", () => !over && setFace("smile"));
       const around = (i) => {
         const r = (i / N) | 0,
           c = i % N,
@@ -1037,11 +947,8 @@ function openMinesweeper() {
         return o;
       };
       const status = () => {
-        el.querySelector(".xp-ms-count").textContent = String(MINES - flags).padStart(3, "0");
-        el.querySelector(".xp-ms-time").textContent = String(Math.min(999, seconds)).padStart(
-          3,
-          "0",
-        );
+        el.querySelector(".xp-ms-count").innerHTML = digits(MINES - flags);
+        el.querySelector(".xp-ms-time").innerHTML = digits(seconds);
       };
       const reset = () => {
         clearInterval(timer);
@@ -1054,7 +961,7 @@ function openMinesweeper() {
         over = false;
         opened = flags = seconds = 0;
         first = true;
-        face.textContent = "🙂";
+        setFace("smile");
         grid.innerHTML = cells
           .map((_, i) => `<button data-i="${i}" aria-label="Cell"></button>`)
           .join("");
@@ -1084,16 +991,23 @@ function openMinesweeper() {
         opened++;
         btn(i).classList.add("open");
         if (c.mine) return;
-        if (c.n) {
-          btn(i).textContent = c.n;
-          btn(i).dataset.n = c.n;
-        } else around(i).forEach(reveal);
+        if (c.n) btn(i).style.backgroundImage = `url(${S("open" + c.n)})`;
+        else around(i).forEach(reveal);
       };
       const end = (won) => {
         over = true;
         clearInterval(timer);
-        face.textContent = won ? "😎" : "😵";
-        cells.forEach((c, i) => c.mine && (btn(i).textContent = won ? "🚩" : "💣"));
+        setFace(won ? "win" : "dead");
+        cells.forEach((c, i) => {
+          const b = btn(i);
+          if (c.mine && !b.classList.contains("boom")) {
+            b.classList.add(won ? "flag" : "open");
+            b.style.backgroundImage = `url(${S(won ? "flag" : "mine-ceil")})`;
+          } else if (!won && c.flag && !c.mine) {
+            b.classList.add("open");
+            b.style.backgroundImage = `url(${S("misflagged")})`;
+          }
+        });
         if (won)
           setTimeout(() => messageBox("Minesweeper", `You won in ${seconds} seconds! 🎉`), 300);
       };
@@ -1102,7 +1016,8 @@ function openMinesweeper() {
         if (over || c.open) return;
         c.flag = !c.flag;
         flags += c.flag ? 1 : -1;
-        btn(i).textContent = c.flag ? "🚩" : "";
+        btn(i).classList.toggle("flag", c.flag);
+        btn(i).style.backgroundImage = c.flag ? `url(${S("flag")})` : "";
         status();
       };
       grid.addEventListener("click", (e) => {
@@ -1115,7 +1030,8 @@ function openMinesweeper() {
           plant(i);
         }
         if (cells[i].mine) {
-          b.classList.add("boom");
+          b.classList.add("boom", "open");
+          b.style.backgroundImage = `url(${S("mine-death")})`;
           return end(false);
         }
         reveal(i);

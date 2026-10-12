@@ -160,31 +160,6 @@
   opacity: 0.7;
 }
 
-/* Wallpaper: original sky + rolling green hill */
-.xp-wallpaper {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 130% 55% at 30% 112%, #3f9a2c 0 58%, transparent 58.4%),
-    radial-gradient(ellipse 120% 50% at 75% 105%, #57b33b 0 60%, transparent 60.4%),
-    radial-gradient(ellipse 18% 6% at 22% 22%, rgba(255, 255, 255, 0.9), transparent 70%),
-    radial-gradient(ellipse 22% 7% at 30% 25%, rgba(255, 255, 255, 0.75), transparent 70%),
-    radial-gradient(ellipse 16% 5% at 70% 15%, rgba(255, 255, 255, 0.85), transparent 70%),
-    radial-gradient(ellipse 24% 6% at 78% 19%, rgba(255, 255, 255, 0.6), transparent 70%),
-    linear-gradient(#2a6fd6 0%, #5d9cec 40%, #a9d0f5 70%, #d9ecfb 82%);
-}
-.xp-wallpaper::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    ellipse 140% 60% at 50% 115%,
-    transparent 55%,
-    rgba(255, 255, 255, 0.15) 56%,
-    transparent 60%
-  );
-}
-
 /* Desktop icons */
 .xp-icons {
   position: absolute;
@@ -731,94 +706,6 @@
   caret-color: currentColor;
 }
 
-/* Minesweeper */
-.xp-mines .xp-body {
-  background: #c0c0c0;
-}
-.xp-ms {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 6px;
-  border: 3px solid;
-  border-color: #fff #808080 #808080 #fff;
-}
-.xp-ms-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 4px;
-  border: 2px solid;
-  border-color: #808080 #fff #fff #808080;
-}
-.xp-ms-count,
-.xp-ms-time {
-  min-width: 42px;
-  padding: 1px 3px;
-  font:
-    700 20px/1 "Courier New",
-    monospace;
-  color: #ff0000;
-  background: #000;
-  text-align: center;
-}
-.xp-ms-face {
-  width: 28px;
-  height: 28px;
-  font-size: 17px !important;
-  background: #c0c0c0 !important;
-  border: 2px solid !important;
-  border-color: #fff #808080 #808080 #fff !important;
-}
-.xp-ms-grid {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(9, 1fr);
-  border: 3px solid;
-  border-color: #808080 #fff #fff #808080;
-}
-.xp-ms-grid button {
-  aspect-ratio: 1;
-  font:
-    700 14px/1 Tahoma,
-    sans-serif !important;
-  background: #c0c0c0 !important;
-  border: 2px solid !important;
-  border-color: #fff #808080 #808080 #fff !important;
-}
-.xp-ms-grid button.open {
-  border: 1px solid #808080 !important;
-  border-width: 0 1px 1px 0 !important;
-}
-.xp-ms-grid button.boom {
-  background: #f00 !important;
-}
-.xp-ms-grid [data-n="1"] {
-  color: #0000ff;
-}
-.xp-ms-grid [data-n="2"] {
-  color: #008000;
-}
-.xp-ms-grid [data-n="3"] {
-  color: #ff0000;
-}
-.xp-ms-grid [data-n="4"] {
-  color: #000080;
-}
-.xp-ms-grid [data-n="5"] {
-  color: #800000;
-}
-.xp-ms-grid [data-n="6"] {
-  color: #008080;
-}
-.xp-ms-grid [data-n="7"] {
-  color: #000;
-}
-.xp-ms-grid [data-n="8"] {
-  color: #808080;
-}
-
 /* Solitaire */
 .sol-table {
   flex: 1;
@@ -912,29 +799,6 @@
 }
 .xp-solitaire .xp-status {
   justify-content: space-between;
-}
-
-/* Pinball */
-.xp-pinball .xp-body {
-  background: #06021a;
-}
-.pb-wrap {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  place-items: center;
-  padding: 4px;
-}
-.pb-wrap canvas {
-  max-width: 100%;
-  max-height: 100%;
-  aspect-ratio: 360 / 600;
-  height: 100%;
-  touch-action: none;
-  border-radius: 6px;
-}
-.pb-help {
-  font-size: 11px;
 }
 
 /* Paint */
@@ -1054,61 +918,6 @@
   height: 15px;
   border: 1px solid !important;
   border-color: #808080 #fff #fff #808080 !important;
-}
-
-/* Sticky notes */
-.xp-notes {
-  position: absolute;
-  inset: 0 0 30px;
-  pointer-events: none;
-  z-index: 2;
-}
-.xp-note {
-  position: absolute;
-  width: 210px;
-  height: 190px;
-  display: flex;
-  flex-direction: column;
-  pointer-events: auto;
-  background: #fff47a;
-  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.3);
-  resize: both;
-  overflow: hidden;
-  min-width: 140px;
-  min-height: 100px;
-}
-.xp-note header {
-  flex: none;
-  height: 22px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 4px;
-  background: #f5e65c;
-  cursor: move;
-  touch-action: none;
-}
-.xp-note header button {
-  width: 18px;
-  height: 18px;
-  font:
-    700 15px/1 Tahoma,
-    sans-serif !important;
-  color: #6b5d00 !important;
-}
-.xp-note textarea {
-  flex: 1;
-  border: 0;
-  resize: none;
-  padding: 6px 8px;
-  background: transparent;
-  font:
-    14px/1.35 "Segoe Print",
-    "Comic Sans MS",
-    "Bradley Hand",
-    cursive;
-  color: #333;
-  outline: none;
 }
 
 /* Clappy */
@@ -1643,17 +1452,194 @@
     width: 70px;
     height: 70px;
   }
-  .xp-note {
-    width: 180px;
-    height: 160px;
-  }
-  .pb-help {
-    display: none !important;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   #xp *,
   #xp *::before {
     animation: none !important;
   }
+}
+
+/* ── Real Windows XP assets ─────────────────────────────────────────────── */
+.xp-wallpaper {
+  position: absolute;
+  inset: 0;
+  background: #5a7edc url(/assets/xp/bliss.jpg) center / cover no-repeat;
+}
+:where(#xp) .xp-ico {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.xp-icon-img {
+  width: 32px;
+  height: 32px;
+}
+.xp-taskpane button .xp-ico,
+.xp-tool-btn .xp-ico {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+.xp-tool-btn .xp-ico {
+  width: 24px;
+  height: 24px;
+}
+#xp .xp-start-btn {
+  padding: 0 !important;
+  margin-right: 10px;
+  border-radius: 0;
+  background: none !important;
+  box-shadow: none;
+}
+.xp-start-btn img {
+  display: block;
+  height: 30px;
+  width: auto;
+  border-radius: 0;
+  box-shadow: none;
+}
+.xp-boot-logo img {
+  width: 88px;
+  border-radius: 0;
+  box-shadow: none;
+}
+.xp-boot-logo small {
+  display: block;
+  font:
+    700 13px/1 Arial,
+    sans-serif;
+  margin-bottom: 2px;
+}
+.xp-boot-logo b {
+  font:
+    700 42px/1 "Franklin Gothic Medium",
+    Arial,
+    sans-serif;
+  font-style: normal;
+}
+.xp-boot-logo sup {
+  font-size: 0.5em;
+  color: #f88b2a;
+  font-style: italic;
+  margin-left: 2px;
+}
+.xp-boot p {
+  position: absolute;
+  bottom: 24px;
+  left: 28px;
+  font-size: 12px;
+}
+
+/* 3D Pinball (embedded) */
+.xp-pinball .xp-body {
+  background: #000;
+}
+.xp-pinball iframe {
+  flex: 1;
+  width: 100%;
+  border: 0;
+}
+
+/* Minesweeper with original sprites */
+.xp-mines .xp-body {
+  background: #c0c0c0;
+}
+.xp-ms {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  border: 3px solid;
+  border-color: #fff #808080 #808080 #fff;
+}
+.xp-ms-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 5px;
+  border: 2px solid;
+  border-color: #808080 #fff #fff #808080;
+}
+.xp-ms-count,
+.xp-ms-time {
+  display: flex;
+  border: 1px solid;
+  border-color: #808080 #fff #fff #808080;
+}
+.xp-ms-count img,
+.xp-ms-time img {
+  display: block;
+  width: 13px;
+  height: 23px;
+}
+#xp .xp-ms-face {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #fff #808080 #808080 #fff;
+}
+#xp .xp-ms-face:active {
+  border-color: #808080 #fff #fff #808080;
+}
+.xp-ms-face img {
+  width: 17px;
+  height: 17px;
+  image-rendering: pixelated;
+}
+.xp-ms-grid {
+  align-self: center;
+  display: grid;
+  grid-template-columns: repeat(9, 24px);
+  border: 3px solid;
+  border-color: #808080 #fff #fff #808080;
+}
+#xp .xp-ms-grid button {
+  width: 24px;
+  height: 24px;
+  background: #c0c0c0 center / 24px 24px no-repeat;
+  image-rendering: pixelated;
+  border: 3px solid;
+  border-color: #fff #808080 #808080 #fff;
+}
+#xp .xp-ms-grid button.flag {
+  background-size: 18px 18px;
+}
+#xp .xp-ms-grid button.open {
+  border: 0;
+  border-right: 1px solid #808080;
+  border-bottom: 1px solid #808080;
+  background-size: 24px 24px;
+}
+#xp .xp-ms-grid button.boom {
+  background-color: #f00;
+}
+
+/* Solitaire with real card art on the classic green table */
+.sol-table {
+  background: #008000;
+}
+.sol-card {
+  border-radius: 5px;
+  box-shadow: none;
+}
+.sol-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 5px;
+  background: #fff;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.sol-slot {
+  border: 1px solid #003b00;
+  border-radius: 5px;
+  color: rgba(0, 0, 0, 0.25);
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.2);
 }
