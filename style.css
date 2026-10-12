@@ -640,7 +640,7 @@ body:has(#about:not([hidden])) .project-cursor {
     transform: translateY(0);
   }
 }
-body:has(#about:not([hidden])) .header > button,
+body:has(#about:not([hidden])) .header-right,
 body:has(#about:not([hidden])) .header nav {
   visibility: hidden;
 }
@@ -857,4 +857,63 @@ body:has(#about:not([hidden])) .header {
   50% {
     border-color: transparent;
   }
+}
+
+/* Header: contact link next to "about" (always visible, also on phones) */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+@media (max-width: 520px) {
+  .header-right {
+    gap: 10px;
+    font-size: 12px;
+  }
+}
+
+/* Landing page call to action */
+.home-cta {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+  z-index: 3;
+  font-size: 14px;
+  text-shadow: 0 1px 12px #000;
+}
+@media (max-width: 520px) {
+  .home-cta {
+    left: 16px;
+    font-size: 13px;
+  }
+}
+
+/* Privacy page */
+.legal {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 120px 20px 80px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+.legal h1 {
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+}
+.legal h2 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 32px 0 6px;
+}
+.legal-date {
+  opacity: 0.6;
+  font-size: 14px;
+}
+.legal a {
+  text-decoration: underline;
+}
+.copyright a {
+  text-decoration: underline;
 }

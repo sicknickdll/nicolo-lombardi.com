@@ -29,6 +29,11 @@
     <image:image><image:loc>https://nicolo-lombardi.com/assets/wppproduction-header.webp</image:loc></image:image>
   </url>
   <url>
+    <loc>https://nicolo-lombardi.com/privacy/</loc>
+    <lastmod>2026-10-12</lastmod>
+
+  </url>
+  <url>
     <loc>https://nicolo-lombardi.com/work/uncommonsense/</loc>
     <lastmod>2026-10-12</lastmod>
     <image:image><image:loc>https://nicolo-lombardi.com/assets/uncommonsense-header.webp</image:loc></image:image>

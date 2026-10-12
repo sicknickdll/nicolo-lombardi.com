@@ -90,7 +90,7 @@ export const projects = [
     images: ["/assets/DTlMGv30IEOltcth8y1RmJJoVug.webp"],
     videos: [],
     youtube:
-      "https://www.youtube.com/embed/Zykwz9wTaG4?v=Zykwz9wTaG4&iv_load_policy=3&rel=0&modestbranding=1&playsinline=1&autoplay=0&color=white",
+      "https://www.youtube-nocookie.com/embed/Zykwz9wTaG4?v=Zykwz9wTaG4&iv_load_policy=3&rel=0&modestbranding=1&playsinline=1&autoplay=0&color=white",
   },
   {
     id: "lexus",
@@ -271,7 +271,7 @@ export const projects = [
     images: [],
     videos: [],
     youtube:
-      "https://www.youtube.com/embed/Bg-ywjQUpUk?iv_load_policy=3&rel=0&modestbranding=1&playsinline=1&color=white",
+      "https://www.youtube-nocookie.com/embed/Bg-ywjQUpUk?iv_load_policy=3&rel=0&modestbranding=1&playsinline=1&color=white",
   },
 ];
 
@@ -309,6 +309,10 @@ export const clients = [
   { name: "Graphomedia", logo: "/assets/clients/graphomedia.webp", ratio: 1.792 },
   { name: "UNCOMMONSENSE", logo: "/assets/clients/uncommonsense.webp", ratio: 13.03 },
 ];
+
+// Visitor statistics (GoatCounter: free, no cookies, no cookie banner needed).
+// Create an account at https://www.goatcounter.com and put your code here, e.g. "nicolo".
+export const goatcounter = "";
 
 // Landing page background loop (an .mp4 with the same name is the Safari fallback).
 export const hero = "/assets/anime-eye.webm";

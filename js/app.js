@@ -356,6 +356,10 @@ function render() {
     if (a.pathname === path) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
   });
+  if (path === "/privacy/") {
+    document.documentElement.classList.remove("snap-pages");
+    return;
+  }
   if (path === "/film/") showProjects(film, "Selected films", "Films by Nicoló Lombardi");
   else if (path === "/visuals/")
     showProjects(visuals, "Visual projects", "Visual projects by Nicoló Lombardi");

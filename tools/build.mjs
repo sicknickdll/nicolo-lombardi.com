@@ -7,7 +7,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { projects } from "../js/data.js";
+import { projects, goatcounter } from "../js/data.js";
 import {
   esc,
   film,
@@ -90,7 +90,13 @@ function write(path, headHTML, mainHTML) {
     template
       .replace("{{HEAD}}", headHTML)
       .replace("{{MAIN}}", mainHTML)
-      .replace("{{CLIENTS}}", clientsMarkup()),
+      .replace("{{CLIENTS}}", clientsMarkup())
+      .replace(
+        "{{ANALYTICS}}",
+        goatcounter
+          ? `    <script data-goatcounter="https://${goatcounter}.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>`
+          : "",
+      ),
   );
 }
 
@@ -223,10 +229,48 @@ for (const p of projects) {
 
 // Sitemap (with images, so covers and stills can show in Google Images)
 const today = new Date().toISOString().slice(0, 10);
+// Privacy page
+write(
+  "privacy",
+  head({
+    title: `Privacy — ${NAME}`,
+    description: `How ${NAME}'s portfolio handles your data: no cookies, no tracking, no forms.`,
+    path: "/privacy/",
+    image: "/assets/og-image.jpg",
+    imageAlt: NAME,
+    schema: [
+      breadcrumbs([
+        [NAME, "/"],
+        ["Privacy", "/privacy/"],
+      ]),
+    ],
+  }),
+  `<article class="legal">
+  <h1>Privacy</h1>
+  <p class="legal-date">Last updated: ${new Date().toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" })}</p>
+  <h2>In short</h2>
+  <p>This website does not use cookies, does not ask for personal data and does not sell or share anything about you.</p>
+  <h2>Who is responsible</h2>
+  <p>${NAME}, Madrid, Spain — <a href="mailto:hello.nicolombardi@gmail.com">hello.nicolombardi@gmail.com</a>.</p>
+  <h2>Visitor statistics</h2>
+  <p>${goatcounter ? "To understand which projects people look at, the site counts visits with GoatCounter, a privacy-friendly service that uses no cookies and stores no personal data or IP addresses." : "The site does not collect visitor statistics."}</p>
+  <h2>Hosting</h2>
+  <p>The site is hosted on GitHub Pages. Like any web server, GitHub may log technical data such as your IP address for security purposes. See <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener noreferrer">GitHub's privacy statement</a>.</p>
+  <h2>Embedded videos</h2>
+  <p>Some projects embed videos from YouTube (in its privacy-enhanced "no cookie" mode) and Vimeo (with "do not track" enabled). When you press play, those services may process data according to their own privacy policies.</p>
+  <h2>Contacting me</h2>
+  <p>If you write to me by e-mail, I use your message only to reply. Ask me at any time to delete it.</p>
+  <h2>Your rights</h2>
+  <p>Under the GDPR you can ask to access, correct or delete any personal data I hold about you. Write to the address above.</p>
+  <p><a href="/">← Back to the portfolio</a></p>
+</article>`,
+);
+
 const pages = [
   ["/", ["/assets/og-image.jpg"]],
   ["/film/", film.map((p) => p.cover)],
   ["/visuals/", visuals.map((p) => p.cover)],
+  ["/privacy/", []],
   ...projects.map((p) => [`/work/${p.id}/`, [p.cover, ...p.images]]),
 ];
 writeFileSync(
