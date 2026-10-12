@@ -553,8 +553,8 @@ function messageBox(title, html, icon = "help") {
   return openWindow({
     title,
     icon,
-    width: 380,
-    height: 190,
+    width: 400,
+    height: 220,
     resizable: false,
     className: "xp-dialog",
     body(el, w) {
@@ -731,16 +731,61 @@ function openNotepad() {
   });
 }
 
+// "Deleted" classified files: internet mysteries, each opening its wiki page.
+const CLASSIFIED = [
+  {
+    file: "CLASSIFIED_titor_2036.txt",
+    title: "John Titor",
+    teaser:
+      "Subject claimed to be a soldier from the year 2036, sent back in time for an IBM 5100 computer. Posted on internet forums in 2000–2001, then vanished.",
+    url: "https://en.wikipedia.org/wiki/John_Titor",
+  },
+  {
+    file: "DO_NOT_OPEN_herobrine.dat",
+    title: "Herobrine",
+    teaser:
+      "Unconfirmed entity reported in single-player worlds. White eyes. Builds pyramids, removes leaves from trees. Officially “removed” in many updates.",
+    url: "https://minecraft.wiki/w/Herobrine",
+  },
+  {
+    file: "have_you_seen_this_man.jpg",
+    title: "This Man",
+    teaser:
+      "Thousands of people claim to have seen the same face in their dreams, all over the world. Have you seen this man?",
+    url: "https://en.wikipedia.org/wiki/This_Man",
+  },
+];
 function openRecycleBin() {
   openWindow({
     key: "bin",
     title: "Recycle Bin",
     icon: "bin",
-    width: 560,
-    height: 340,
-    className: "xp-explorer",
+    width: 640,
+    height: 360,
+    className: "xp-explorer xp-bin",
     body(el) {
-      el.innerHTML = `<div class="xp-menubar"><span>File</span><span>Edit</span><span>View</span><span>Help</span></div><div class="xp-empty-folder">This folder is empty.</div><footer class="xp-status">0 objects</footer>`;
+      el.innerHTML = `<div class="xp-menubar"><span>File</span><span>Edit</span><span>View</span><span>Help</span></div>
+        <table class="xp-bin-list"><thead><tr><th>Name</th><th>Original Location</th><th>Date Deleted</th></tr></thead><tbody>${CLASSIFIED.map(
+          (c, i) =>
+            `<tr><td><button class="xp-bin-file" data-i="${i}"><span class="xp-mini">${ICONS.file}</span>${esc(c.file)}</button></td><td>C:\\Nicoló\\Classified</td><td>${i === 0 ? "11/2/2000" : i === 1 ? "8/16/2010" : "1/1/2006"} 3:33 AM</td></tr>`,
+        ).join("")}</tbody></table>
+        <footer class="xp-status">${CLASSIFIED.length} objects · You weren't supposed to find these.</footer>`;
+      const openFile = (e) => {
+        const b = e.target.closest(".xp-bin-file");
+        if (!b) return;
+        const c = CLASSIFIED[b.dataset.i];
+        messageBox(
+          `${c.file} — CLASSIFIED`,
+          `<b class="xp-classified">TOP SECRET // ${esc(c.title.toUpperCase())}</b><br>${esc(c.teaser)}<br><br><a href="${c.url}" target="_blank" rel="noopener noreferrer">Open the file ↗</a>`,
+          "error",
+        );
+      };
+      el.addEventListener("dblclick", openFile);
+      el.addEventListener("click", (e) => {
+        const b = e.target.closest(".xp-bin-file");
+        el.querySelectorAll(".xp-bin-file").forEach((x) => x.classList.toggle("selected", x === b));
+        if (touchOnly()) openFile(e);
+      });
     },
   });
 }
