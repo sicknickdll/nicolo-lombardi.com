@@ -837,3 +837,24 @@ body:has(#about:not([hidden])) .header {
       2px 0 #ff2bd6;
   }
 }
+
+/* "CLICK ME" at the bottom of About: opens the Windows XP Easter egg */
+.click-me {
+  margin-top: 28px;
+  padding: 8px 14px;
+  border: 1px solid #fff;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  animation: click-me-blink 1.4s steps(2) infinite;
+}
+.click-me:hover {
+  opacity: 1;
+  background: #fff;
+  color: #000;
+  animation: none;
+}
+@keyframes click-me-blink {
+  50% {
+    border-color: transparent;
+  }
+}

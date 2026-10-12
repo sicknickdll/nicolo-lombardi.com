@@ -421,4 +421,9 @@ document.querySelectorAll(".header a").forEach((a) =>
   }),
 );
 document.querySelector("#year").textContent = new Date().getFullYear();
+// Second way into the Easter egg: the "CLICK ME" button at the bottom of About.
+document.querySelector("#click-me").onclick = () => {
+  closeOverlay();
+  import("./xp/os.js").then((m) => m.launch());
+};
 if (!redirectLegacyHash()) render();
