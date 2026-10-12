@@ -303,6 +303,49 @@ function buildIcons() {
     list.querySelectorAll(".xp-icon").forEach((i) => i.classList.remove("selected"));
     closeStart();
   });
+  bindMarquee(list);
+}
+
+// Click-and-drag selection rectangle on the desktop, like Explorer's.
+function bindMarquee(list) {
+  const root = desktop;
+  root.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0 || e.pointerType === "touch") return;
+    if (!e.target.classList.contains("xp-wallpaper") && e.target !== list) return;
+    const x0 = e.clientX;
+    const y0 = e.clientY;
+    const box = document.createElement("div");
+    box.className = "xp-marquee";
+    let started = false;
+    const move = (ev) => {
+      const x = Math.min(Math.max(ev.clientX, 0), innerWidth);
+      const y = Math.min(Math.max(ev.clientY, 0), innerHeight);
+      const l = Math.min(x, x0);
+      const t = Math.min(y, y0);
+      const w = Math.abs(x - x0);
+      const h = Math.abs(y - y0);
+      if (!started && w < 3 && h < 3) return;
+      if (!started) {
+        started = true;
+        root.append(box);
+      }
+      Object.assign(box.style, { left: l + "px", top: t + "px", width: w + "px", height: h + "px" });
+      list.querySelectorAll(".xp-icon").forEach((i) => {
+        const r = i.getBoundingClientRect();
+        i.classList.toggle("selected", r.left < l + w && r.right > l && r.top < t + h && r.bottom > t);
+      });
+    };
+    const end = () => {
+      removeEventListener("pointermove", move);
+      removeEventListener("pointerup", end);
+      removeEventListener("pointercancel", end);
+      box.remove();
+    };
+    addEventListener("pointermove", move);
+    addEventListener("pointerup", end);
+    addEventListener("pointercancel", end);
+    e.preventDefault();
+  });
 }
 
 // ── Start menu ──────────────────────────────────────────────────────────────
