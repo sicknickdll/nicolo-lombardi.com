@@ -314,11 +314,19 @@ export const clients = [
 // Create an account at https://www.goatcounter.com and put your code here, e.g. "nicolo".
 export const goatcounter = "";
 
-// Landing intro (js/intro.js). `words` tick through in the name's place before the name
-// itself appears; then the `frames` burst out of the name onto a spinning ring and get
-// pulled back into it. ratio = width ÷ height. A frame with `video` plays that clip
-// (its .mp4 twin must exist; `src` is the still shown until it plays). Keep clips
-// small: they download during the intro. Phones get the stills only.
+// Landing intro (js/intro.js). It opens as a glitchy loading screen on the first of
+// `words`; the others then tick through in the name's place before the name itself
+// appears. The `frames` burst out of the name onto a spinning ring and get pulled back
+// into it. ratio = width ÷ height. A frame with `video` plays that clip on a loop (its
+// .mp4 twin must exist; `src` is its first frame, shown until it plays). The clips are
+// 4-second, 480px cuts of the project videos made by tools/make-intro-clips.sh, so they
+// load fast: add new ones there.
+const clip = (name, ratio) => ({
+  src: `/assets/intro/${name}.webp`,
+  video: `/assets/intro/${name}.webm`,
+  ratio,
+});
+const still = (name, ratio) => ({ src: `/assets/intro/${name}.webp`, ratio });
 export const intro = {
   words: [
     "AI Production Specialist",
@@ -328,32 +336,20 @@ export const intro = {
     "Virtual Production",
   ],
   frames: [
-    { src: "/assets/pgvXtdMshKqmetkpEhgM2k1TI-poster.webp", ratio: 1.333 },
-    { src: "/assets/Ste489lG9zmVBFJeCYP9xDo-poster.webp", ratio: 0.5625 },
-    {
-      src: "/assets/ktb-vfx-01-poster.webp",
-      video: "/assets/ktb-vfx-01.webm",
-      ratio: 1.896,
-    },
-    { src: "/assets/q65cZYQLVwWuvK4CaJ99qUKYaI0-poster.webp", ratio: 0.8 },
-    { src: "/assets/lexus-header.webp", ratio: 1.778 },
-    {
-      src: "/assets/dtWaKoY1sNjmQihjqZxhqg2lUw-poster.webp",
-      video: "/assets/dtWaKoY1sNjmQihjqZxhqg2lUw.webm",
-      ratio: 0.5625,
-    },
-    { src: "/assets/malik-cross-film-poster.webp", ratio: 2.344 },
-    { src: "/assets/zSZrThHWODZG0ReCYFLVQcZv8fk-poster.webp", ratio: 0.5625 },
-    { src: "/assets/DTlMGv30IEOltcth8y1RmJJoVug.webp", ratio: 1.845 },
-    { src: "/assets/SKCYB8BMwkneaPvdQDQqhbuyVKE.webp", ratio: 1 },
-    {
-      src: "/assets/ktb-vfx-03-poster.webp",
-      video: "/assets/ktb-vfx-03.webm",
-      ratio: 1.896,
-    },
-    { src: "/assets/Vfrnp4LUs7aaOAevNvmhbI8FJrw-poster.webp", ratio: 0.5625 },
-    { src: "/assets/wichita-666-header.webp", ratio: 1.778 },
-    { src: "/assets/i7MWkcoSeItRmxvFvuUf3tTLM-poster.webp", ratio: 0.5625 },
+    clip("pgvXtdMshKqmetkpEhgM2k1TI", 1.333),
+    clip("Ste489lG9zmVBFJeCYP9xDo", 0.5625),
+    clip("ktb-vfx-01", 1.893),
+    clip("q65cZYQLVwWuvK4CaJ99qUKYaI0", 0.8),
+    still("lexus-header", 1.778),
+    clip("dtWaKoY1sNjmQihjqZxhqg2lUw", 0.5625),
+    clip("malik-cross-film", 2.344),
+    clip("zSZrThHWODZG0ReCYFLVQcZv8fk", 0.5625),
+    still("DTlMGv30IEOltcth8y1RmJJoVug", 1.845),
+    still("SKCYB8BMwkneaPvdQDQqhbuyVKE", 1),
+    clip("ktb-vfx-03", 1.893),
+    clip("Vfrnp4LUs7aaOAevNvmhbI8FJrw", 0.5625),
+    still("wichita-666-header", 1.778),
+    clip("i7MWkcoSeItRmxvFvuUf3tTLM", 0.5625),
   ],
 };
 

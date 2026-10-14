@@ -1,6 +1,8 @@
-// Landing intro, modelled on voku.studio: a word ticker plays in the hero name's place
-// and ends on the name; project frames then burst out of the name onto a spinning
-// ring, get pulled back into it, and the page appears behind the name.
+// Landing intro, modelled on voku.studio. It opens as a glitchy loading screen: the
+// first word flickers in scrambled and colour-split while the frames load, then snaps
+// clean. A word ticker follows in the hero name's place and ends on the name; project
+// frames burst out of the name onto a spinning ring, get pulled back into it, and the
+// page appears behind the name.
 // It only runs when the inline script in template.html added `html.intro` (entering
 // the site or reloading the landing page, not coming back to it from another page,
 // and never with reduced motion). Any click, tap or key skips it.
@@ -14,8 +16,10 @@ const lerp = (a, b, t) => a + (b - a) * t;
 // Durations in ms; spin speeds in radians per second (negative = anticlockwise,
 // so frames cross the top of the ring from right to left as on voku.studio).
 const T = {
-  firstWord: 1200, // first word stays at least this long while the frames load
-  loadCap: 3000, // …and at most this long
+  loading: 1800, // glitch loading screen lasts at least this long while the frames load
+  loadCap: 3500, // …and at most this long
+  glitchTick: 55, // how often the glitch re-scrambles
+  glitchBurst: 240, // last strong glitch before the word snaps clean
   word: 200, // each following word
   name: 380, // the name alone, before the frames appear
   burst: 950, // frames fly out to the ring
@@ -24,6 +28,65 @@ const T = {
   reveal: 850, // black fades away, page appears
 };
 const SPIN = { burst: -5.5, cruise: -0.35, absorb: -4 };
+const GLYPHS = "!<>-_\\/[]{}=+*^?#%&01";
+const rand = (a, b) => a + Math.random() * (b - a);
+
+// Glitches `item` until the returned stop() is called: letters scramble (fewer as
+// `progress()` goes 0 → 1), two colour-split copies show through random slices and
+// the text jitters. stop() ends on a stronger burst, then restores the clean text.
+function glitch(item, counter, progress) {
+  const text = item.textContent;
+  let burst = false;
+  item.classList.add("intro-glitch");
+  const tick = () => {
+    const p = burst ? 0.5 : progress(),
+      amp = burst ? 3 : 1;
+    const scrambled = [...text]
+      .map((c) =>
+        c === " " || Math.random() < 0.08 + p * 0.88
+          ? c
+          : GLYPHS[Math.floor(Math.random() * GLYPHS.length)],
+      )
+      .join("");
+    item.textContent = scrambled;
+    item.dataset.text = scrambled;
+    const slice = (n) => {
+      const top = rand(0, 85);
+      item.style.setProperty(`--g${n}t`, top + "%");
+      item.style.setProperty(`--g${n}b`, Math.max(0, 100 - top - rand(8, 30) * amp) + "%");
+      item.style.setProperty(`--g${n}x`, rand(2, 7) * amp * (n === 1 ? -1 : 1) + "px");
+    };
+    slice(1);
+    slice(2);
+    const jolt = Math.random() < 0.18 * amp;
+    item.style.transform = jolt
+      ? `translateX(${rand(-4, 4) * amp}px) skewX(${rand(-8, 8) * amp}deg)`
+      : "";
+    item.style.opacity = Math.random() < 0.06 * amp ? 0.35 : 1;
+    counter.textContent = String(Math.round(progress() * 100)).padStart(3, "0") + "%";
+  };
+  const timer = setInterval(tick, T.glitchTick);
+  tick();
+  const clean = () => {
+    clearInterval(timer);
+    item.classList.remove("intro-glitch");
+    item.removeAttribute("style");
+    item.textContent = text;
+    delete item.dataset.text;
+  };
+  return {
+    clean,
+    stop: () =>
+      new Promise((done) => {
+        burst = true;
+        setTimeout(() => {
+          clean();
+          counter.classList.add("is-done");
+          done();
+        }, T.glitchBurst);
+      }),
+  };
+}
 
 export function playIntro() {
   const root = document.documentElement;
@@ -31,17 +94,18 @@ export function playIntro() {
   const finishNow = () => root.classList.remove("intro");
   if (!heroName) return (finishNow(), Promise.resolve());
 
-  const small = matchMedia("(max-width: 991px)").matches || navigator.connection?.saveData;
+  const saveData = navigator.connection?.saveData;
   const blocked = [document.querySelector("#main"), document.querySelector(".header")];
   blocked.forEach((el) => el && (el.inert = true));
 
   const el = document.createElement("div");
   el.className = "intro-overlay";
-  el.innerHTML = `<div class="intro-bg"></div><div class="intro-ring" aria-hidden="true"></div><div class="intro-word" aria-hidden="true"><div class="intro-roll"></div></div><button class="intro-skip" type="button">skip intro</button>`;
+  el.innerHTML = `<div class="intro-bg"></div><div class="intro-ring" aria-hidden="true"></div><div class="intro-word" aria-hidden="true"><div class="intro-roll"></div></div><div class="intro-load" aria-hidden="true">000%</div><button class="intro-skip" type="button">skip intro</button>`;
   document.body.append(el);
   const ring = el.querySelector(".intro-ring"),
     word = el.querySelector(".intro-word"),
-    roll = el.querySelector(".intro-roll");
+    roll = el.querySelector(".intro-roll"),
+    counter = el.querySelector(".intro-load");
 
   // Words, then a copy of the hero name (same letter spans, so the same kerning) that
   // ends exactly on top of the real one.
@@ -73,12 +137,22 @@ export function playIntro() {
     );
     img.src = f.src;
     let media = img;
-    if (f.video && !small) {
+    if (f.video && !saveData) {
+      // Muted + inline + autoplay is what lets phones play it without a tap. It counts
+      // as loaded once it can play, so the ring never shows a frozen clip.
       const v = document.createElement("video");
-      v.muted = v.loop = v.playsInline = true;
+      v.muted = v.loop = v.playsInline = v.autoplay = true;
+      v.setAttribute("muted", "");
+      v.setAttribute("playsinline", "");
       v.preload = "auto";
       v.poster = f.src;
       v.innerHTML = `<source src="${f.video}" type="video/webm"><source src="${f.video.replace(/\.webm$/, ".mp4")}" type="video/mp4">`;
+      loads.push(
+        new Promise((done) => {
+          v.addEventListener("canplay", done, { once: true });
+          v.lastElementChild.addEventListener("error", done, { once: true });
+        }),
+      );
       media = v;
     }
     frame.append(media);
@@ -119,6 +193,7 @@ export function playIntro() {
       transform: cs.transform === "none" ? "" : cs.transform,
     });
     items.forEach((item) => (item.style.height = lineHeight + "px"));
+    counter.style.top = cy + lineHeight / 2 + 14 + "px";
     showWord(current);
     const vw = innerWidth,
       vh = innerHeight,
@@ -136,7 +211,7 @@ export function playIntro() {
       });
     });
   };
-  let current = -1;
+  let current = 0; // the loading screen shows the first word straight away
   const showWord = (i) => {
     current = i;
     roll.style.transform = `translateY(${-i * lineHeight}px)`;
@@ -205,6 +280,7 @@ export function playIntro() {
     if (ended) return;
     ended = true;
     timers.forEach(clearTimeout);
+    loading.clean();
     finishNow();
     blocked.forEach((b) => b && (b.inert = false));
     el.classList.add(fast ? "is-skipped" : "is-revealing");
@@ -231,11 +307,21 @@ export function playIntro() {
   el.addEventListener("pointerdown", skip);
   addEventListener("keydown", skipKey);
 
-  // Timeline: first word while the frames load, the other words, the name, the ring.
-  at(80, () => showWord(0));
-  const minWait = new Promise((r) => setTimeout(r, T.firstWord));
+  // Timeline: glitch loading screen until the frames are in (the percentage climbs no
+  // faster than T.loading), then the other words, the name, the ring.
+  let loaded = 0,
+    forced = false;
+  loads.forEach((l) => l.then(() => loaded++));
+  const started = performance.now();
+  const progress = () =>
+    forced ? 1 : Math.min(loaded / loads.length, (performance.now() - started) / T.loading);
+  const loading = glitch(items[0], counter, progress);
+  const minWait = new Promise((r) => setTimeout(r, T.loading));
   const capWait = new Promise((r) => setTimeout(r, T.loadCap));
-  Promise.race([Promise.all([minWait, ...loads]), capWait]).then(() => {
+  Promise.race([Promise.all([minWait, ...loads]), capWait]).then(async () => {
+    if (ended) return;
+    forced = true;
+    await loading.stop();
     if (ended) return;
     for (let i = 1; i < items.length; i++) at(T.word * (i - 1), () => showWord(i));
     const nameAt = T.word * (items.length - 2);
