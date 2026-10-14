@@ -5,6 +5,7 @@
 import { projects } from "./data.js";
 import { bindGalleries } from "./galleries.js";
 import { pixelCurtain } from "./pixels.js";
+import { eyeTracking } from "./eye.js";
 import { projectLogoMarkup } from "./project-logos.js";
 import { film, visuals, homeMarkup, listMarkup, projectMarkup, projectURL } from "./views.js";
 const main = document.querySelector("#main");
@@ -47,12 +48,12 @@ function showHome() {
     if (v.paused) v.play().catch(() => setPaused(true));
     else v.pause();
   };
-  // Easter egg: 5 quick clicks on the name open "Nicoló OS". A single click still
-  // goes to Film (after a short pause, to tell it apart from a multi-click).
+  // Easter egg: 5 quick clicks on the name open "Nicoló OS". Clicking the name does
+  // nothing else (it sits inside the hero link, so the click is swallowed).
   const name = main.querySelector(".animated-name");
   let clicks = 0,
     clickTimer;
-  name.style.cursor = "pointer";
+  name.style.cursor = "default";
   name.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -66,15 +67,16 @@ function showHome() {
       return;
     }
     clickTimer = setTimeout(() => {
-      if (clicks === 1) location.href = "/film/";
       clicks = 0;
       name.classList.remove("tease");
     }, 420);
   });
-  const scrollCleanup = bindProjectScroll(film);
+  const scrollCleanup = bindProjectScroll(film),
+    eyeCleanup = eyeTracking(v);
   cleanup = () => {
     v.pause();
     scrollCleanup();
+    eyeCleanup();
   };
 }
 function bindProjectScroll(list) {
