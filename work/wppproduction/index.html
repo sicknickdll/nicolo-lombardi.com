@@ -122,8 +122,14 @@
             type !== "back_forward" &&
             !(internal && type !== "reload") &&
             !matchMedia("(prefers-reduced-motion: reduce)").matches
-          )
+          ) {
             document.documentElement.classList.add("intro");
+            // Failsafe: never leave the page covered if the intro doesn't start.
+            setTimeout(function () {
+              if (!document.querySelector(".intro-overlay"))
+                document.documentElement.classList.remove("intro");
+            }, 5000);
+          }
         } catch (e) {}
       })();
     </script>

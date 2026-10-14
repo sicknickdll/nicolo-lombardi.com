@@ -9,12 +9,13 @@ template.html       page shell (header, About panel) used for every page
 js/data.js          ← ALL CONTENT: projects, texts, videos, order of Film / Visuals
 js/views.js         page markup, shared by the browser and the page generator
 js/app.js           interactions: snap scrolling, logo hover, carousels, About panel
-js/intro.js         landing intro: word ticker, frames orbiting and absorbed into the name
+js/intro.js         landing intro: glitch loader, word ticker, frames orbiting into the name
 js/galleries.js     video and image carousels on project pages
 js/project-logos.js brand logos shown when hovering the left/right edges
 tools/build.mjs     generates the pages below + sitemap.xml   (npm run build)
 tools/make-og-images.py  link-preview images in assets/og/
 tools/prepare-video.sh   converts a new video into the needed formats
+tools/make-intro-clips.sh  short, light loop clips for the landing intro (assets/intro/)
 index.html, film/, visuals/, work/<id>/   GENERATED pages, don't edit by hand
 assets/             images (.webp), videos (.webm + .mp4 fallback), icons, previews
 CNAME, .nojekyll    GitHub Pages settings · _headers for Netlify / Cloudflare
@@ -55,7 +56,8 @@ commit and push.
      added in `js/project-logos.js`.
 - **About text / contact**: edit `template.html`, then rebuild.
 - **Landing intro**: the words and the frames that orbit the name are `intro` in `js/data.js`.
-  It plays when someone enters the site or reloads the landing page, not when they come back
+  The frames' clips are 4-second, 480px cuts of the project videos: list a new one in
+  `tools/make-intro-clips.sh`, run it, then add it to `intro.frames`. It plays when someone enters the site or reloads the landing page, not when they come back
   to it from another page; any click, tap or key skips it, and it never plays with reduced
   motion turned on.
 
