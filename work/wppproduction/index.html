@@ -107,6 +107,26 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico?v=anime-eye" />
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/anime-eye-touch-180.png" />
     <link rel="stylesheet" href="/style.css" />
+    <script>
+      // Landing intro (js/intro.js): on entering the site or reloading the landing page,
+      // not when coming back to it from another page of the site.
+      (function () {
+        try {
+          var nav = performance.getEntriesByType("navigation")[0],
+            type = nav && nav.type,
+            ref = document.referrer,
+            internal = ref && new URL(ref).origin === location.origin;
+          if (
+            location.pathname === "/" &&
+            !location.hash &&
+            type !== "back_forward" &&
+            !(internal && type !== "reload") &&
+            !matchMedia("(prefers-reduced-motion: reduce)").matches
+          )
+            document.documentElement.classList.add("intro");
+        } catch (e) {}
+      })();
+    </script>
 
   </head>
   <body>

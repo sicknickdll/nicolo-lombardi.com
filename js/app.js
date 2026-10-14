@@ -71,6 +71,12 @@ function showHome() {
       name.classList.remove("tease");
     }, 420);
   });
+  // Landing intro: html.intro is set by the inline script in the page head.
+  const root = document.documentElement;
+  if (root.classList.contains("intro"))
+    import("./intro.js")
+      .then((m) => m.playIntro())
+      .catch(() => root.classList.remove("intro"));
   const scrollCleanup = bindProjectScroll(film),
     eyeCleanup = eyeTracking(v);
   cleanup = () => {

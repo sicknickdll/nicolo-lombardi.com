@@ -9,6 +9,7 @@ template.html       page shell (header, About panel) used for every page
 js/data.js          ← ALL CONTENT: projects, texts, videos, order of Film / Visuals
 js/views.js         page markup, shared by the browser and the page generator
 js/app.js           interactions: snap scrolling, logo hover, carousels, About panel
+js/intro.js         landing intro: word ticker, frames orbiting and absorbed into the name
 js/galleries.js     video and image carousels on project pages
 js/project-logos.js brand logos shown when hovering the left/right edges
 tools/build.mjs     generates the pages below + sitemap.xml   (npm run build)
@@ -53,6 +54,10 @@ commit and push.
   5. New projects show their brand name as text on the hover edges. A cropped logo can be
      added in `js/project-logos.js`.
 - **About text / contact**: edit `template.html`, then rebuild.
+- **Landing intro**: the words and the frames that orbit the name are `intro` in `js/data.js`.
+  It plays when someone enters the site or reloads the landing page, not when they come back
+  to it from another page; any click, tap or key skips it, and it never plays with reduced
+  motion turned on.
 
 Keep every file under 24 MB so it fits all free hosts.
 
