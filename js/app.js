@@ -63,7 +63,7 @@ function showHome() {
     if (clicks >= 5) {
       clicks = 0;
       name.classList.remove("tease");
-      import("./xp/os.js").then((m) => m.launch());
+      openOS();
       return;
     }
     clickTimer = setTimeout(() => {
@@ -380,6 +380,16 @@ function render() {
 }
 const about = document.querySelector("#about"),
   aboutToggle = document.querySelector("#about-toggle");
+// Opens the Easter egg. Its sounds need an AudioContext made during the click itself,
+// since browsers only allow sound right after a user gesture.
+function openOS() {
+  const Context = window.AudioContext || window.webkitAudioContext;
+  let audio = null;
+  try {
+    audio = Context ? new Context() : null;
+  } catch {}
+  import("./xp/os.js").then((m) => m.launch(audio));
+}
 function isOverlayOpen() {
   return !about.hidden;
 }
@@ -436,6 +446,6 @@ document.querySelector("#year").textContent = new Date().getFullYear();
 // Second way into the Easter egg: the "CLICK ME" button at the bottom of About.
 document.querySelector("#click-me").onclick = () => {
   closeOverlay();
-  import("./xp/os.js").then((m) => m.launch());
+  openOS();
 };
 if (!redirectLegacyHash()) render();
