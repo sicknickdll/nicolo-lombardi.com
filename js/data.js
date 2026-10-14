@@ -314,6 +314,49 @@ export const clients = [
 // Create an account at https://www.goatcounter.com and put your code here, e.g. "nicolo".
 export const goatcounter = "";
 
+// Landing intro (js/intro.js). `words` tick through in the name's place before the name
+// itself appears; then the `frames` burst out of the name onto a spinning ring and get
+// pulled back into it. ratio = width ÷ height. A frame with `video` plays that clip
+// (its .mp4 twin must exist; `src` is the still shown until it plays). Keep clips
+// small: they download during the intro. Phones get the stills only.
+export const intro = {
+  words: [
+    "AI Production Specialist",
+    "Art Direction",
+    "AI Filmmaking",
+    "VFX",
+    "Virtual Production",
+  ],
+  frames: [
+    { src: "/assets/pgvXtdMshKqmetkpEhgM2k1TI-poster.webp", ratio: 1.333 },
+    { src: "/assets/Ste489lG9zmVBFJeCYP9xDo-poster.webp", ratio: 0.5625 },
+    {
+      src: "/assets/ktb-vfx-01-poster.webp",
+      video: "/assets/ktb-vfx-01.webm",
+      ratio: 1.896,
+    },
+    { src: "/assets/q65cZYQLVwWuvK4CaJ99qUKYaI0-poster.webp", ratio: 0.8 },
+    { src: "/assets/lexus-header.webp", ratio: 1.778 },
+    {
+      src: "/assets/dtWaKoY1sNjmQihjqZxhqg2lUw-poster.webp",
+      video: "/assets/dtWaKoY1sNjmQihjqZxhqg2lUw.webm",
+      ratio: 0.5625,
+    },
+    { src: "/assets/malik-cross-film-poster.webp", ratio: 2.344 },
+    { src: "/assets/zSZrThHWODZG0ReCYFLVQcZv8fk-poster.webp", ratio: 0.5625 },
+    { src: "/assets/DTlMGv30IEOltcth8y1RmJJoVug.webp", ratio: 1.845 },
+    { src: "/assets/SKCYB8BMwkneaPvdQDQqhbuyVKE.webp", ratio: 1 },
+    {
+      src: "/assets/ktb-vfx-03-poster.webp",
+      video: "/assets/ktb-vfx-03.webm",
+      ratio: 1.896,
+    },
+    { src: "/assets/Vfrnp4LUs7aaOAevNvmhbI8FJrw-poster.webp", ratio: 0.5625 },
+    { src: "/assets/wichita-666-header.webp", ratio: 1.778 },
+    { src: "/assets/i7MWkcoSeItRmxvFvuUf3tTLM-poster.webp", ratio: 0.5625 },
+  ],
+};
+
 // Landing page background loop (an .mp4 with the same name is the Safari fallback).
 export const hero = "/assets/anime-eye.webm";
 export const heroPoster = "/assets/anime-eye-poster.webp";
