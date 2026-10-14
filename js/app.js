@@ -5,6 +5,7 @@
 import { projects } from "./data.js";
 import { bindGalleries } from "./galleries.js";
 import { pixelCurtain } from "./pixels.js";
+import { eyeTracking } from "./eye.js";
 import { projectLogoMarkup } from "./project-logos.js";
 import { film, visuals, homeMarkup, listMarkup, projectMarkup, projectURL } from "./views.js";
 const main = document.querySelector("#main");
@@ -71,10 +72,12 @@ function showHome() {
       name.classList.remove("tease");
     }, 420);
   });
-  const scrollCleanup = bindProjectScroll(film);
+  const scrollCleanup = bindProjectScroll(film),
+    eyeCleanup = eyeTracking(v);
   cleanup = () => {
     v.pause();
     scrollCleanup();
+    eyeCleanup();
   };
 }
 function bindProjectScroll(list) {
