@@ -314,13 +314,12 @@ export const clients = [
 // Create an account at https://www.goatcounter.com and put your code here, e.g. "nicolo".
 export const goatcounter = "";
 
-// Landing intro (js/intro.js). It opens as a glitchy loading screen on the first of
-// `words`; the others then tick through in the name's place before the name itself
-// appears. The `frames` burst out of the name onto a spinning ring and get pulled back
-// into it. ratio = width ÷ height. A frame with `video` plays that clip on a loop (its
-// .mp4 twin must exist; `src` is its first frame, shown until it plays). The clips are
-// 4-second, 480px cuts of the project videos made by tools/make-intro-clips.sh, so they
-// load fast: add new ones there.
+// Landing intro (js/intro.js). `words` roll through in the name's place before the
+// name itself appears, while the `frames` spin around them on a ring; the ring is then
+// pulled back into the name. ratio = width ÷ height. A frame with `video` plays that
+// clip on a loop (its .mp4 twin must exist; `src` is its first frame, shown until it
+// plays). The clips are 4-second, 480px cuts of the project videos made by
+// tools/make-intro-clips.sh, so they load fast: add new ones there.
 const clip = (name, ratio) => ({
   src: `/assets/intro/${name}.webp`,
   video: `/assets/intro/${name}.webm`,

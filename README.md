@@ -9,7 +9,7 @@ template.html       page shell (header, About panel) used for every page
 js/data.js          ← ALL CONTENT: projects, texts, videos, order of Film / Visuals
 js/views.js         page markup, shared by the browser and the page generator
 js/app.js           interactions: snap scrolling, logo hover, carousels, About panel
-js/intro.js         landing intro: glitch loader, word ticker, frames orbiting into the name
+js/intro.js         landing intro: words rolling inside a ring of spinning frames
 js/galleries.js     video and image carousels on project pages
 js/project-logos.js brand logos shown when hovering the left/right edges
 tools/build.mjs     generates the pages below + sitemap.xml   (npm run build)
@@ -75,14 +75,17 @@ Keep every file under 24 MB so it fits all free hosts.
 
 ## Easter egg: Nicoló OS
 
-Click the name on the landing page 5 times: the page glitches into a Windows XP desktop.
-Code: `js/xp/` (`os.js` desktop + small apps, `solitaire.js`, `paint.js`) and `xp.css`, only
+Click the name on the landing page 5 times: the page glitches into a Windows XP desktop, with a
+glitch sound and then the XP startup chime.
+Code: `js/xp/` (`os.js` desktop + small apps, `solitaire.js`, `paint.js`, `sound.js`) and `xp.css`, only
 downloaded when someone triggers it. Projects and videos come from `js/data.js` automatically.
 
 Third-party material used there:
 - Windows XP icons, Bliss wallpaper and Minesweeper sprites (`assets/xp/`), taken from the
   open-source [winXP](https://github.com/ShizukuIchi/winXP) recreation. They are Microsoft's.
 - Card art: Vectorized Playing Cards (LGPL, licence in `assets/xp/cards/`).
+- Windows XP startup sound (`assets/xp/sounds/startup.mp3`, from the Internet Archive). It is
+  Microsoft's. The glitch sound before it is generated in the browser (`js/xp/sound.js`).
 - 3D Pinball Space Cadet is embedded from the [98.js.org](https://98.js.org) web port, so it
   needs that site to be online.
 

@@ -1,8 +1,10 @@
 // Easter egg: click the landing-page name 5 times → the page glitches into
-// "Nicoló OS", a Windows XP–inspired desktop. All artwork and code are original
-// (no Microsoft assets). Loaded only when triggered; games load on first open.
+// "Nicoló OS", a Windows XP–inspired desktop. The code is original; the XP icons,
+// wallpaper and startup sound are Microsoft's (see README). Loaded only when
+// triggered; games load on first open.
 import { projects, filmOrder, visualsOrder, hero, heroPoster } from "../data.js";
 import { pixelCurtain } from "../pixels.js";
+import { glitchSound, loadStartup, play } from "./sound.js";
 
 export const esc = (s) =>
   String(s).replace(
@@ -54,7 +56,11 @@ export const ICONS = {
 const CLAPPY = `<svg viewBox="0 0 100 100" aria-hidden="true"><g class="xp-clappy-top"><path d="M14 30 L84 14 L87 26 L17 42 Z" fill="#222"/><path d="M24 27.7l8 12M40 24l8 12M56 20.4l8 12M72 16.8l8 12" stroke="#fff" stroke-width="6"/></g><rect x="14" y="40" width="72" height="50" rx="4" fill="#222"/><rect x="14" y="40" width="72" height="9" fill="#fff"/><path d="M22 40l8 9M38 40l8 9M54 40l8 9M70 40l8 9" stroke="#222" stroke-width="5"/><g class="xp-clappy-eyes"><ellipse cx="38" cy="66" rx="9" ry="11" fill="#fff"/><ellipse cx="62" cy="66" rx="9" ry="11" fill="#fff"/><circle cx="40" cy="68" r="4.5" fill="#111"/><circle cx="64" cy="68" r="4.5" fill="#111"/></g><path d="M30 52q8-5 16 0M54 52q8-5 16 0" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`;
 
 // ── Glitch transition ───────────────────────────────────────────────────────
-function glitch(duration = matchMedia("(prefers-reduced-motion: reduce)").matches ? 250 : 1100) {
+function glitch(
+  duration = matchMedia("(prefers-reduced-motion: reduce)").matches ? 250 : 1100,
+  audio = null,
+) {
+  glitchSound(audio, duration);
   return new Promise((resolve) => {
     const root = document.documentElement;
     root.classList.add("xp-glitching");
@@ -99,17 +105,22 @@ function glitch(duration = matchMedia("(prefers-reduced-motion: reduce)").matche
 
 // ── Desktop ─────────────────────────────────────────────────────────────────
 let desktop = null;
+const BOOT_SCREEN = 1900; // ms the XP boot screen shows before the desktop
 
-export async function launch() {
-  if (desktop) return;
+export async function launch(audio = null) {
+  if (desktop) return audio?.close();
   const css = document.createElement("link");
   css.rel = "stylesheet";
   css.href = "/xp.css";
   document.head.append(css);
   const cssReady = new Promise((r) => (css.onload = css.onerror = r));
   document.querySelectorAll("video").forEach((v) => v.pause());
-  const [glitchCanvas] = await Promise.all([glitch(), cssReady]);
+  const startup = loadStartup(audio);
+  const [glitchCanvas] = await Promise.all([glitch(undefined, audio), cssReady]);
   boot();
+  desktop._audio = audio;
+  // The XP startup chime plays as the boot screen gives way to the desktop.
+  setTimeout(() => startup.then((buffer) => play(audio, buffer)), BOOT_SCREEN);
   glitchCanvas.remove();
   document.documentElement.classList.add("xp-open");
 }
@@ -132,7 +143,10 @@ function boot() {
       <div class="xp-tray"><button class="xp-tray-clappy" aria-label="Show Clappy" title="Clappy">${ICONS.help}</button><time class="xp-clock"></time></div>
     </div>`;
   document.body.append(desktop);
-  setTimeout(() => desktop?.querySelector(".xp-boot")?.classList.add("xp-boot-done"), 1900);
+  setTimeout(
+    () => desktop?.querySelector(".xp-boot")?.classList.add("xp-boot-done"),
+    BOOT_SCREEN,
+  );
   setTimeout(() => desktop?.querySelector(".xp-boot")?.remove(), 2600);
   buildIcons();
   buildStart();
@@ -144,6 +158,7 @@ function boot() {
 
 function exitOS() {
   clearInterval(desktop._clock);
+  desktop._audio?.close();
   desktop.remove();
   desktop = null;
   document.documentElement.classList.remove("xp-open");
@@ -230,6 +245,9 @@ const APPS = {
         className: "xp-pinball",
         body(el) {
           el.innerHTML = `<iframe src="https://98.js.org/programs/pinball/space-cadet.html" title="3D Pinball for Windows – Space Cadet" allow="autoplay; fullscreen; gamepad" loading="eager"></iframe>`;
+          // Give the game the keyboard straight away, no click needed.
+          const game = el.querySelector("iframe");
+          game.addEventListener("load", () => game.focus());
         },
       }),
   },
