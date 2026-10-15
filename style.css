@@ -1005,48 +1005,6 @@ html.intro .home-tagline {
 .intro-word .name-letter {
   animation: none;
 }
-/* Loading screen: two colour-split copies of the scrambled text, each showing through a
-   random horizontal slice that js/intro.js moves on every tick. */
-.intro-glitch {
-  position: relative;
-}
-.intro-glitch::before,
-.intro-glitch::after {
-  content: attr(data-text);
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-  mix-blend-mode: screen;
-}
-.intro-glitch::before {
-  color: #00f0ff;
-  clip-path: inset(var(--g1t, 0) 0 var(--g1b, 100%) 0);
-  transform: translateX(var(--g1x, 0));
-}
-.intro-glitch::after {
-  color: #ff2bd6;
-  clip-path: inset(var(--g2t, 0) 0 var(--g2b, 100%) 0);
-  transform: translateX(var(--g2x, 0));
-}
-.intro-load {
-  position: absolute;
-  left: 0;
-  width: 100%;
-  z-index: 200;
-  text-align: center;
-  font-size: 12px;
-  font-weight: 400;
-  letter-spacing: 0.12em;
-  font-variant-numeric: tabular-nums;
-  opacity: 0.55;
-  transition: opacity 0.3s;
-}
-.intro-load.is-done {
-  opacity: 0;
-}
 .intro-pulse {
   animation: intro-pulse 0.5s var(--ease);
 }

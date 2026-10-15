@@ -9,7 +9,7 @@ template.html       page shell (header, About panel) used for every page
 js/data.js          ← ALL CONTENT: projects, texts, videos, order of Film / Visuals
 js/views.js         page markup, shared by the browser and the page generator
 js/app.js           interactions: snap scrolling, logo hover, carousels, About panel
-js/intro.js         landing intro: glitch loader, word ticker, frames orbiting into the name
+js/intro.js         landing intro: words rolling inside a ring of spinning frames
 js/galleries.js     video and image carousels on project pages
 js/project-logos.js brand logos shown when hovering the left/right edges
 tools/build.mjs     generates the pages below + sitemap.xml   (npm run build)
