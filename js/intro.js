@@ -35,7 +35,7 @@ export function playIntro() {
   const saveData = navigator.connection?.saveData;
   // Only a few frames play at once, spread around the ring (the rest show their
   // first frame): decoding many clips together is what makes the ring stutter.
-  const maxClips = saveData ? 0 : matchMedia("(max-width: 991px)").matches ? 3 : 5;
+  const maxClips = saveData ? 0 : matchMedia("(max-width: 991px)").matches ? 2 : 4;
   const withVideo = intro.frames.filter((f) => f.video);
   const step = Math.ceil(withVideo.length / maxClips);
   const playing = new Set(withVideo.filter((_, i) => i % step === 0).slice(0, maxClips));
@@ -105,11 +105,8 @@ export function playIntro() {
     ring.append(frame);
     return {
       frame,
-      media,
       ratio: f.ratio,
       slot: (i / intro.frames.length) * Math.PI * 2,
-      tiltX: (Math.random() * 2 - 1) * 10,
-      tiltY: (Math.random() * 2 - 1) * 10,
       tiltZ: (Math.random() * 2 - 1) * 4,
       delay: Math.random() * 0.3,
     };
@@ -170,7 +167,9 @@ export function playIntro() {
     angle = -Math.PI / 2,
     phase = "idle",
     phaseStart = 0,
-    clock = 0;
+    clock = 0,
+    checked = false;
+  const slowFrames = [];
   const startPhase = (p) => {
     phase = p;
     phaseStart = clock;
@@ -181,13 +180,11 @@ export function playIntro() {
     clock += dt * 1000;
     const t = clock - phaseStart;
     let radius = 0,
-      spin = 0,
-      zoom = 1;
+      spin = 0;
     if (phase === "orbit") {
       const k = clamp(t / T.burst);
       radius = easeOut(k);
       spin = lerp(SPIN.burst, SPIN.cruise, easeOut(clamp(t / T.settle)));
-      zoom = lerp(1.4, 1, easeOut(k));
     } else if (phase === "absorb") {
       const k = clamp(t / T.absorb);
       radius = 1 - easeIn(k);
@@ -198,6 +195,17 @@ export function playIntro() {
       }
     }
     angle += spin * dt;
+    // Safeguard: if the first frames of the ring come out slow, this device can't
+    // decode the clips and animate at once, so the clips pause (on their current
+    // frame) and the ring stays smooth.
+    if (phase === "orbit" && !checked && dt && t > 250) {
+      slowFrames.push(dt);
+      if (slowFrames.length === 24) {
+        checked = true;
+        const mean = slowFrames.reduce((s, d) => s + d, 0) / slowFrames.length;
+        if (mean > 1 / 45) el.querySelectorAll("video").forEach((v) => v.pause());
+      }
+    }
     const burstAge = phase === "orbit" ? t / 1000 : 1;
     frames.forEach((f) => {
       const a = angle + f.slot,
@@ -209,9 +217,8 @@ export function playIntro() {
       const z = Math.round((depth + 1) * 4);
       if (z !== f.z) f.frame.style.zIndex = f.z = z; // restacking is costly: only on change
       f.frame.style.transform =
-        `translate3d(${cx + Math.cos(a) * rx * radius}px,${cy + depth * ry * radius}px,0)` +
-        ` rotateY(${-Math.cos(a) * 18 + f.tiltY}deg) rotateX(${f.tiltX}deg) rotateZ(${f.tiltZ}deg) scale(${scale})`;
-      f.media.style.transform = `scale(${zoom})`;
+        `translate(${cx + Math.cos(a) * rx * radius}px,${cy + depth * ry * radius}px)` +
+        ` rotate(${f.tiltZ}deg) scale(${scale})`; // 2D only: far cheaper to draw than 3D
     });
     if (phase !== "done") raf = requestAnimationFrame(draw);
   };

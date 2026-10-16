@@ -875,9 +875,9 @@ html.intro .home-tagline {
 .intro-ring {
   position: absolute;
   inset: 0;
-  perspective: 1100px;
 }
 .intro-frame {
+  contain: strict;
   position: absolute;
   left: 0;
   top: 0;
