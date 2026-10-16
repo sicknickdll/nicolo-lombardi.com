@@ -33,6 +33,15 @@ export function playIntro() {
   if (!heroName) return (finishNow(), Promise.resolve());
 
   const saveData = navigator.connection?.saveData;
+  // Only a few frames play at once, spread around the ring (the rest show their
+  // first frame): decoding many clips together is what makes the ring stutter.
+  const maxClips = saveData ? 0 : matchMedia("(max-width: 991px)").matches ? 3 : 5;
+  const withVideo = intro.frames.filter((f) => f.video);
+  const step = Math.ceil(withVideo.length / maxClips);
+  const playing = new Set(withVideo.filter((_, i) => i % step === 0).slice(0, maxClips));
+  // The hero video under the intro is invisible until the end: no need to decode it.
+  const heroVideo = document.querySelector("#entrance-video");
+  heroVideo?.pause();
   const blocked = [document.querySelector("#main"), document.querySelector(".header")];
   blocked.forEach((el) => el && (el.inert = true));
 
@@ -74,11 +83,11 @@ export function playIntro() {
     );
     img.src = f.src;
     let media = img;
-    if (f.video && !saveData) {
+    if (playing.has(f)) {
       // Muted + inline + autoplay is what lets phones play it without a tap. It counts
       // as loaded once it can play, so the ring never shows a frozen clip.
       const v = document.createElement("video");
-      v.muted = v.loop = v.playsInline = v.autoplay = true;
+      v.muted = v.loop = v.playsInline = true;
       v.setAttribute("muted", "");
       v.setAttribute("playsinline", "");
       v.preload = "auto";
@@ -197,7 +206,8 @@ export function playIntro() {
         scale = shrink * (0.88 + 0.14 * (depth + 1));
       const fade = phase === "orbit" ? clamp((burstAge - f.delay) / 0.18) : clamp(radius / 0.35);
       f.frame.style.opacity = phase === "done" ? 0 : fade;
-      f.frame.style.zIndex = Math.round((depth + 1) * 50);
+      const z = Math.round((depth + 1) * 4);
+      if (z !== f.z) f.frame.style.zIndex = f.z = z; // restacking is costly: only on change
       f.frame.style.transform =
         `translate3d(${cx + Math.cos(a) * rx * radius}px,${cy + depth * ry * radius}px,0)` +
         ` rotateY(${-Math.cos(a) * 18 + f.tiltY}deg) rotateX(${f.tiltX}deg) rotateZ(${f.tiltZ}deg) scale(${scale})`;
@@ -216,6 +226,7 @@ export function playIntro() {
     ended = true;
     timers.forEach(clearTimeout);
     finishNow();
+    heroVideo?.play().catch(() => {});
     blocked.forEach((b) => b && (b.inert = false));
     el.classList.add(fast ? "is-skipped" : "is-revealing");
     setTimeout(
@@ -254,7 +265,10 @@ export function playIntro() {
     for (let i = 1; i < items.length; i++) at(T.word * i, () => showWord(i));
     const nameAt = T.word * (items.length - 1);
     at(nameAt + 450, () => word.classList.add("is-settled"));
-    at(nameAt + T.name, () => startPhase("absorb"));
+    at(nameAt + T.name, () => {
+      startPhase("absorb");
+      el.querySelectorAll("video").forEach((v) => v.pause());
+    });
   });
   return finished;
 }

@@ -97,6 +97,11 @@ export function eyeTracking(video) {
   const frame = () => {
     raf = 0;
     if (!visible) return;
+    // Hidden under the landing intro: skip the per-frame video upload.
+    if (document.documentElement.classList.contains("intro")) {
+      raf = requestAnimationFrame(frame);
+      return;
+    }
     look.x += (target.x - look.x) * 0.12;
     look.y += (target.y - look.y) * 0.12;
     if (video.readyState >= 2) {

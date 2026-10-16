@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Makes the small files used by the landing intro (js/intro.js) in assets/intro/:
-#   <name>.webm + <name>.mp4  4-second silent loop, 480px on the long side
+#   <name>.webm + <name>.mp4  4-second silent loop, 360px on the long side, 24 fps
 #   <name>.webp               its first frame (shown until the clip plays)
 # Stills (images without a video) only get the small .webp.
 # Needs ffmpeg. Usage: tools/make-intro-clips.sh   (edit the lists below, then run)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 mkdir -p assets/intro
-fit="scale='if(gt(iw,ih),min(480,iw),-2)':'if(gt(iw,ih),-2,min(480,ih))',scale=trunc(iw/2)*2:trunc(ih/2)*2,setsar=1"
+fit="fps=24,scale='if(gt(iw,ih),min(360,iw),-2)':'if(gt(iw,ih),-2,min(360,ih))',scale=trunc(iw/2)*2:trunc(ih/2)*2,setsar=1"
 
 # source video in assets/ (without extension) and the second the clip starts at
 clips=(
