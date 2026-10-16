@@ -37,7 +37,8 @@ function showHome() {
     b.textContent = paused ? "play" : "pause";
     b.setAttribute("aria-label", paused ? "Play background video" : "Pause background video");
   };
-  if (reduce.matches) {
+  // Under the landing intro the video waits: js/intro.js starts it when the page appears.
+  if (reduce.matches || document.documentElement.classList.contains("intro")) {
     v.pause();
     setPaused(true);
   } else v.play().catch(() => setPaused(true));

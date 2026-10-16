@@ -53,7 +53,7 @@ commit and push.
   4. `python3 tools/make-og-images.py` (link-preview image), then `node tools/build.mjs`.
 - **About text / contact**: edit `template.html`, then rebuild.
 - **Landing intro**: the words and the frames that orbit the name are `intro` in `js/data.js`.
-  The frames' clips are 4-second, 480px cuts of the project videos: list a new one in
+  The frames' clips are 4-second, 360px cuts of the project videos: list a new one in
   `tools/make-intro-clips.sh`, run it, then add it to `intro.frames`. It plays when someone enters the site or reloads the landing page, not when they come back
   to it from another page; any click, tap or key skips it, and it never plays with reduced
   motion turned on.
