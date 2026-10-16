@@ -6,7 +6,6 @@ import { projects } from "./data.js";
 import { bindGalleries } from "./galleries.js";
 import { pixelCurtain } from "./pixels.js";
 import { eyeTracking } from "./eye.js";
-import { projectLogoMarkup } from "./project-logos.js";
 import { film, visuals, homeMarkup, listMarkup, projectMarkup, projectURL } from "./views.js";
 const main = document.querySelector("#main");
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
@@ -88,15 +87,8 @@ function showHome() {
 function bindProjectScroll(list) {
   const link = main.querySelector(".view-project");
   const pages = [...main.querySelectorAll(".home,.project-section")];
-  const previous = main.querySelector(".project-prev"),
-    next = main.querySelector(".project-next");
-  const cursor = main.querySelector(".project-cursor");
-  const finePointer = matchMedia("(hover: hover) and (pointer: fine)");
   let frame = 0,
-    cursorFrame = 0,
-    currentIndex = -1,
-    hoveredSide = null,
-    pointer = { x: 0, y: 0 };
+    currentIndex = -1;
   const projectFor = (page) => list.find((p) => p.id === page?.dataset.project);
   const nearest = () =>
     pages.reduce((best, page, i) => {
@@ -106,46 +98,6 @@ function bindProjectScroll(list) {
       };
       return distance(page) < distance(pages[best]) ? i : best;
     }, 0);
-  const hideCursor = () => {
-    hoveredSide = null;
-    cursor.hidden = true;
-  };
-  const positionCursor = () => {
-    cursorFrame = 0;
-    cursor.style.left = Math.max(82, Math.min(innerWidth - 82, pointer.x)) + "px";
-    cursor.style.top = Math.max(50, Math.min(innerHeight - 50, pointer.y)) + "px";
-  };
-  const refreshCursor = () => {
-    if (!hoveredSide || hoveredSide.disabled || isOverlayOpen() || !finePointer.matches) {
-      cursor.hidden = true;
-      return;
-    }
-    cursor.innerHTML = projectLogoMarkup(
-      list.find((p) => p.id === hoveredSide.dataset.destination),
-      "cursor",
-    );
-    cursor.hidden = false;
-    positionCursor();
-  };
-  const configure = (button, index, direction) => {
-    const page = pages[index];
-    button.disabled = !page;
-    if (!page) {
-      button.innerHTML = "";
-      button.setAttribute("aria-label", direction + " project");
-      delete button.dataset.destination;
-      return;
-    }
-    const project = projectFor(page);
-    button.innerHTML = projectLogoMarkup(project, direction.toLowerCase());
-    button.dataset.destination = project?.id || "home";
-    button.setAttribute(
-      "aria-label",
-      direction +
-        " — " +
-        (project ? project.brand + " — " + project.title : "Nicoló Lombardi landing"),
-    );
-  };
   const update = () => {
     frame = 0;
     const index = nearest();
@@ -158,9 +110,6 @@ function bindProjectScroll(list) {
         link.setAttribute("aria-label", "View " + project.brand + " — " + project.title);
         announce(project.brand + " — " + project.title);
       }
-      configure(previous, index - 1, "Previous");
-      configure(next, index + 1, "Next");
-      refreshCursor();
     }
   };
   const move = (direction) => {
@@ -171,8 +120,6 @@ function bindProjectScroll(list) {
       behavior: reduce.matches ? "auto" : "smooth",
     });
   };
-  previous.onclick = () => move(-1);
-  next.onclick = () => move(1);
   const key = (e) => {
     if (isOverlayOpen() || e.target.closest?.("a,button,input,textarea,select")) return;
     if (["ArrowDown", "ArrowRight", "PageDown"].includes(e.key)) {
@@ -182,25 +129,6 @@ function bindProjectScroll(list) {
       e.preventDefault();
       move(-1);
     }
-  };
-  const pointerMove = (e) => {
-    if (e.pointerType !== "mouse" || !finePointer.matches) {
-      hideCursor();
-      return;
-    }
-    const side = e.target.closest?.(".project-prev,.project-next");
-    if (!side || side.disabled || isOverlayOpen()) {
-      hideCursor();
-      return;
-    }
-    pointer = { x: e.clientX, y: e.clientY };
-    if (hoveredSide !== side || cursor.hidden) {
-      hoveredSide = side;
-      refreshCursor();
-    } else if (!cursorFrame) cursorFrame = requestAnimationFrame(positionCursor);
-  };
-  const pointerLeave = (e) => {
-    if (!e.relatedTarget) hideCursor();
   };
   // Require a fresh, deliberate gesture after the final section has settled.
   // Tracking all wheel events prevents arrival momentum from counting as intent.
@@ -225,7 +153,6 @@ function bindProjectScroll(list) {
   };
   const returnToLanding = () => {
     returning = true;
-    hideCursor();
     announce("Back to Nicoló Lombardi");
     if (location.pathname === "/")
       window.scrollTo({ top: 0, behavior: reduce.matches ? "auto" : "smooth" });
@@ -295,9 +222,6 @@ function bindProjectScroll(list) {
   window.addEventListener("scroll", scroll, { passive: true });
   window.addEventListener("resize", scroll);
   window.addEventListener("keydown", key);
-  window.addEventListener("blur", hideCursor);
-  document.addEventListener("pointermove", pointerMove, { passive: true });
-  document.addEventListener("pointerout", pointerLeave);
   window.addEventListener("wheel", wheel, { passive: false });
   window.addEventListener("touchstart", touchBegin, { passive: true });
   window.addEventListener("touchend", touchEnd, { passive: true });
@@ -305,14 +229,9 @@ function bindProjectScroll(list) {
   update();
   return () => {
     cancelAnimationFrame(frame);
-    cancelAnimationFrame(cursorFrame);
-    hideCursor();
     window.removeEventListener("scroll", scroll);
     window.removeEventListener("resize", scroll);
     window.removeEventListener("keydown", key);
-    window.removeEventListener("blur", hideCursor);
-    document.removeEventListener("pointermove", pointerMove);
-    document.removeEventListener("pointerout", pointerLeave);
     window.removeEventListener("wheel", wheel);
     window.removeEventListener("touchstart", touchBegin);
     window.removeEventListener("touchend", touchEnd);

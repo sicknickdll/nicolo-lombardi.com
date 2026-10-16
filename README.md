@@ -11,7 +11,6 @@ js/views.js         page markup, shared by the browser and the page generator
 js/app.js           interactions: snap scrolling, logo hover, carousels, About panel
 js/intro.js         landing intro: words rolling inside a ring of spinning frames
 js/galleries.js     video and image carousels on project pages
-js/project-logos.js brand logos shown when hovering the left/right edges
 tools/build.mjs     generates the pages below + sitemap.xml   (npm run build)
 tools/make-og-images.py  link-preview images in assets/og/
 tools/prepare-video.sh   converts a new video into the needed formats
@@ -52,8 +51,6 @@ commit and push.
   3. Copy an existing project block in `projects`, give it a new `id` (it becomes the address
      `/work/<id>/`), fill in the fields, and add the `id` to `filmOrder` and/or `visualsOrder`.
   4. `python3 tools/make-og-images.py` (link-preview image), then `node tools/build.mjs`.
-  5. New projects show their brand name as text on the hover edges. A cropped logo can be
-     added in `js/project-logos.js`.
 - **About text / contact**: edit `template.html`, then rebuild.
 - **Landing intro**: the words and the frames that orbit the name are `intro` in `js/data.js`.
   The frames' clips are 4-second, 480px cuts of the project videos: list a new one in

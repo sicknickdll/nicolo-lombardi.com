@@ -3,7 +3,6 @@
 // Pure string functions: no DOM access here.
 import { projects, filmOrder, visualsOrder, hero, heroPoster, clients } from "./data.js";
 import { videoGalleryMarkup, imageGalleryMarkup, videoSources } from "./galleries.js";
-import { logoFilters } from "./project-logos.js";
 
 export const esc = (s) =>
   String(s).replace(
@@ -29,7 +28,7 @@ export function homeMarkup() {
 
 // Full-screen scrolling covers. `heading` adds a screen-reader/search heading.
 export function listMarkup(list, label, heading) {
-  return `${heading ? `<h1 class="sr-only">${esc(heading)}</h1>` : ""}${logoFilters}<div class="project-scroll" aria-label="${label}">${list.map((p, i) => `<section class="project-section" id="p-${p.id}" data-project="${p.id}" aria-label="${esc(fullName(p))}"><a class="project-open" href="${projectURL(p)}" aria-label="Open ${esc(fullName(p))} project"></a><img src="${p.cover}" alt="${esc(`${fullName(p)} — ${p.type} by Nicoló Lombardi`)}" loading="${i === 0 ? "eager" : "lazy"}" decoding="async"></section>`).join("")}</div><a class="view-project" href="${projectURL(list[0])}" aria-label="View ${esc(list[0].brand)} project" hidden>view project</a><button class="project-prev" aria-label="Previous project"></button><button class="project-next" aria-label="Next project"></button><div class="project-cursor" aria-hidden="true" hidden></div>`;
+  return `${heading ? `<h1 class="sr-only">${esc(heading)}</h1>` : ""}<div class="project-scroll" aria-label="${label}">${list.map((p, i) => `<section class="project-section" id="p-${p.id}" data-project="${p.id}" aria-label="${esc(fullName(p))}"><a class="project-open" href="${projectURL(p)}" aria-label="Open ${esc(fullName(p))} project"></a><img src="${p.cover}" alt="${esc(`${fullName(p)} — ${p.type} by Nicoló Lombardi`)}" loading="${i === 0 ? "eager" : "lazy"}" decoding="async"></section>`).join("")}</div><a class="view-project" href="${projectURL(list[0])}" aria-label="View ${esc(list[0].brand)} project" hidden>view project</a>`;
 }
 
 export function projectMarkup(p, backHref = "/film/") {
