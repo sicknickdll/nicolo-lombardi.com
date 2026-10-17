@@ -51,6 +51,11 @@ commit and push.
   3. Copy an existing project block in `projects`, give it a new `id` (it becomes the address
      `/work/<id>/`), fill in the fields, and add the `id` to `filmOrder` and/or `visualsOrder`.
   4. `python3 tools/make-og-images.py` (link-preview image), then `node tools/build.mjs`.
+- **Case layout** (WPP Production, El Águila, Malik Cross): a project with `stills` shows its
+  film on top, the text, a two-column grid of stills (`img(path, width, height)`), then an
+  optional "Behind the scenes" strip (`bts.images`, scrolls on its own) and an optional
+  closing film (`closingVideo`, plays muted while on screen). Videos: `MAX=1440
+  tools/prepare-video.sh <file> <name>` makes the .webm, .mp4, poster and thumbnail.
 - **About text / contact**: edit `template.html`, then rebuild.
 - **Landing intro**: the words and the frames that orbit the name are `intro` in `js/data.js`.
   The frames' clips are 4-second, 360px cuts of the project videos: list a new one in

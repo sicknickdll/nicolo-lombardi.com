@@ -263,7 +263,21 @@ function showProject(id) {
     ),
   );
   const galleriesCleanup = bindGalleries(main);
+  // Closing films (data-inview) play on their own, muted, while they are on screen.
+  const autoplay = new IntersectionObserver(
+    (entries) =>
+      entries.forEach((e) => {
+        const v = e.target;
+        if (e.isIntersecting && !reduce.matches) {
+          v.preload = "auto";
+          v.play().catch(() => {});
+        } else v.pause();
+      }),
+    { threshold: 0.35 },
+  );
+  main.querySelectorAll("video[data-inview]").forEach((v) => autoplay.observe(v));
   cleanup = () => {
+    autoplay.disconnect();
     galleriesCleanup();
     main.querySelectorAll("video").forEach((v) => v.pause());
   };

@@ -957,3 +957,120 @@ html.intro .home-tagline {
   opacity: 0;
   transition: opacity 0.4s ease;
 }
+
+/* Case layout (projects with `stills` in js/data.js): stills grid, "Behind the scenes"
+   strip and a closing film. */
+.case-stills,
+.case-posters {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 0 clamp(8px, 2vw, 28px);
+}
+.case-stills figure,
+.case-posters figure {
+  margin: 0;
+  overflow: hidden;
+  background: #111;
+}
+.case-stills img,
+.case-posters img {
+  width: 100%;
+  height: auto;
+}
+.case-stills figure:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+.case-posters {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 1100px;
+  margin: 8px auto 0;
+}
+.case-bts {
+  margin: 110px 0 0;
+  overflow: hidden;
+}
+.case-bts header {
+  padding: 0 clamp(16px, 3vw, 40px);
+  margin-bottom: 28px;
+}
+.case-bts header span {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-bottom: 10px;
+}
+.case-bts h2 {
+  font-size: clamp(26px, 4vw, 52px);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+.bts-marquee {
+  overflow: hidden;
+}
+.bts-track {
+  display: flex;
+  gap: 8px;
+  width: max-content;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  animation: bts-scroll 70s linear infinite;
+}
+.bts-marquee:hover .bts-track {
+  animation-play-state: paused;
+}
+.bts-track li {
+  flex: 0 0 auto;
+  height: clamp(180px, 30vw, 380px);
+  background: #111;
+}
+.bts-track img {
+  height: 100%;
+  width: auto;
+  max-width: none;
+}
+/* The strip holds the photos twice; moving it by half its width (plus half a gap)
+   loops it seamlessly. */
+@keyframes bts-scroll {
+  to {
+    transform: translateX(calc(-50% - 4px));
+  }
+}
+.case-film {
+  margin: 110px 0 0;
+  background: #000;
+}
+.case-film video {
+  display: block;
+  width: 100%;
+  aspect-ratio: var(--ratio, 16 / 9);
+  max-height: 100dvh;
+  max-width: none;
+  object-fit: contain;
+}
+@media (max-width: 820px) {
+  .case-stills {
+    grid-template-columns: 1fr;
+  }
+  .case-posters {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .case-bts,
+  .case-film {
+    margin-top: 70px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bts-marquee {
+    overflow-x: auto;
+  }
+  .bts-track {
+    animation: none;
+  }
+  .bts-track li[aria-hidden="true"] {
+    display: none;
+  }
+}
