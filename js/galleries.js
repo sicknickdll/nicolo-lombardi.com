@@ -36,10 +36,100 @@ export function tickerMarkup(project, escape) {
   return `<section class="ticker" aria-label="${escape(project.brand)} gallery"><div class="ticker-row"><ul class="ticker-track">${once}${twice}</ul></div></section>`;
 }
 
+// Click an image: it grows from where it sits to a large centred view (a "FLIP" animation
+// on a smooth ease-out curve) over a dark backdrop, and shrinks back on close.
+const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
+function bindZoom(root, pause) {
+  let box = null;
+  const fit = (img) => {
+    const k = Math.min((innerWidth * 0.9) / img.naturalWidth, (innerHeight * 0.84) / img.naturalHeight);
+    const w = img.naturalWidth * k,
+      h = img.naturalHeight * k;
+    return { left: (innerWidth - w) / 2, top: (innerHeight - h) / 2 + 12, width: w, height: h };
+  };
+  const frames = (from, to) => [
+    { transform: `translate(${from.left - to.left}px,${from.top - to.top}px) scale(${from.width / to.width},${from.height / to.height})` },
+    { transform: "none" },
+  ];
+  const duration = () => (matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 750);
+  const open = (img) => {
+    if (box) return;
+    pause(true);
+    const from = img.getBoundingClientRect(),
+      to = fit(img);
+    const wrap = document.createElement("div");
+    wrap.className = "zoom";
+    wrap.setAttribute("role", "dialog");
+    wrap.setAttribute("aria-modal", "true");
+    wrap.setAttribute("aria-label", img.alt || "Image");
+    const back = document.createElement("div");
+    back.className = "zoom-back";
+    const big = document.createElement("img");
+    big.src = img.currentSrc || img.src;
+    big.alt = img.alt;
+    Object.assign(big.style, {
+      left: to.left + "px",
+      top: to.top + "px",
+      width: to.width + "px",
+      height: to.height + "px",
+    });
+    const x = document.createElement("button");
+    x.type = "button";
+    x.className = "zoom-close";
+    x.textContent = "close";
+    wrap.append(back, big, x);
+    document.body.append(wrap);
+    img.style.visibility = "hidden";
+    const d = duration();
+    back.animate([{ opacity: 0 }, { opacity: 1 }], { duration: d * 0.8, easing: EASE, fill: "forwards" });
+    x.animate([{ opacity: 0 }, { opacity: 1 }], { duration: d, delay: d * 0.4, fill: "backwards" });
+    big.animate(frames(from, to), { duration: d, easing: EASE });
+    box = { wrap, back, big, x, img, to };
+    x.focus({ preventScroll: true });
+    wrap.addEventListener("click", close);
+  };
+  const close = () => {
+    if (!box) return;
+    const { wrap, back, big, x, img, to } = box;
+    box = null;
+    const d = duration();
+    // The row may have drifted: grow back to where the image is now, if it is on screen.
+    const now = img.getBoundingClientRect();
+    const onScreen = now.right > 0 && now.left < innerWidth;
+    back.animate([{ opacity: 1 }, { opacity: 0 }], { duration: d * 0.8, easing: EASE, fill: "forwards" });
+    x.style.opacity = 0;
+    const a = big.animate(
+      onScreen ? [...frames(now, to)].reverse() : [{ opacity: 1, transform: "none" }, { opacity: 0, transform: "scale(0.96)" }],
+      { duration: d, easing: EASE, fill: "forwards" },
+    );
+    a.onfinish = () => {
+      img.style.visibility = "";
+      wrap.remove();
+      pause(false);
+    };
+  };
+  const key = (e) => {
+    if (box && e.key === "Escape") {
+      e.stopPropagation();
+      close();
+    }
+  };
+  window.addEventListener("keydown", key, true);
+  return { open, off: () => window.removeEventListener("keydown", key, true) };
+}
+
 function bindTicker(root) {
   const row = root.querySelector(".ticker-row"),
     track = root.querySelector(".ticker-track");
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return () => {};
+  let paused = false,
+    moved = 0;
+  const zoom = bindZoom(root, (p) => (paused = p));
+  row.addEventListener("click", (e) => {
+    if (moved > 6) return;
+    const img = document.elementFromPoint(e.clientX, e.clientY)?.closest(".ticker-track img");
+    if (img) zoom.open(img);
+  });
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return zoom.off;
   const BASE = 60; // px per second
   let x = 0,
     setW = 0,
@@ -60,7 +150,7 @@ function bindTicker(root) {
     raf = requestAnimationFrame(frame);
     const dt = Math.min(0.05, last ? (now - last) / 1000 : 0);
     last = now;
-    if (!visible || !setW) return;
+    if (!visible || !setW || paused) return;
     speed += (target - speed) * Math.min(1, dt * 5);
     kick *= Math.pow(0.04, dt);
     x -= (drag ? 0 : speed + kick) * dt;
@@ -88,11 +178,13 @@ function bindTicker(root) {
   row.addEventListener("pointerdown", (e) => {
     if (e.button > 0) return;
     drag = { px: e.clientX, x0: x };
+    moved = 0;
     row.setPointerCapture(e.pointerId);
     row.classList.add("dragging");
   });
   row.addEventListener("pointermove", (e) => {
     if (!drag) return;
+    moved = Math.max(moved, Math.abs(e.clientX - drag.px));
     x = drag.x0 + (e.clientX - drag.px);
     x = ((x % setW) + setW) % setW - setW;
     track.style.transform = `translate3d(${x}px,0,0)`;
@@ -109,6 +201,7 @@ function bindTicker(root) {
     cancelAnimationFrame(raf);
     io.disconnect();
     removeEventListener("resize", measure);
+    zoom.off();
   };
 }
 
