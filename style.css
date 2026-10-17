@@ -1121,14 +1121,11 @@ html.intro .home-tagline {
     display: none;
   }
 }
-.ticker-track img {
-  cursor: zoom-in;
-}
 .zoom {
   position: fixed;
   inset: 0;
   z-index: 300;
-  cursor: zoom-out;
+  cursor: pointer;
 }
 .zoom-back {
   position: absolute;
