@@ -16,8 +16,8 @@
 //   youtube         optional YouTube embed URL (replaces local videos)
 //   externalVideo   optional Vimeo link (embedded + "Open film on Vimeo" link)
 //   autoplay        true = a single video starts playing (muted) when the page opens
-//   gallery         "showcase" = show `images` as a 3D gallery with switchable looks
-//                   instead of the vertical carousel
+//   gallery         "viewer" = show `images` as one large image with prev / next and a
+//                   thumbnail strip instead of the vertical carousel
 //   stills          optional: switches the page to the "case" layout (film on top, text,
 //                   then a two-column grid of these stills). Each is img(path, width, height)
 //   bts             optional: { images: [img(...)] } "Behind the scenes" strip under the stills
@@ -287,7 +287,7 @@ export const projects = [
     description:
       "A series of AI-crafted beauty visuals for Soap & Glory, blending playful, fragrance-inspired worlds with precise product reproduction. Working alongside expert photoretouchers, I developed campaign-ready imagery that preserves packaging accuracy, material realism, and texture detail while pushing the creative possibilities beyond traditional product photography.\n\nProperty of WPP Production / WPP Holding. Featured here to showcase my contribution as part of the production and creative team.",
     cover: "/assets/soapandglory-header.webp",
-    gallery: "showcase",
+    gallery: "viewer",
     images: [
       "/assets/fQqLobjVjQLcjn0oYAmyuUyPAs.webp",
       "/assets/SKCYB8BMwkneaPvdQDQqhbuyVKE.webp",
