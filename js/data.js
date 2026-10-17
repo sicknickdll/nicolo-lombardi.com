@@ -284,8 +284,9 @@ export const projects = [
     type: "AI Product Shot",
     description:
       "A series of AI-crafted beauty visuals for Soap & Glory, blending playful, fragrance-inspired worlds with precise product reproduction. Working alongside expert photoretouchers, I developed campaign-ready imagery that preserves packaging accuracy, material realism, and texture detail while pushing the creative possibilities beyond traditional product photography.\n\nProperty of WPP Production / WPP Holding. Featured here to showcase my contribution as part of the production and creative team.",
-    cover: "/assets/fQqLobjVjQLcjn0oYAmyuUyPAs.webp",
+    cover: "/assets/soapandglory-header.webp",
     images: [
+      "/assets/fQqLobjVjQLcjn0oYAmyuUyPAs.webp",
       "/assets/SKCYB8BMwkneaPvdQDQqhbuyVKE.webp",
       "/assets/VsTh5pQROkDtulNoeTzjH4oFN10.webp",
       "/assets/WPCII4Q6wfoAC5QLMGvrtZzfiMg.webp",
