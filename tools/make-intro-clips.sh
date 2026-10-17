@@ -15,14 +15,21 @@ clips=(
   "Ste489lG9zmVBFJeCYP9xDo 5"
   "ktb-vfx-01 0"
   "q65cZYQLVwWuvK4CaJ99qUKYaI0 8"
-  "dtWaKoY1sNjmQihjqZxhqg2lUw 2"
-  "malik-cross-film 20"
   "zSZrThHWODZG0ReCYFLVQcZv8fk 4"
   "ktb-vfx-03 0"
   "Vfrnp4LUs7aaOAevNvmhbI8FJrw 5"
   "i7MWkcoSeItRmxvFvuUf3tTLM 6"
+  "elaguila-hero 1"
+  "malik-cross-hero 9"
+  "wppproduction-hero 14"
 )
-stills=(DTlMGv30IEOltcth8y1RmJJoVug SKCYB8BMwkneaPvdQDQqhbuyVKE lexus-header wichita-666-header)
+stills=(
+  DTlMGv30IEOltcth8y1RmJJoVug SKCYB8BMwkneaPvdQDQqhbuyVKE lexus-header wichita-666-header
+  elaguila-still-01 elaguila-still-02 elaguila-still-03 elaguila-still-05 elaguila-still-06 elaguila-still-08
+  wppproduction-still-01 wppproduction-still-03 wppproduction-still-04 wppproduction-still-06 wppproduction-still-07
+  malik-cross-still-02 malik-cross-still-03 malik-cross-still-06
+  soapandglory-01 soapandglory-02 soapandglory-03 soapandglory-04
+)
 
 for entry in "${clips[@]}"; do
   read -r name at <<<"$entry"

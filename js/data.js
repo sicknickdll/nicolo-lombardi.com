@@ -16,6 +16,8 @@
 //   youtube         optional YouTube embed URL (replaces local videos)
 //   externalVideo   optional Vimeo link (embedded + "Open film on Vimeo" link)
 //   autoplay        true = a single video starts playing (muted) when the page opens
+//   gallery         "tilt" = show `images` as a tilted, endless, draggable grid instead of
+//                   the vertical carousel
 //   stills          optional: switches the page to the "case" layout (film on top, text,
 //                   then a two-column grid of these stills). Each is img(path, width, height)
 //   bts             optional: { images: [img(...)] } "Behind the scenes" strip under the stills
@@ -285,6 +287,7 @@ export const projects = [
     description:
       "A series of AI-crafted beauty visuals for Soap & Glory, blending playful, fragrance-inspired worlds with precise product reproduction. Working alongside expert photoretouchers, I developed campaign-ready imagery that preserves packaging accuracy, material realism, and texture detail while pushing the creative possibilities beyond traditional product photography.\n\nProperty of WPP Production / WPP Holding. Featured here to showcase my contribution as part of the production and creative team.",
     cover: "/assets/soapandglory-header.webp",
+    gallery: "tilt",
     images: [
       "/assets/fQqLobjVjQLcjn0oYAmyuUyPAs.webp",
       "/assets/SKCYB8BMwkneaPvdQDQqhbuyVKE.webp",
@@ -324,9 +327,9 @@ export const filmOrder = [
   "toyota",
   "uncommonsense",
   "anaya",
+  "malik-cross",
   "wichita",
   "wichita-666",
-  "malik-cross",
   "melia",
 ];
 export const visualsOrder = ["soapandglory", "toyota", "elaguila", "anaya", "wppproduction"];
@@ -375,20 +378,28 @@ export const intro = {
     "Virtual Production",
   ],
   frames: [
+    clip("elaguila-hero", 16 / 9),
+    still("elaguila-still-02", 16 / 9),
+    still("wppproduction-still-01", 16 / 9),
+    clip("malik-cross-hero", 2.3453),
+    still("soapandglory-01", 1),
+    still("lexus-header", 16 / 9),
     clip("pgvXtdMshKqmetkpEhgM2k1TI", 1.333),
+    still("elaguila-still-05", 16 / 9),
+    still("malik-cross-still-02", 2.357),
+    still("wppproduction-still-04", 16 / 9),
     clip("Ste489lG9zmVBFJeCYP9xDo", 0.5625),
-    clip("ktb-vfx-01", 1.893),
-    clip("q65cZYQLVwWuvK4CaJ99qUKYaI0", 0.8),
-    still("lexus-header", 1.778),
-    clip("dtWaKoY1sNjmQihjqZxhqg2lUw", 0.5625),
-    clip("malik-cross-film", 2.344),
-    clip("zSZrThHWODZG0ReCYFLVQcZv8fk", 0.5625),
-    still("DTlMGv30IEOltcth8y1RmJJoVug", 1.845),
+    still("soapandglory-03", 1),
+    still("elaguila-still-08", 16 / 9),
+    clip("wppproduction-hero", 2.3529),
+    still("wppproduction-still-06", 16 / 9),
     still("SKCYB8BMwkneaPvdQDQqhbuyVKE", 1),
-    clip("ktb-vfx-03", 1.893),
-    clip("Vfrnp4LUs7aaOAevNvmhbI8FJrw", 0.5625),
-    still("wichita-666-header", 1.778),
-    clip("i7MWkcoSeItRmxvFvuUf3tTLM", 0.5625),
+    still("malik-cross-still-06", 2.35),
+    clip("q65cZYQLVwWuvK4CaJ99qUKYaI0", 0.8),
+    still("elaguila-still-01", 16 / 9),
+    still("wichita-666-header", 16 / 9),
+    still("soapandglory-02", 1),
+    still("wppproduction-still-03", 16 / 9),
   ],
 };
 

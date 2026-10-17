@@ -2,7 +2,7 @@
 // (tools/build.mjs), so the pre-built HTML Google reads is exactly what visitors see.
 // Pure string functions: no DOM access here.
 import { projects, filmOrder, visualsOrder, hero, heroPoster, clients } from "./data.js";
-import { videoGalleryMarkup, imageGalleryMarkup, videoSources } from "./galleries.js";
+import { videoGalleryMarkup, imageGalleryMarkup, tiltGalleryMarkup, videoSources } from "./galleries.js";
 
 export const esc = (s) =>
   String(s).replace(
@@ -77,7 +77,9 @@ export function projectMarkup(p, backHref = "/film/") {
   // In the case layout the portrait key visuals sit in a row after the stills.
   const images = caseLayout
     ? ""
-    : imageGalleryMarkup(p, esc);
+    : p.gallery === "tilt"
+      ? tiltGalleryMarkup(p, esc)
+      : imageGalleryMarkup(p, esc);
   const posters = caseLayout && p.images.length
     ? `<section class="case-posters" aria-label="${esc(p.brand)} key visuals">${p.images.map((src, i) => `<figure><img src="${src}" alt="${stillAlt(p, "key visual", i)}" loading="lazy" decoding="async"></figure>`).join("")}</section>`
     : "";

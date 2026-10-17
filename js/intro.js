@@ -139,7 +139,10 @@ export function playIntro() {
     showWord(current);
     const vw = innerWidth,
       vh = innerHeight,
-      base = Math.max(64, Math.min(230, Math.min(vw, vh) * 0.21));
+      // More frames than before: shrink them a little so the ring stays readable.
+      base =
+        Math.max(64, Math.min(230, Math.min(vw, vh) * 0.21)) *
+        Math.min(1, Math.sqrt(16 / frames.length));
     rx = vw * (vw < vh ? 0.34 : 0.37);
     ry = vh * (vw < vh ? 0.3 : 0.34);
     frames.forEach((f) => {
@@ -168,12 +171,20 @@ export function playIntro() {
     phase = "idle",
     phaseStart = 0,
     clock = 0,
-    checked = false;
+    checks = 0;
   const slowFrames = [];
   const startPhase = (p) => {
     phase = p;
     phaseStart = clock;
   };
+  // The ring leans towards the pointer (frames nearer the viewer move more). Desktop only.
+  const look = { x: 0, y: 0, tx: 0, ty: 0 };
+  const onMove = (e) => {
+    look.tx = (e.clientX / innerWidth - 0.5) * 2;
+    look.ty = (e.clientY / innerHeight - 0.5) * 2;
+  };
+  if (matchMedia("(hover: hover) and (pointer: fine)").matches)
+    addEventListener("pointermove", onMove, { passive: true });
   const draw = (now) => {
     const dt = Math.min(0.05, last ? (now - last) / 1000 : 0);
     last = now;
@@ -195,17 +206,23 @@ export function playIntro() {
       }
     }
     angle += spin * dt;
-    // Safeguard: if the first frames of the ring come out slow, this device can't
-    // decode the clips and animate at once, so the clips pause (on their current
-    // frame) and the ring stays smooth.
-    if (phase === "orbit" && !checked && dt && t > 250) {
+    // Safeguard: if the ring comes out slow (checked over four short windows), this
+    // device can't decode the clips and animate at once, so the clips pause on their
+    // current frame and the ring stays smooth.
+    if (phase === "orbit" && checks < 4 && dt && t > 250) {
       slowFrames.push(dt);
-      if (slowFrames.length === 24) {
-        checked = true;
-        const mean = slowFrames.reduce((s, d) => s + d, 0) / slowFrames.length;
-        if (mean > 1 / 45) el.querySelectorAll("video").forEach((v) => v.pause());
+      if (slowFrames.length === 20) {
+        checks++;
+        const mean = slowFrames.reduce((sum, d) => sum + d, 0) / slowFrames.length;
+        slowFrames.length = 0;
+        if (mean > 1 / 45) {
+          checks = 4;
+          el.querySelectorAll("video").forEach((v) => v.pause());
+        }
       }
     }
+    look.x += (look.tx - look.x) * Math.min(1, dt * 4);
+    look.y += (look.ty - look.y) * Math.min(1, dt * 4);
     const burstAge = phase === "orbit" ? t / 1000 : 1;
     frames.forEach((f) => {
       const a = angle + f.slot,
@@ -217,7 +234,7 @@ export function playIntro() {
       const z = Math.round((depth + 1) * 4);
       if (z !== f.z) f.frame.style.zIndex = f.z = z; // restacking is costly: only on change
       f.frame.style.transform =
-        `translate(${cx + Math.cos(a) * rx * radius}px,${cy + depth * ry * radius}px)` +
+        `translate(${cx + Math.cos(a) * rx * radius - look.x * 34 * (depth + 1.3) * radius}px,${cy + depth * ry * radius - look.y * 20 * (depth + 1.3) * radius}px)` +
         ` rotate(${f.tiltZ}deg) scale(${scale})`; // 2D only: far cheaper to draw than 3D
     });
     if (phase !== "done") raf = requestAnimationFrame(draw);
@@ -241,6 +258,7 @@ export function playIntro() {
         cancelAnimationFrame(raf);
         removeEventListener("resize", layout);
         removeEventListener("keydown", skipKey);
+        removeEventListener("pointermove", onMove);
         el.querySelectorAll("video").forEach((v) => v.pause());
         el.remove();
         resolve();
