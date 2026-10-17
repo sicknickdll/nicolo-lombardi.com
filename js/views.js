@@ -85,7 +85,9 @@ export function projectMarkup(p, backHref = "/film/") {
     !media && !images
       ? `<section class="detail-header"><img src="${p.cover}" alt="${esc(fullName(p))}"></section>`
       : "";
-  const next = projects[(projects.indexOf(p) + 1) % projects.length];
+  // "Next project" follows the Film order for projects in it, otherwise the `projects` order.
+  const order = film.includes(p) ? film : projects;
+  const next = order[(order.indexOf(p) + 1) % order.length];
   return `<article class="detail"><a class="back" href="${backHref}">back</a>${media}${images}${fallback}<header class="detail-heading"><h1>${esc(p.brand)}${p.title === p.brand ? "" : "<br>" + esc(p.title)}</h1><p>${esc(p.type)}</p></header><div class="detail-text"><h2>About the project</h2><p>${esc(p.description)}</p></div>${stillsMarkup(p)}${posters}${btsMarkup(p)}${closingMarkup(p)}${p.externalVideo ? `<p class="media-note"><a href="${esc(p.externalVideo)}" target="_blank" rel="noopener noreferrer">Open film on Vimeo</a></p>` : ""}<a class="next-project" href="${projectURL(next)}"><span>Next project</span><strong>${esc(next.brand)}</strong></a></article>`;
 }
 

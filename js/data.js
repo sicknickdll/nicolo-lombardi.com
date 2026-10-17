@@ -318,16 +318,16 @@ export const projects = [
 // Sections shown in the top navigation, as lists of project ids.
 // The landing page shows the hero video followed by the film list.
 export const filmOrder = [
-  "uncommonsense",
-  "malik-cross",
-  "toyota",
-  "lexus",
   "elaguila",
-  "melia",
-  "wichita",
-  "anaya",
   "wppproduction",
+  "lexus",
+  "toyota",
+  "uncommonsense",
+  "anaya",
+  "wichita",
   "wichita-666",
+  "malik-cross",
+  "melia",
 ];
 export const visualsOrder = ["soapandglory", "toyota", "elaguila", "anaya", "wppproduction"];
 
