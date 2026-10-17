@@ -77,7 +77,7 @@ export const projects = [
     type: "Short Film · Bionic Awards Entry",
     description:
       "Malik Cross /məˈliːk krɔs/ — a short cinematic story about resilience and ambition.\n\nIt's the story of continuing to do what you love, beyond the outcome: the drive that keeps you going when nobody is keeping score.\n\nCreated side by side with Adrián Vicén as our entry for the Bionic Awards, and made entirely with the Freepik AI suite.\n\nJust do it.",
-    cover: "/assets/malik-cross-header.webp",
+    cover: "/assets/malik-cross-banner.webp",
     images: [],
     stills: [
       img("/assets/malik-cross-still-01.webp", 6336, 2688),
