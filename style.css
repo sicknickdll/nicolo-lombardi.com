@@ -3,6 +3,40 @@
   --ink: #fff;
   --bg: #000;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --cursor-default: default;
+  --cursor-pointer: pointer;
+  --cursor-click: pointer;
+  --cursor-grab: grab;
+  --cursor-grabbing: grabbing;
+  --cursor-not-allowed: not-allowed;
+}
+/* Custom pixel cursors on desktop (mouse) only; touch devices keep the system ones */
+@media (hover: hover) and (pointer: fine) {
+  :root {
+    --cursor-default: url("/assets/cursors/default.png") 6 4, default;
+    --cursor-pointer: url("/assets/cursors/click.png") 22 10, pointer;
+    --cursor-click: url("/assets/cursors/click.png") 22 10, pointer;
+    --cursor-grab: url("/assets/cursors/grab.png") 22 24, grab;
+    --cursor-grabbing: url("/assets/cursors/grabbing.png") 22 24, grabbing;
+    --cursor-not-allowed: url("/assets/cursors/not-allowed.png") 24 24, not-allowed;
+  }
+  html {
+    cursor: var(--cursor-default);
+  }
+  a,
+  [role="button"],
+  label,
+  summary {
+    cursor: var(--cursor-pointer);
+  }
+  a:active,
+  button:active {
+    cursor: var(--cursor-click);
+  }
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: var(--cursor-not-allowed);
+  }
 }
 * {
   box-sizing: border-box;
@@ -29,7 +63,7 @@ button {
   border: 0;
   background: transparent;
   padding: 0;
-  cursor: pointer;
+  cursor: var(--cursor-pointer);
 }
 a,
 button {
@@ -253,7 +287,7 @@ video {
   position: absolute;
   inset: 0;
   z-index: 2;
-  cursor: pointer;
+  cursor: var(--cursor-pointer);
 }
 .project-open:hover {
   opacity: 1;
@@ -365,7 +399,7 @@ video {
   position: relative;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
-  cursor: grab;
+  cursor: var(--cursor-grab);
   padding: 0 50vw;
   flex-shrink: 0;
   width: 100%;
@@ -439,7 +473,7 @@ video {
 .gallery-prev:disabled,
 .gallery-next:disabled {
   opacity: 0.2;
-  cursor: default;
+  cursor: var(--cursor-not-allowed);
 }
 .image-gallery {
   height: 100dvh;
@@ -460,7 +494,7 @@ video {
   position: relative;
   scroll-snap-type: y mandatory;
   scrollbar-width: none;
-  cursor: grab;
+  cursor: var(--cursor-grab);
   overscroll-behavior-y: auto;
 }
 .image-slide {
@@ -491,7 +525,7 @@ video {
 .dragging {
   scroll-snap-type: none;
   scroll-behavior: auto;
-  cursor: grabbing;
+  cursor: var(--cursor-grabbing);
   user-select: none;
 }
 .dragging img {
@@ -882,7 +916,7 @@ html.intro .home-tagline {
   inset: 0;
   z-index: 1000;
   overflow: hidden;
-  cursor: default;
+  cursor: var(--cursor-default);
 }
 .intro-bg {
   position: absolute;
@@ -1102,13 +1136,13 @@ html.intro .home-tagline {
 }
 .ticker-row {
   overflow: hidden;
-  cursor: grab;
+  cursor: var(--cursor-grab);
   touch-action: pan-y;
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
   mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
 }
 .ticker-row.dragging {
-  cursor: grabbing;
+  cursor: var(--cursor-grabbing);
 }
 .ticker-track {
   display: flex;
@@ -1142,7 +1176,7 @@ html.intro .home-tagline {
   position: fixed;
   inset: 0;
   z-index: 300;
-  cursor: pointer;
+  cursor: var(--cursor-pointer);
 }
 .zoom-back {
   position: absolute;
