@@ -23,63 +23,93 @@ export function imageGalleryMarkup(project, escape) {
   return `<section class="image-gallery" aria-label="${escape(project.brand)} images" aria-roledescription="carousel"><div class="image-track" tabindex="0" aria-label="Image carousel — use up and down arrows">${project.images.map((src, i) => `<figure class="image-slide" role="group" aria-label="Image ${i + 1} of ${project.images.length}"><img src="${src}" alt="${escape(project.title === project.brand ? project.brand : project.brand + " — " + project.title)} (${escape(project.type)}), image ${i + 1}" loading="lazy" decoding="async"></figure>`).join("")}</div>${project.images.length > 1 ? '<div class="image-navigation"><button class="gallery-prev" aria-label="Previous image">↑</button><button class="gallery-next" aria-label="Next image">↓</button></div>' : ""}</section>`;
 }
 
-// Viewer gallery (project.gallery === "viewer"): one large image with a counter, title,
-// prev / next and a thumbnail strip underneath. Pre-built with the first image showing.
-export function viewerMarkup(project, escape) {
+// Ticker gallery (project.gallery === "ticker"): one row of images that scrolls by itself,
+// endlessly, with faded edges. It slows right down under the pointer and the mouse wheel
+// or a drag pushes it along. The images are listed twice (the copy is hidden from screen
+// readers) and the row wraps by exactly one set.
+export function tickerMarkup(project, escape) {
   const name = project.title === project.brand ? project.brand : `${project.brand} — ${project.title}`;
-  const n = project.images.length;
-  const alt = (i) => `${escape(name)} (${escape(project.type)}), image ${i + 1}`;
-  return `<section class="viewer" aria-label="${escape(project.brand)} gallery" data-alt="${escape(name)} (${escape(project.type)}), image "><div class="viewer-main"><img src="${project.images[0]}" alt="${alt(0)}" decoding="async"><div class="viewer-info"><span class="viewer-count">01 / ${String(n).padStart(2, "0")}</span><h2>${escape(project.brand)}</h2><p>${escape(project.type)}</p><div class="viewer-actions"><button type="button" data-act="prev">Prev</button><button type="button" data-act="next">Next</button></div></div></div><div class="viewer-thumbs">${project.images.map((src, i) => `<button type="button" data-k="${i}" aria-label="Image ${i + 1} of ${n}" aria-pressed="${i === 0}"><img src="${src}" alt="" loading="${i < 8 ? "eager" : "lazy"}" decoding="async"></button>`).join("")}</div></section>`;
+  const item = (src, i, copy) =>
+    `<li${copy ? ' aria-hidden="true"' : ""}><img src="${src}" alt="${copy ? "" : `${escape(name)} (${escape(project.type)}), image ${i + 1}`}" loading="eager" decoding="async" draggable="false"></li>`;
+  const once = project.images.map((s, i) => item(s, i, false)).join("");
+  const twice = project.images.map((s, i) => item(s, i, true)).join("");
+  return `<section class="ticker" aria-label="${escape(project.brand)} gallery"><div class="ticker-row"><ul class="ticker-track">${once}${twice}</ul></div></section>`;
 }
 
-function bindViewer(root) {
-  const big = root.querySelector(".viewer-main > img"),
-    count = root.querySelector(".viewer-count"),
-    thumbs = [...root.querySelectorAll(".viewer-thumbs button")];
-  const N = thumbs.length;
-  let i = 0;
-  const show = (k) => {
-    i = ((k % N) + N) % N;
-    const src = thumbs[i].querySelector("img").src;
-    big.src = src;
-    big.alt = root.dataset.alt + (i + 1);
-    count.textContent = `${String(i + 1).padStart(2, "0")} / ${String(N).padStart(2, "0")}`;
-    thumbs.forEach((t, j) => t.setAttribute("aria-pressed", String(j === i)));
-    const bar = thumbs[i].parentElement;
-    bar.scrollTo({
-      left: thumbs[i].offsetLeft - (bar.clientWidth - thumbs[i].clientWidth) / 2,
-      behavior: behavior(),
-    });
-    // Warm up the next image so stepping forward is instant.
-    new Image().src = thumbs[(i + 1) % N].querySelector("img").src;
+function bindTicker(root) {
+  const row = root.querySelector(".ticker-row"),
+    track = root.querySelector(".ticker-track");
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return () => {};
+  const BASE = 60; // px per second
+  let x = 0,
+    setW = 0,
+    speed = BASE,
+    target = BASE,
+    kick = 0,
+    raf = 0,
+    last = 0,
+    visible = true,
+    drag = null;
+  const measure = () => {
+    const kids = [...track.children];
+    const half = kids.length / 2;
+    const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+    setW = kids.slice(0, half).reduce((w, el) => w + el.getBoundingClientRect().width + gap, 0);
   };
-  const click = (e) => {
-    const act = e.target.closest("[data-act]")?.dataset.act,
-      k = e.target.closest("[data-k]")?.dataset.k;
-    if (act) show(i + (act === "next" ? 1 : -1));
-    else if (k !== undefined) show(+k);
+  const frame = (now) => {
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min(0.05, last ? (now - last) / 1000 : 0);
+    last = now;
+    if (!visible || !setW) return;
+    speed += (target - speed) * Math.min(1, dt * 5);
+    kick *= Math.pow(0.04, dt);
+    x -= (drag ? 0 : speed + kick) * dt;
+    x = ((x % setW) + setW) % setW - setW;
+    track.style.transform = `translate3d(${x}px,0,0)`;
   };
-  const key = (e) => {
-    if (e.target.closest("input,textarea,select")) return;
-    if (e.key === "ArrowRight") show(i + 1);
-    else if (e.key === "ArrowLeft") show(i - 1);
-  };
-  root.addEventListener("click", click);
-  window.addEventListener("keydown", key);
-  // Swipe on touch screens.
-  let sx = null;
-  big.addEventListener("touchstart", (e) => (sx = e.touches[0].clientX), { passive: true });
-  big.addEventListener(
-    "touchend",
+  const imgs = [...track.querySelectorAll("img")];
+  // Measure now and again as each image arrives (a row's width depends on its images).
+  measure();
+  imgs.forEach((im) => !im.complete && im.addEventListener("load", measure, { once: true }));
+  addEventListener("resize", measure);
+  const io = new IntersectionObserver(([e]) => (visible = e.isIntersecting));
+  io.observe(root);
+  row.addEventListener("pointerenter", (e) => e.pointerType === "mouse" && (target = BASE * 0.12));
+  row.addEventListener("pointerleave", () => (target = BASE));
+  row.addEventListener(
+    "wheel",
     (e) => {
-      if (sx === null) return;
-      const dx = e.changedTouches[0].clientX - sx;
-      sx = null;
-      if (Math.abs(dx) > 40) show(i + (dx < 0 ? 1 : -1));
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return; // vertical scrolling stays the page's
+      e.preventDefault();
+      kick += e.deltaX * 2.2;
     },
-    { passive: true },
+    { passive: false },
   );
-  return () => window.removeEventListener("keydown", key);
+  row.addEventListener("pointerdown", (e) => {
+    if (e.button > 0) return;
+    drag = { px: e.clientX, x0: x };
+    row.setPointerCapture(e.pointerId);
+    row.classList.add("dragging");
+  });
+  row.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    x = drag.x0 + (e.clientX - drag.px);
+    x = ((x % setW) + setW) % setW - setW;
+    track.style.transform = `translate3d(${x}px,0,0)`;
+    kick = -(e.movementX || 0) * 20; // let go and it carries on in the same direction
+  });
+  const up = () => {
+    drag = null;
+    row.classList.remove("dragging");
+  };
+  row.addEventListener("pointerup", up);
+  row.addEventListener("pointercancel", up);
+  raf = requestAnimationFrame(frame);
+  return () => {
+    cancelAnimationFrame(raf);
+    io.disconnect();
+    removeEventListener("resize", measure);
+  };
 }
 
 function bindCarousel(root, axis, selector, thumbnailSelector) {
@@ -233,6 +263,6 @@ export function bindGalleries(main) {
   main
     .querySelectorAll(".image-gallery")
     .forEach((root) => clean.push(bindCarousel(root, "y", ".image-slide")));
-  main.querySelectorAll(".viewer").forEach((root) => clean.push(bindViewer(root)));
+  main.querySelectorAll(".ticker").forEach((root) => clean.push(bindTicker(root)));
   return () => clean.forEach((fn) => fn());
 }
