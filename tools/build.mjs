@@ -16,6 +16,7 @@ import {
   homeMarkup,
   clientsMarkup,
   listMarkup,
+  projectImages,
   projectMarkup,
 } from "../js/views.js";
 
@@ -214,7 +215,7 @@ for (const p of projects) {
           headline: `${fullName(p)} — ${p.type}`,
           genre: p.type,
           description: p.description.replace(/\s+/g, " ").trim(),
-          image: [SITE + og, ...p.images.map((i) => SITE + i)],
+          image: [SITE + og, ...projectImages(p).map((i) => SITE + i)],
           creator: { "@id": person["@id"] },
           about: { "@type": "Brand", name: p.brand },
           ...(p.externalVideo || p.youtube ? { sameAs: p.externalVideo || p.youtube } : {}),
@@ -271,7 +272,7 @@ const pages = [
   ["/film/", film.map((p) => p.cover)],
   ["/visuals/", visuals.map((p) => p.cover)],
   ["/privacy/", []],
-  ...projects.map((p) => [`/work/${p.id}/`, [p.cover, ...p.images]]),
+  ...projects.map((p) => [`/work/${p.id}/`, [p.cover, ...projectImages(p)]]),
 ];
 writeFileSync(
   join(root, "sitemap.xml"),

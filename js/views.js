@@ -13,6 +13,12 @@ const byIds = (ids) => ids.map((id) => projects.find((p) => p.id === id)).filter
 export const film = byIds(filmOrder);
 export const visuals = byIds(visualsOrder);
 export const projectURL = (p) => `/work/${p.id}/`;
+// Every image a project shows, for the sitemap and structured data.
+export const projectImages = (p) => [
+  ...p.images,
+  ...(p.stills || []).map((s) => s.src),
+  ...(p.bts?.images || []).map((s) => s.src),
+];
 export const fullName = (p) => (p.title === p.brand ? p.brand : `${p.brand} — ${p.title}`);
 
 export function homeMarkup() {
@@ -31,6 +37,27 @@ export function listMarkup(list, label, heading) {
   return `${heading ? `<h1 class="sr-only">${esc(heading)}</h1>` : ""}<div class="project-scroll" aria-label="${label}">${list.map((p, i) => `<section class="project-section" id="p-${p.id}" data-project="${p.id}" aria-label="${esc(fullName(p))}"><a class="project-open" href="${projectURL(p)}" aria-label="Open ${esc(fullName(p))} project"></a><img src="${p.cover}" alt="${esc(`${fullName(p)} — ${p.type} by Nicoló Lombardi`)}" loading="${i === 0 ? "eager" : "lazy"}" decoding="async"></section>`).join("")}</div><a class="view-project" href="${projectURL(list[0])}" aria-label="View ${esc(list[0].brand)} project" hidden>view project</a>`;
 }
 
+// "Case" layout (projects with `stills`): film on top, text, a two-column grid of stills,
+// an optional "Behind the scenes" strip and an optional closing film that plays on its own.
+const stillAlt = (p, what, i) => esc(`${fullName(p)} — ${what} ${i + 1}`);
+function stillsMarkup(p) {
+  if (!p.stills?.length) return "";
+  return `<section class="case-stills" aria-label="${esc(p.brand)} stills">${p.stills.map((s, i) => `<figure><img src="${s.src}" alt="${stillAlt(p, "still", i)}" width="${s.w}" height="${s.h}" loading="lazy" decoding="async"></figure>`).join("")}</section>`;
+}
+function btsMarkup(p) {
+  if (!p.bts?.images?.length) return "";
+  const item = (s, i, copy) =>
+    `<li${copy ? ' aria-hidden="true"' : ""}><img src="${s.src}" alt="${copy ? "" : stillAlt(p, "behind the scenes", i)}" width="${s.w}" height="${s.h}" loading="lazy" decoding="async"></li>`;
+  const list = p.bts.images.map((s, i) => item(s, i, false)).join("");
+  const copy = p.bts.images.map((s, i) => item(s, i, true)).join("");
+  return `<section class="case-bts" aria-labelledby="bts-title"><header><span>— Making of</span><h2 id="bts-title">Behind the scenes</h2></header><div class="bts-marquee"><ul class="bts-track">${list}${copy}</ul></div></section>`;
+}
+function closingMarkup(p) {
+  const v = p.closingVideo;
+  if (!v) return "";
+  return `<section class="case-film" aria-label="${esc(p.brand)} — ${esc(v.label || "closing film")}"><video controls muted loop playsinline preload="none" data-inview poster="${v.poster}" style="--ratio:${v.ratio || 16 / 9}">${videoSources(v.src)}</video></section>`;
+}
+
 export function projectMarkup(p, backHref = "/film/") {
   const local =
     p.videos.length === 1
@@ -46,13 +73,20 @@ export function projectMarkup(p, backHref = "/film/") {
   const media = embed
     ? `<section class="single-film"><iframe src="${esc(embed)}" title="${esc(fullName(p))}" allow="fullscreen; picture-in-picture; encrypted-media" allowfullscreen loading="lazy"></iframe></section>`
     : local;
-  const images = imageGalleryMarkup(p, esc);
+  const caseLayout = Boolean(p.stills?.length);
+  // In the case layout the portrait key visuals sit in a row after the stills.
+  const images = caseLayout
+    ? ""
+    : imageGalleryMarkup(p, esc);
+  const posters = caseLayout && p.images.length
+    ? `<section class="case-posters" aria-label="${esc(p.brand)} key visuals">${p.images.map((src, i) => `<figure><img src="${src}" alt="${stillAlt(p, "key visual", i)}" loading="lazy" decoding="async"></figure>`).join("")}</section>`
+    : "";
   const fallback =
     !media && !images
       ? `<section class="detail-header"><img src="${p.cover}" alt="${esc(fullName(p))}"></section>`
       : "";
   const next = projects[(projects.indexOf(p) + 1) % projects.length];
-  return `<article class="detail"><a class="back" href="${backHref}">back</a>${media}${images}${fallback}<header class="detail-heading"><h1>${esc(p.brand)}${p.title === p.brand ? "" : "<br>" + esc(p.title)}</h1><p>${esc(p.type)}</p></header><div class="detail-text"><h2>About the project</h2><p>${esc(p.description)}</p></div>${p.externalVideo ? `<p class="media-note"><a href="${esc(p.externalVideo)}" target="_blank" rel="noopener noreferrer">Open film on Vimeo</a></p>` : ""}<a class="next-project" href="${projectURL(next)}"><span>Next project</span><strong>${esc(next.brand)}</strong></a></article>`;
+  return `<article class="detail"><a class="back" href="${backHref}">back</a>${media}${images}${fallback}<header class="detail-heading"><h1>${esc(p.brand)}${p.title === p.brand ? "" : "<br>" + esc(p.title)}</h1><p>${esc(p.type)}</p></header><div class="detail-text"><h2>About the project</h2><p>${esc(p.description)}</p></div>${stillsMarkup(p)}${posters}${btsMarkup(p)}${closingMarkup(p)}${p.externalVideo ? `<p class="media-note"><a href="${esc(p.externalVideo)}" target="_blank" rel="noopener noreferrer">Open film on Vimeo</a></p>` : ""}<a class="next-project" href="${projectURL(next)}"><span>Next project</span><strong>${esc(next.brand)}</strong></a></article>`;
 }
 
 // "Selected clients" strip. Each logo gets the same visual area whatever its shape:

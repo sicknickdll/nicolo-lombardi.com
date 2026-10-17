@@ -16,10 +16,17 @@
 //   youtube         optional YouTube embed URL (replaces local videos)
 //   externalVideo   optional Vimeo link (embedded + "Open film on Vimeo" link)
 //   autoplay        true = a single video starts playing (muted) when the page opens
+//   stills          optional: switches the page to the "case" layout (film on top, text,
+//                   then a two-column grid of these stills). Each is img(path, width, height)
+//   bts             optional: { images: [img(...)] } "Behind the scenes" strip under the stills
+//   closingVideo    optional: { src (.webm + .mp4 twin), poster, ratio, label } film at the
+//                   bottom that plays muted on a loop while it is on screen
+//                   (with `stills`, `images` becomes a row of portrait key visuals)
 //
 // The order of `projects` is the order of the "Next project" links.
 // `filmOrder` and `visualsOrder` decide what appears in each section, in order.
 // ─────────────────────────────────────────────────────────────────────────────
+const img = (src, w, h) => ({ src, w, h });
 export const projects = [
   {
     id: "uncommonsense",
@@ -70,12 +77,20 @@ export const projects = [
     type: "Short Film · Bionic Awards Entry",
     description:
       "Malik Cross /məˈliːk krɔs/ — a short cinematic story about resilience and ambition.\n\nIt's the story of continuing to do what you love, beyond the outcome: the drive that keeps you going when nobody is keeping score.\n\nCreated side by side with Adrián Vicén as our entry for the Bionic Awards, and made entirely with the Freepik AI suite.\n\nJust do it.",
-    cover: "/assets/malik-cross-header.webp",
+    cover: "/assets/malik-cross-banner.webp",
     images: [],
-    videos: ["/assets/malik-cross-film.webm"],
-    videoPosters: ["/assets/malik-cross-film-poster.webp"],
-    videoThumbnails: ["/assets/malik-cross-film-thumb.webp"],
-    videoRatios: [2.3443],
+    stills: [
+      img("/assets/malik-cross-still-01.webp", 6336, 2688),
+      img("/assets/malik-cross-still-02.webp", 3168, 1344),
+      img("/assets/malik-cross-still-03.webp", 3168, 1344),
+      img("/assets/malik-cross-still-04.webp", 1584, 672),
+      img("/assets/malik-cross-still-05.webp", 3168, 1344),
+      img("/assets/malik-cross-still-06.webp", 1920, 817),
+    ],
+    videos: ["/assets/malik-cross-hero.webm"],
+    videoPosters: ["/assets/malik-cross-hero-poster.webp"],
+    videoThumbnails: ["/assets/malik-cross-hero-thumb.webp"],
+    videoRatios: [2.3453],
     autoplay: true,
     youtube: null,
   },
@@ -120,26 +135,18 @@ export const projects = [
       "/assets/yIEYV8vCubp6Kj2aMdWp37H2M.webp",
       "/assets/D7gRk6cgnwsXzD7ZpcUlbGip1QY.webp",
     ],
-    videos: [
-      "/assets/dtWaKoY1sNjmQihjqZxhqg2lUw.webm",
-      "/assets/8fGBCk6oQ0OAD5GdSgJchhMk44.webm",
-      "/assets/2whYpxgd3GAUPGqDR5SeGZ1CBAM.webm",
-      "/assets/0LWzJpUVqcUeFipZK5FL9GiADM.webm",
-    ],
+    stills: [1, 2, 3, 4, 5, 6, 7, 8].map((n) => img(`/assets/elaguila-still-0${n}.webp`, 1920, 1080)),
+    videos: ["/assets/elaguila-hero.webm"],
     youtube: null,
-    videoPosters: [
-      "/assets/dtWaKoY1sNjmQihjqZxhqg2lUw-poster.webp",
-      "/assets/8fGBCk6oQ0OAD5GdSgJchhMk44-poster.webp",
-      "/assets/2whYpxgd3GAUPGqDR5SeGZ1CBAM-poster.webp",
-      "/assets/0LWzJpUVqcUeFipZK5FL9GiADM-poster.webp",
-    ],
-    videoThumbnails: [
-      "/assets/dtWaKoY1sNjmQihjqZxhqg2lUw-thumb.webp",
-      "/assets/8fGBCk6oQ0OAD5GdSgJchhMk44-thumb.webp",
-      "/assets/2whYpxgd3GAUPGqDR5SeGZ1CBAM-thumb.webp",
-      "/assets/0LWzJpUVqcUeFipZK5FL9GiADM-thumb.webp",
-    ],
-    videoRatios: [0.5625, 0.5625, 0.5625, 0.5625],
+    videoPosters: ["/assets/elaguila-hero-poster.webp"],
+    videoThumbnails: ["/assets/elaguila-hero-thumb.webp"],
+    videoRatios: [16 / 9],
+    closingVideo: {
+      src: "/assets/elaguila-film.webm",
+      poster: "/assets/elaguila-film-poster.webp",
+      ratio: 16 / 9,
+      label: "film",
+    },
   },
   {
     id: "melia",
@@ -228,19 +235,47 @@ export const projects = [
     description:
       "A pilot project exploring how AI-generated environments can be integrated into Virtual Production workflows. Crafted on set of WPP Production (old name Hogarth).\n\nProperty of WPP Production / WPP Holding. Featured here to showcase my contribution as part of the production and creative team.",
     cover: "/assets/wppproduction-header.webp",
-    images: [
-      "/assets/tCWzlzIAE7jQHlAVps91sxPcyj8.webp",
-      "/assets/jc4FOKsSx1h4P4kwI6ODDCKpm9Q.webp",
-      "/assets/9hyo0VkCbLoEIrXSuxcA1SIr6c.webp",
-      "/assets/naOAPUvjZFYi85q78GDLS8IER0.webp",
-      "/assets/ioNHN6Zjwan6br7R43sdHv4a2uQ.webp",
-      "/assets/MnxhisGIRkQF5Rp4UtkNeOmCVQg.webp",
+    images: [],
+    stills: [
+      img("/assets/wppproduction-still-01.webp", 3840, 2160),
+      img("/assets/wppproduction-still-03.webp", 1920, 1080),
+      img("/assets/wppproduction-still-04.webp", 1920, 1080),
+      img("/assets/wppproduction-still-06.webp", 1920, 1080),
+      img("/assets/wppproduction-still-02.webp", 1920, 1080),
+      img("/assets/wppproduction-still-07.webp", 1920, 1080),
+      img("/assets/9hyo0VkCbLoEIrXSuxcA1SIr6c.webp", 2048, 880),
+      img("/assets/naOAPUvjZFYi85q78GDLS8IER0.webp", 2048, 877),
+      img("/assets/tCWzlzIAE7jQHlAVps91sxPcyj8.webp", 2048, 874),
+      img("/assets/ioNHN6Zjwan6br7R43sdHv4a2uQ.webp", 2048, 874),
     ],
-    videos: ["/assets/Ldb4lUOdpBMLqQgyUIvXayYlE.webm"],
+    bts: {
+      images: [
+        img("/assets/wppproduction-bts-01.webp", 3840, 2160),
+        img("/assets/wppproduction-bts-02.webp", 3840, 2160),
+        img("/assets/jc4FOKsSx1h4P4kwI6ODDCKpm9Q.webp", 2048, 877),
+        img("/assets/wppproduction-bts-03.webp", 3840, 2160),
+        img("/assets/wppproduction-bts-04.webp", 3840, 2160),
+        img("/assets/wppproduction-bts-05.webp", 3840, 2160),
+        img("/assets/wppproduction-bts-06.webp", 3840, 2160),
+      ],
+    },
+    videos: ["/assets/wppproduction-hero.webm", "/assets/Ldb4lUOdpBMLqQgyUIvXayYlE.webm"],
     youtube: null,
-    videoPosters: ["/assets/Ldb4lUOdpBMLqQgyUIvXayYlE-poster.webp"],
-    videoThumbnails: ["/assets/Ldb4lUOdpBMLqQgyUIvXayYlE-thumb.webp"],
-    videoRatios: [1.7777777777777777],
+    videoPosters: [
+      "/assets/wppproduction-hero-poster.webp",
+      "/assets/Ldb4lUOdpBMLqQgyUIvXayYlE-poster.webp",
+    ],
+    videoThumbnails: [
+      "/assets/wppproduction-hero-thumb.webp",
+      "/assets/Ldb4lUOdpBMLqQgyUIvXayYlE-thumb.webp",
+    ],
+    videoRatios: [2.3529, 1.7777777777777777],
+    closingVideo: {
+      src: "/assets/wppproduction-bts.webm",
+      poster: "/assets/wppproduction-bts-poster.webp",
+      ratio: 16 / 9,
+      label: "behind the scenes film",
+    },
   },
   {
     id: "soapandglory",

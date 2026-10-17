@@ -7,19 +7,20 @@
 # and prints the lines to paste into js/data.js.
 #
 # Needs ffmpeg (macOS: `brew install ffmpeg`).
-# Usage: tools/prepare-video.sh <input-video> <name> [poster-second]
+# Usage: [MAX=1600] tools/prepare-video.sh <input-video> <name> [poster-second]
 #   e.g. tools/prepare-video.sh ~/Desktop/heineken.mov heineken-01 2
 set -euo pipefail
 [ $# -ge 2 ] || { sed -n 2,13p "$0"; exit 1; }
 in="$1"; name="$2"; at="${3:-1}"
 out="$(cd "$(dirname "$0")/.." && pwd)/assets"
-# Max 1280px on the long side, even dimensions, square pixels.
-fit="scale='if(gt(iw,ih),min(1280,iw),-2)':'if(gt(iw,ih),-2,min(1280,ih))',scale=trunc(iw/2)*2:trunc(ih/2)*2,setsar=1"
+# Max 1280px on the long side (override with MAX=1600), even dimensions, square pixels.
+max="${MAX:-1280}"
+fit="scale='if(gt(iw,ih),min($max,iw),-2)':'if(gt(iw,ih),-2,min($max,ih))',scale=trunc(iw/2)*2:trunc(ih/2)*2,setsar=1"
 
 echo "→ webm"; ffmpeg -hide_banner -loglevel error -y -i "$in" -vf "$fit" \
-  -c:v libvpx-vp9 -crf 34 -b:v 0 -row-mt 1 -c:a libopus -b:a 96k "$out/$name.webm"
+  -c:v libvpx-vp9 -crf 34 -b:v 0 -row-mt 1 -deadline good -cpu-used 5 -c:a libopus -b:a 96k "$out/$name.webm"
 echo "→ mp4";  ffmpeg -hide_banner -loglevel error -y -i "$in" -vf "$fit" \
-  -c:v libx264 -preset slow -crf 23 -maxrate 2500k -bufsize 5000k -pix_fmt yuv420p \
+  -c:v libx264 -preset medium -crf 23 -maxrate 2500k -bufsize 5000k -pix_fmt yuv420p \
   -c:a aac -b:a 128k -movflags +faststart "$out/$name.mp4"
 echo "→ poster + thumbnail"
 ffmpeg -hide_banner -loglevel error -y -ss "$at" -i "$out/$name.mp4" -frames:v 1 -q:v 80 "$out/$name-poster.webp"

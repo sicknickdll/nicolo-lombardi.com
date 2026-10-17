@@ -26,6 +26,8 @@ stills=(DTlMGv30IEOltcth8y1RmJJoVug SKCYB8BMwkneaPvdQDQqhbuyVKE lexus-header wic
 
 for entry in "${clips[@]}"; do
   read -r name at <<<"$entry"
+  # Sources that were removed from the site keep their already-made clip in assets/intro/.
+  [ -f "assets/$name.mp4" ] || { echo "· $name: source video gone, keeping its existing clip"; continue; }
   echo "→ $name"
   ffmpeg -hide_banner -loglevel error -y -ss "$at" -t 4 -i "assets/$name.mp4" -an -vf "$fit" \
     -c:v libvpx-vp9 -crf 40 -b:v 0 -row-mt 1 "assets/intro/$name.webm"
