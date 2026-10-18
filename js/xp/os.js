@@ -4,7 +4,7 @@
 // triggered; games load on first open.
 import { projects, filmOrder, visualsOrder, hero, heroPoster } from "../data.js";
 import { pixelCurtain } from "../pixels.js";
-import { glitchSound, loadStartup, play } from "./sound.js";
+import { glitchSound, loadSound, loadStartup, play } from "./sound.js";
 
 export const esc = (s) =>
   String(s).replace(
@@ -187,7 +187,7 @@ function turnOffDialog() {
     const act = e.target.closest("[data-act]")?.dataset.act;
     if (!act) return;
     veil.remove();
-    if (act === "off") shutdownScreen(() => pixelCurtain(exitOS));
+    if (act === "off") shutdownScreen(() => pixelCurtain(exitOS), undefined, true);
     if (act === "restart")
       shutdownScreen(() => {
         exitOS();
@@ -203,12 +203,27 @@ function turnOffDialog() {
     }
   });
 }
-function shutdownScreen(after, text = "Windows is shutting down…") {
+// With `music`, the Windows XP shutdown sound plays and `after` waits until it ends.
+function shutdownScreen(after, text = "Windows is shutting down…", music = false) {
   const s = document.createElement("div");
   s.className = "xp-shutdown";
   s.innerHTML = `<div class="xp-boot-logo"><img src="/assets/xp/icons/windows.png" alt=""><div><small>Microsoft<sup>®</sup></small><b>Windows<sup>xp</sup></b></div></div><p>${text}</p>`;
   desktop.append(s);
-  setTimeout(after, 1400);
+  const audio = desktop._audio;
+  if (!music || !audio) return setTimeout(after, 1400);
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    after();
+  };
+  // Fallback if the sound can't load or play, so the shutdown still completes.
+  setTimeout(finish, 6000);
+  loadSound(audio, "/assets/xp/sounds/shutdown.mp3").then((buffer) => {
+    const source = play(audio, buffer, 1);
+    if (source) source.onended = finish;
+    else finish();
+  });
 }
 
 // ── Apps registry ───────────────────────────────────────────────────────────
