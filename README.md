@@ -88,6 +88,8 @@ Third-party material used there:
 - Card art: Vectorized Playing Cards (LGPL, licence in `assets/xp/cards/`).
 - Windows XP startup sound (`assets/xp/sounds/startup.mp3`, from the Internet Archive). It is
   Microsoft's. The glitch sound before it is generated in the browser (`js/xp/sound.js`).
+- Windows XP shutdown sound (`assets/xp/sounds/shutdown.mp3`, from the Internet Archive). It is
+  Microsoft's too; it plays when Turn Off is chosen.
 - 3D Pinball Space Cadet is embedded from the [98.js.org](https://98.js.org) web port, so it
   needs that site to be online.
 

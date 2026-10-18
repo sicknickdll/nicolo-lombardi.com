@@ -1,6 +1,7 @@
 // Easter-egg sounds: a glitch made on the fly with Web Audio (noise stutters, a digital
 // squeal jumping between pitches, a rising mains buzz), then the Windows XP startup
-// chime (assets/xp/sounds/startup.mp3) when the desktop appears.
+// chime (assets/xp/sounds/startup.mp3) when the desktop appears, and the Windows XP shutdown
+// sound (assets/xp/sounds/shutdown.mp3) when Turn Off is chosen.
 // The AudioContext is created by js/app.js inside the click that opens the easter egg,
 // because browsers only let a page make sound after a click.
 
@@ -61,21 +62,23 @@ export function glitchSound(audio, duration) {
   }
 }
 
-// Fetches and decodes the startup chime ahead of time, so it plays on cue.
-export function loadStartup(audio) {
+// Fetches and decodes a sound ahead of time, so it plays on cue.
+export function loadSound(audio, url) {
   if (!audio) return Promise.resolve(null);
-  return fetch("/assets/xp/sounds/startup.mp3")
+  return fetch(url)
     .then((r) => r.arrayBuffer())
     .then((data) => audio.decodeAudioData(data))
     .catch(() => null);
 }
+export const loadStartup = (audio) => loadSound(audio, "/assets/xp/sounds/startup.mp3");
 
 export function play(audio, buffer, volume = 0.8) {
-  if (!audio || !buffer) return;
+  if (!audio || !buffer) return null;
   const source = audio.createBufferSource(),
     gain = audio.createGain();
   source.buffer = buffer;
   gain.gain.value = volume;
   source.connect(gain).connect(audio.destination);
   source.start();
+  return source;
 }
