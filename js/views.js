@@ -50,12 +50,17 @@ function btsMarkup(p) {
     `<li${copy ? ' aria-hidden="true"' : ""}><img src="${s.src}" alt="${copy ? "" : stillAlt(p, "behind the scenes", i)}" width="${s.w}" height="${s.h}" loading="lazy" decoding="async"></li>`;
   const list = p.bts.images.map((s, i) => item(s, i, false)).join("");
   const copy = p.bts.images.map((s, i) => item(s, i, true)).join("");
-  return `<section class="case-bts" aria-labelledby="bts-title"><header><span>— Making of</span><h2 id="bts-title">Behind the scenes</h2></header><div class="bts-marquee"><ul class="bts-track">${list}${copy}</ul></div></section>`;
+  return `<section class="case-bts" aria-labelledby="bts-title">${btsHeader}<div class="bts-marquee"><ul class="bts-track">${list}${copy}</ul></div></section>`;
 }
+const btsHeader = `<header><span>— Making of</span><h2 id="bts-title">Behind the scenes</h2></header>`;
+// A making-of film without a marquee gets the same heading as the Behind the scenes strip.
 function closingMarkup(p) {
   const v = p.closingVideo;
   if (!v) return "";
-  return `<section class="case-film" aria-label="${esc(p.brand)} — ${esc(v.label || "closing film")}"><video controls muted loop playsinline preload="none" data-inview poster="${v.poster}" style="--ratio:${v.ratio || 16 / 9}">${videoSources(v.src)}</video></section>`;
+  const heading = !p.bts?.images?.length && /behind the scenes/i.test(v.label || "")
+    ? `<section class="case-bts case-bts--heading" aria-labelledby="bts-title">${btsHeader}</section>`
+    : "";
+  return `${heading}<section class="case-film" aria-label="${esc(p.brand)} — ${esc(v.label || "closing film")}"><video controls muted loop playsinline preload="none" data-inview poster="${v.poster}" style="--ratio:${v.ratio || 16 / 9}">${videoSources(v.src)}</video></section>`;
 }
 
 export function projectMarkup(p, backHref = "/film/") {
@@ -75,7 +80,11 @@ export function projectMarkup(p, backHref = "/film/") {
     : local;
   const caseLayout = Boolean(p.stills?.length);
   // In the case layout the portrait key visuals sit in a row after the stills.
-  const images = caseLayout
+  // A single picture fills the screen like the films do.
+  const fullImage = !caseLayout && p.images.length === 1 && !p.gallery
+    ? `<section class="single-film single-image"><img src="${p.images[0]}" alt="${esc(fullName(p))} (${esc(p.type)})" loading="lazy" decoding="async"></section>`
+    : "";
+  const images = caseLayout || fullImage
     ? ""
     : p.gallery === "ticker"
       ? tickerMarkup(p, esc)
@@ -90,7 +99,7 @@ export function projectMarkup(p, backHref = "/film/") {
   // "Next project" follows the Film order for projects in it, otherwise the `projects` order.
   const order = film.includes(p) ? film : projects;
   const next = order[(order.indexOf(p) + 1) % order.length];
-  return `<article class="detail"><a class="back" href="${backHref}">back</a>${media}${images}${fallback}<header class="detail-heading"><h1>${esc(p.brand)}${p.title === p.brand ? "" : "<br>" + esc(p.title)}</h1><p>${esc(p.type)}</p></header><div class="detail-text"><h2>About the project</h2><p>${esc(p.description)}</p></div>${stillsMarkup(p)}${posters}${btsMarkup(p)}${closingMarkup(p)}${p.externalVideo ? `<p class="media-note"><a href="${esc(p.externalVideo)}" target="_blank" rel="noopener noreferrer">Open film on Vimeo</a></p>` : ""}<a class="next-project" href="${projectURL(next)}"><span>Next project</span><strong>${esc(next.brand)}</strong></a></article>`;
+  return `<article class="detail"><a class="back" href="${backHref}">back</a>${media}${fullImage}${images}${fallback}<header class="detail-heading"><h1>${esc(p.brand)}${p.title === p.brand ? "" : "<br>" + esc(p.title)}</h1><p>${esc(p.type)}</p></header><div class="detail-text"><h2>About the project</h2><p>${esc(p.description)}</p></div>${stillsMarkup(p)}${posters}${btsMarkup(p)}${closingMarkup(p)}${p.externalVideo ? `<p class="media-note"><a href="${esc(p.externalVideo)}" target="_blank" rel="noopener noreferrer">Open film on Vimeo</a></p>` : ""}<a class="next-project" href="${projectURL(next)}"><span>Next project</span><strong>${esc(next.brand)}</strong></a></article>`;
 }
 
 // "Selected clients" strip. Each logo gets the same visual area whatever its shape:
