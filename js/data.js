@@ -147,7 +147,7 @@ export const projects = [
       src: "/assets/elaguila-film.webm",
       poster: "/assets/elaguila-film-poster.webp",
       ratio: 16 / 9,
-      label: "film",
+      label: "behind the scenes film",
     },
   },
   {
