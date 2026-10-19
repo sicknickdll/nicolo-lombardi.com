@@ -33,23 +33,10 @@ function announce(s) {
 }
 function showHome() {
   main.innerHTML = homeMarkup();
-  const v = document.querySelector("#entrance-video"),
-    b = document.querySelector(".home-pause");
-  const setPaused = (paused) => {
-    b.textContent = paused ? "play" : "pause";
-    b.setAttribute("aria-label", paused ? "Play background video" : "Pause background video");
-  };
+  const v = document.querySelector("#entrance-video");
   // Under the landing intro the video waits: js/intro.js starts it when the page appears.
-  if (reduce.matches || document.documentElement.classList.contains("intro")) {
-    v.pause();
-    setPaused(true);
-  } else v.play().catch(() => setPaused(true));
-  v.addEventListener("play", () => setPaused(false));
-  v.addEventListener("pause", () => setPaused(true));
-  b.onclick = () => {
-    if (v.paused) v.play().catch(() => setPaused(true));
-    else v.pause();
-  };
+  if (reduce.matches || document.documentElement.classList.contains("intro")) v.pause();
+  else v.play().catch(() => {});
   // Easter egg: 5 quick clicks on the name open "Nicoló OS". Clicking the name does
   // nothing else (it sits inside the hero link, so the click is swallowed).
   const name = main.querySelector(".animated-name");

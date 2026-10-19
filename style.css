@@ -226,13 +226,6 @@ video {
   transform: translateX(-50%) rotate(45deg);
   animation: bob 1.4s ease-in-out infinite;
 }
-.home-pause {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  z-index: 3;
-  font-size: 14px;
-}
 @keyframes bob {
   50% {
     bottom: 35px;
@@ -634,9 +627,6 @@ body:has(#about:not([hidden])) .header nav {
     line-height: 1.1;
     max-width: 90%;
   }
-  .home-pause {
-    right: 16px;
-  }
   .detail {
     padding: 0 0 40px;
   }
@@ -864,22 +854,6 @@ body:has(#about:not([hidden])) .header {
   .header-right {
     gap: 10px;
     font-size: 12px;
-  }
-}
-
-/* Landing page call to action */
-.home-cta {
-  position: absolute;
-  left: 20px;
-  bottom: 20px;
-  z-index: 3;
-  font-size: 14px;
-  text-shadow: 0 1px 12px #000;
-}
-@media (max-width: 520px) {
-  .home-cta {
-    left: 16px;
-    font-size: 13px;
   }
 }
 
