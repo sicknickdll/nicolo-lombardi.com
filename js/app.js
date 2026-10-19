@@ -5,6 +5,7 @@
 import { projects } from "./data.js";
 import { bindGalleries } from "./galleries.js";
 import { bindScramble } from "./scramble.js";
+import { bindPlayers } from "./player.js";
 import { pixelCurtain } from "./pixels.js";
 import { eyeTracking } from "./eye.js";
 import { film, visuals, homeMarkup, listMarkup, projectMarkup, projectURL } from "./views.js";
@@ -265,6 +266,7 @@ function showProject(id) {
   );
   const galleriesCleanup = bindGalleries(main);
   const scrambleCleanup = bindScramble(main);
+  const playersCleanup = bindPlayers(main);
   // Closing films (data-inview) play on their own, muted, while they are on screen.
   const autoplay = new IntersectionObserver(
     (entries) =>
@@ -282,6 +284,7 @@ function showProject(id) {
     autoplay.disconnect();
     galleriesCleanup();
     scrambleCleanup();
+    playersCleanup();
     main.querySelectorAll("video").forEach((v) => v.pause());
   };
 }
