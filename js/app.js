@@ -4,6 +4,7 @@
 // previous/next logo hover, carousels, the About panel.
 import { projects } from "./data.js";
 import { bindGalleries } from "./galleries.js";
+import { bindScramble } from "./scramble.js";
 import { pixelCurtain } from "./pixels.js";
 import { eyeTracking } from "./eye.js";
 import { film, visuals, homeMarkup, listMarkup, projectMarkup, projectURL } from "./views.js";
@@ -263,6 +264,7 @@ function showProject(id) {
     ),
   );
   const galleriesCleanup = bindGalleries(main);
+  const scrambleCleanup = bindScramble(main);
   // Closing films (data-inview) play on their own, muted, while they are on screen.
   const autoplay = new IntersectionObserver(
     (entries) =>
@@ -279,6 +281,7 @@ function showProject(id) {
   cleanup = () => {
     autoplay.disconnect();
     galleriesCleanup();
+    scrambleCleanup();
     main.querySelectorAll("video").forEach((v) => v.pause());
   };
 }

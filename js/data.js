@@ -337,9 +337,9 @@ export const projects = [
 // Sections shown in the top navigation, as lists of project ids.
 // The landing page shows the hero video followed by the film list.
 export const filmOrder = [
-  "schweppes",
   "elaguila",
   "wppproduction",
+  "schweppes",
   "lexus",
   "toyota",
   "uncommonsense",
