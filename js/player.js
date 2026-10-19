@@ -5,12 +5,12 @@
 //     click or drag it to jump (arrow keys too)
 //   · a horizontal wheel / trackpad swipe (or shift + wheel) scrubs the film forward /
 //     backward; vertical scrolling is never touched, so the page always scrolls normally
-//   · paused: a title card; playing: the controls fade out after a moment
+//   · paused: a title card; playing: the controls fade out after 5 seconds
 //
 // Each <video controls> sits in <div class="player" data-brand data-title data-type>
 // (see views.js / galleries.js). Without JavaScript the native controls stay.
 const WHEEL = 0.015; // seconds of film per pixel of sideways wheel
-const IDLE = 2400; // ms before the controls fade out while playing
+const IDLE = 5000; // ms before the controls fade out while playing
 
 const clock = (s) => {
   s = Math.max(0, Math.floor(s || 0));
