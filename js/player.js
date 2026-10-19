@@ -3,14 +3,13 @@
 //   · click the picture to play / pause; small text controls: play, sound, fullscreen
 //   · a fine line along the bottom edge shows the length of the film and where you are:
 //     click or drag it to jump (arrow keys too)
-//   · while a film is playing, the mouse wheel scrubs it forward / backward. This only
-//     starts after the visitor has pressed play, and lets go at the start, at the end and
-//     while paused, so it never traps the page scroll
+//   · a horizontal wheel / trackpad swipe (or shift + wheel) scrubs the film forward /
+//     backward; vertical scrolling is never touched, so the page always scrolls normally
 //   · paused: a title card; playing: the controls fade out after a moment
 //
 // Each <video controls> sits in <div class="player" data-brand data-title data-type>
 // (see views.js / galleries.js). Without JavaScript the native controls stay.
-const WHEEL = 0.015; // seconds of film per wheel pixel
+const WHEEL = 0.015; // seconds of film per pixel of sideways wheel
 const IDLE = 2400; // ms before the controls fade out while playing
 
 const clock = (s) => {
@@ -60,7 +59,6 @@ function upgrade(wrap, signal) {
   wrap.append(screen, card, ui, line);
 
   // ── state ──
-  let engaged = false; // the visitor has pressed play: the wheel may scrub
   let hideTimer = 0;
   let raf = 0;
   let pending = 0;
@@ -101,7 +99,6 @@ function upgrade(wrap, signal) {
     }, IDLE);
   };
   const toggle = () => {
-    engaged = true;
     if (video.paused) {
       if (video.ended || (video.duration && video.currentTime >= video.duration - 0.05)) video.currentTime = 0;
       video.preload = "auto";
@@ -116,15 +113,11 @@ function upgrade(wrap, signal) {
     wake();
   });
   on(video, "pause", () => {
-    engaged = false;
     labels();
     progress();
     wrap.classList.add("is-ui");
   });
-  on(video, "ended", () => {
-    engaged = false;
-    labels();
-  });
+  on(video, "ended", labels);
   on(video, "volumechange", labels);
   ["loadedmetadata", "durationchange", "timeupdate", "seeked"].forEach((t) => on(video, t, progress));
   on(document, "fullscreenchange", labels);
@@ -155,7 +148,6 @@ function upgrade(wrap, signal) {
   on(line, "pointerdown", (e) => {
     if (e.button !== 0) return;
     e.stopPropagation(); // not a carousel drag
-    engaged = true;
     scrubbing = true;
     wrap.classList.add("is-scrubbing", "is-ui");
     line.setPointerCapture(e.pointerId);
@@ -199,25 +191,24 @@ function upgrade(wrap, signal) {
     wrap,
     "wheel",
     (e) => {
-      if (!engaged || video.paused || e.ctrlKey || !video.duration) return;
-      const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1);
-      if (!dy) return;
-      // At either end the page takes over again.
-      if (dy > 0 && video.currentTime >= video.duration - 0.2) return;
-      if (dy < 0 && video.currentTime <= 0.05) return;
+      if (e.ctrlKey || !video.duration) return;
+      const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerWidth : 1;
+      // Sideways only (shift + wheel counts too): a vertical scroll stays a page scroll.
+      const dx = (e.deltaX || (e.shiftKey ? e.deltaY : 0)) * unit;
+      if (!dx || (!e.shiftKey && Math.abs(e.deltaX) < Math.abs(e.deltaY))) return;
+      // In a carousel a paused film lets the swipe move the carousel; at either end too.
+      if (video.paused && wrap.closest(".video-track")) return;
+      if (dx > 0 && video.currentTime >= video.duration - 0.2) return;
+      if (dx < 0 && video.currentTime <= 0.05) return;
       e.preventDefault();
-      pending += dy * WHEEL;
+      pending += dx * WHEEL;
       wake();
       if (!raf2) raf2 = requestAnimationFrame(apply);
     },
     { passive: false },
   );
 
-  // Off screen: the wheel belongs to the page again.
-  const io = new IntersectionObserver(([e]) => !e.isIntersecting && (engaged = false), { threshold: 0.3 });
-  io.observe(wrap);
   signal.addEventListener("abort", () => {
-    io.disconnect();
     cancelAnimationFrame(raf);
     cancelAnimationFrame(raf2);
     clearTimeout(hideTimer);
