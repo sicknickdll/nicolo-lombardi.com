@@ -11,6 +11,7 @@ js/views.js         page markup, shared by the browser and the page generator
 js/app.js           interactions: snap scrolling, logo hover, carousels, About panel
 js/intro.js         landing intro: words rolling inside a ring of spinning frames
 js/galleries.js     video and image carousels on project pages
+js/scramble.js      text "decode" effect for the About block of every project page
 tools/build.mjs     generates the pages below + sitemap.xml   (npm run build)
 tools/make-og-images.py  link-preview images in assets/og/
 tools/prepare-video.sh   converts a new video into the needed formats

@@ -367,6 +367,19 @@ video {
   font-size: 14px;
   font-weight: 700;
 }
+/* Text decode on scroll (js/scramble.js): hidden until it enters the screen, then every
+   character keeps its real width while it shuffles, so nothing reflows. */
+.sc-pending {
+  opacity: 0;
+}
+.sc-word {
+  white-space: nowrap;
+}
+.sc-char {
+  display: inline-block;
+  text-align: center;
+  white-space: nowrap;
+}
 .next-project {
   display: block;
   text-align: center;
