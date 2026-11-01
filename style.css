@@ -49,7 +49,7 @@ body {
   color: var(--ink);
 }
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-weight: 750;
   -webkit-font-smoothing: antialiased;
 }
@@ -108,23 +108,6 @@ video {
   letter-spacing: -0.02em;
   color: white;
   text-shadow: 0 1px 12px #000;
-}
-.header nav {
-  position: absolute;
-  left: 50%;
-  top: 16px;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  white-space: nowrap;
-}
-.header nav > span {
-  opacity: 0.5;
-  font-weight: 400;
-}
-.header a[aria-current="page"] {
-  opacity: 0.65;
 }
 .skip {
   position: fixed;
@@ -543,84 +526,9 @@ video {
 .dragging img {
   pointer-events: none;
 }
-#about {
-  position: fixed;
-  inset: 0;
-  z-index: 70;
-  background: black;
-  color: white;
-  overflow: auto;
-  animation: reveal 0.4s var(--ease);
-}
-#about-close {
-  position: absolute;
-  top: 16px;
-  right: 20px;
-  font-size: 14px;
-  z-index: 90;
-}
-.about-name {
-  position: absolute;
-  top: 15%;
-  left: 8%;
-  font-size: clamp(44px, 7vw, 110px);
-  letter-spacing: -0.055em;
-  white-space: nowrap;
-  opacity: 0.95;
-  animation: float-name 25s ease-in-out infinite alternate;
-}
-.about-content {
-  position: relative;
-  margin: 42svh 20px 25px;
-}
-.bio {
-  max-width: 800px;
-  font-size: clamp(20px, 2vw, 30px);
-  line-height: 1.2;
-  margin-bottom: 65px;
-}
-.about-columns {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  font-size: 14px;
-  line-height: 1.4;
-  gap: 40px;
-}
-.about-columns p:first-child {
-  margin-bottom: 22px;
-}
-.about-columns a {
-  overflow-wrap: anywhere;
-}
-.copyright {
-  font-size: 12px;
-  margin-top: 45px;
-}
-@keyframes float-name {
-  to {
-    transform: translate(15vw, 10svh);
-  }
-}
-@keyframes reveal {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-body:has(#about:not([hidden])) .header-right,
-body:has(#about:not([hidden])) .header nav {
-  visibility: hidden;
-}
 @media (max-width: 991px) {
   .header {
     padding: 16px;
-  }
-  .header nav {
-    gap: 10px;
   }
   .home h1 {
     font-size: 38px;
@@ -669,46 +577,12 @@ body:has(#about:not([hidden])) .header nav {
   .image-navigation {
     right: 8px;
   }
-  .about-name {
-    position: relative;
-    top: auto;
-    left: auto;
-    margin: 110px 16px 40px;
-    white-space: normal;
-    font-size: 44px;
-    animation: none;
-  }
-  .about-content {
-    margin: 0 16px 35px;
-  }
-  .bio {
-    font-size: 22px;
-    margin-bottom: 45px;
-  }
-  .about-columns {
-    grid-template-columns: 1fr;
-    gap: 30px;
-    font-size: 16px;
-  }
-  .about-columns p:first-child {
-    margin-bottom: 12px;
-  }
-  #about-close {
-    right: 16px;
-  }
 }
 @media (max-width: 520px) {
   .header .brand {
     font-size: 12px;
     max-width: 110px;
     line-height: 1.25;
-  }
-  .header nav {
-    font-size: 14px;
-    gap: 8px;
-  }
-  .header #about-toggle {
-    font-size: 12px;
   }
   .home h1 {
     font-size: clamp(27px, 7.7vw, 38px);
@@ -747,7 +621,7 @@ body:has(#about:not([hidden])) .header nav {
   }
 }
 
-/* "Selected clients" logo strip in the About panel */
+/* "Selected clients" logo strip on the About page */
 .clients {
   margin-top: 70px;
   font-size: 14px;
@@ -792,70 +666,8 @@ body:has(#about:not([hidden])) .header nav {
   }
 }
 
-/* About: keep "close" on screen while the panel scrolls */
-#about-close {
-  position: fixed;
-  text-shadow: 0 1px 12px #000;
-}
-/* Pixel transition canvas (js/pixels.js), above everything */
-.pixel-curtain {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 300;
-}
-/* While About is open the header sits above it: let clicks reach "close" */
-body:has(#about:not([hidden])) .header {
-  pointer-events: none;
-}
 
-/* Hint while clicking the name repeatedly (Easter egg, see js/win7.js) */
-.animated-name.tease .name-letter {
-  animation: name-tease 0.18s steps(2) infinite;
-}
-@keyframes name-tease {
-  50% {
-    transform: translate(1px, -1px);
-    text-shadow:
-      -2px 0 #00f0ff,
-      2px 0 #ff2bd6;
-  }
-}
 
-/* "CLICK ME" at the bottom of About: opens the Windows XP Easter egg */
-.click-me {
-  margin-top: 28px;
-  padding: 8px 14px;
-  border: 1px solid #fff;
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  animation: click-me-blink 1.4s steps(2) infinite;
-}
-.click-me:hover {
-  opacity: 1;
-  background: #fff;
-  color: #000;
-  animation: none;
-}
-@keyframes click-me-blink {
-  50% {
-    border-color: transparent;
-  }
-}
-
-/* Header: contact link next to "about" (always visible, also on phones) */
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-@media (max-width: 520px) {
-  .header-right {
-    gap: 10px;
-    font-size: 12px;
-  }
-}
 
 /* Privacy page */
 .legal {
@@ -1369,4 +1181,346 @@ html.intro .home-tagline {
   right: 20px;
   font-size: 14px;
   z-index: 2;
+}
+
+/* ── Menu (js/menu.js) ──────────────────────────────────────────────────────
+   "Menu +" in the header: the label rolls to "Close" and the plus turns into a cross
+   (after React Bits' Staggered Menu). The panel drops from the top, a grey layer first,
+   then the white one, and the big links rise one by one from behind a mask, stacked
+   vertically (layout after dizmar.xyz). Closing plays it backwards. */
+.header .brand,
+.menu-toggle {
+  transition:
+    color 0.3s 0.15s,
+    text-shadow 0.3s 0.15s,
+    opacity 0.25s;
+}
+html.menu-open .header {
+  color: #000;
+  text-shadow: none;
+}
+html.menu-open {
+  overflow: hidden;
+}
+.menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+.menu-toggle:hover {
+  opacity: 1;
+}
+.menu-toggle-text {
+  display: inline-block;
+  height: 1.25em;
+  overflow: hidden;
+  min-width: 2.6em;
+  text-align: right;
+}
+.menu-toggle-roll {
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.78s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+.menu-toggle-roll > span {
+  display: block;
+  height: 1.25em;
+}
+.menu-toggle-icon {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  transition: transform 0.35s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+html:not(.menu-open) .menu-toggle:hover .menu-toggle-icon {
+  transform: rotate(90deg);
+}
+html.menu-open .menu-toggle-icon {
+  transform: rotate(225deg);
+  transition-duration: 0.8s;
+  transition-timing-function: cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+.menu-toggle-icon > span {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 2px;
+  margin-top: -1px;
+  background: currentColor;
+  box-shadow: 0 1px 10px rgb(0 0 0 / 0.35);
+}
+html.menu-open .menu-toggle-icon > span {
+  box-shadow: none;
+}
+.menu-toggle-icon > span + span {
+  transform: rotate(90deg);
+}
+
+.menu {
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  visibility: hidden;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  transition: visibility 0s linear 0.8s;
+}
+.menu[data-open="true"] {
+  visibility: visible;
+  transition: none;
+}
+.menu-layer,
+.menu-panel {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(0 0 100% 0);
+}
+.menu-layer {
+  background: #e6e6e6;
+  transition: clip-path 0.5s cubic-bezier(0.645, 0.045, 0.355, 1) 0.3s;
+}
+.menu-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 32px;
+  padding: 90px 20px max(22px, env(safe-area-inset-bottom));
+  background: #fff;
+  color: #000;
+  overflow-y: auto;
+  transition: clip-path 0.5s cubic-bezier(0.645, 0.045, 0.355, 1) 0.22s;
+}
+.menu[data-open="true"] .menu-layer {
+  clip-path: inset(0);
+  transition: clip-path 0.6s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+.menu[data-open="true"] .menu-panel {
+  clip-path: inset(0);
+  transition: clip-path 0.6s cubic-bezier(0.645, 0.045, 0.355, 1) 0.08s;
+}
+.menu ::selection {
+  background: #000;
+  color: #fff;
+}
+.menu-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: menu-item;
+  font-size: min(14vh, 12.5vw);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.055em;
+}
+.menu-items li {
+  counter-increment: menu-item;
+  overflow: hidden;
+  padding: 0.04em 0 0.08em;
+  margin-bottom: -0.06em;
+}
+.menu-items a {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.12em;
+  transition: opacity 0.3s;
+}
+.menu-items a:hover {
+  opacity: 1;
+}
+.menu-items a > span {
+  display: block;
+  transform-origin: 0 100%;
+  transform: translateY(118%) rotate(8deg);
+  transition: transform 0.35s cubic-bezier(0.645, 0.045, 0.355, 1) calc((4 - var(--i)) * 35ms);
+}
+.menu[data-open="true"] .menu-items a > span {
+  transform: none;
+  transition: transform 1s cubic-bezier(0.165, 0.84, 0.44, 1) calc(0.32s + var(--i) * 0.08s);
+}
+/* Small number next to each link: 01, 02… */
+.menu-items a::after {
+  content: counter(menu-item, decimal-leading-zero);
+  font-size: max(12px, 0.14em);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1;
+  margin-top: 0.35em;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.menu[data-open="true"] .menu-items a::after {
+  opacity: 0.55;
+  transition: opacity 0.6s ease calc(0.5s + var(--i) * 0.08s);
+}
+.menu-items a[aria-current="page"] > span {
+  text-decoration: underline;
+  text-decoration-thickness: 0.05em;
+  text-underline-offset: 0.08em;
+}
+.menu-items a:focus-visible {
+  outline: none;
+}
+.menu-items a:focus-visible > span {
+  text-decoration: underline;
+  text-decoration-thickness: 0.05em;
+  text-underline-offset: 0.08em;
+}
+@media (hover: hover) {
+  .menu-items:hover a:not(:hover) {
+    opacity: 0.25;
+  }
+}
+.menu-small {
+  font-size: 14px;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.menu[data-open="true"] .menu-small {
+  opacity: 1;
+  transition: opacity 0.5s ease 0.7s;
+}
+.menu-small a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 520px) {
+  .menu-toggle {
+    font-size: 12px;
+  }
+  .menu-items {
+    font-size: min(13vh, 15vw);
+  }
+  .menu-panel {
+    padding: 80px 16px max(20px, env(safe-area-inset-bottom));
+  }
+}
+
+/* ── About page ─────────────────────────────────────────────────────────────
+   Name and text on the left; the right half holds the 3D head (js/head.js),
+   which stays on screen while the text scrolls. */
+.about-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 100svh;
+}
+.about-text {
+  padding: 120px 20px 32px;
+}
+.about-title {
+  font-size: clamp(44px, 7vw, 110px);
+  font-weight: inherit;
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+  margin-bottom: 48px;
+}
+.bio {
+  max-width: 800px;
+  font-size: clamp(20px, 2vw, 30px);
+  line-height: 1.2;
+  margin-bottom: 65px;
+}
+.about-columns {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  justify-content: start;
+  font-size: 14px;
+  line-height: 1.4;
+  gap: 32px 56px;
+}
+.about-columns p:first-child {
+  margin-bottom: 22px;
+}
+@media (max-width: 1200px) {
+  .about-columns {
+    grid-template-columns: repeat(2, auto);
+  }
+}
+.about-columns a {
+  white-space: nowrap;
+}
+.copyright {
+  font-size: 12px;
+  margin-top: 45px;
+}
+.about-head {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.about-head canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+  opacity: 0;
+  transition: opacity 0.9s;
+}
+.about-head.ready canvas {
+  opacity: 1;
+}
+.about-head.over {
+  cursor: var(--cursor-grab);
+}
+.about-head.grabbing {
+  cursor: var(--cursor-grabbing);
+}
+@media (max-width: 991px) {
+  .about-page {
+    grid-template-columns: 1fr;
+  }
+  .about-head {
+    position: relative;
+    order: -1;
+    height: 58svh;
+    margin-top: 56px;
+  }
+  .about-head.failed {
+    display: none;
+  }
+  .about-text {
+    padding: 8px 16px 35px;
+  }
+  .about-title {
+    font-size: 44px;
+    margin-bottom: 32px;
+  }
+  .bio {
+    font-size: 22px;
+    margin-bottom: 45px;
+  }
+  .about-columns {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    font-size: 16px;
+  }
+  .about-columns p:first-child {
+    margin-bottom: 12px;
+  }
+}
+
+/* About is white: the header follows (it is white-on-black everywhere else) */
+html.light,
+html.light body {
+  --bg: #fff;
+  --ink: #000;
+  color-scheme: light;
+}
+html.light .header {
+  color: #000;
+  text-shadow: none;
+}
+html.light .menu-toggle-icon > span {
+  box-shadow: none;
+}
+html.light .client-logos img {
+  filter: invert(1);
 }

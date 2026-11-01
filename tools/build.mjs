@@ -1,5 +1,6 @@
 // Generates every page of the site from template.html + js/data.js:
-//   index.html, film/index.html, visuals/index.html, work/<id>/index.html, sitemap.xml
+//   index.html, about/index.html, work/<id>/index.html, privacy/index.html, sitemap.xml
+// plus small redirect pages at the old /film/ and /visuals/ addresses.
 // Each page gets its own title, description, preview image and structured data,
 // with the content already in the HTML so Google can read it.
 //
@@ -10,12 +11,10 @@ import { fileURLToPath } from "node:url";
 import { projects, goatcounter } from "../js/data.js";
 import {
   esc,
-  film,
-  visuals,
+  work,
   fullName,
   homeMarkup,
-  clientsMarkup,
-  listMarkup,
+  aboutMarkup,
   projectImages,
   projectMarkup,
 } from "../js/views.js";
@@ -83,15 +82,15 @@ function head({ title, description, path, image, imageAlt, schema, preload }) {
     .join("\n");
 }
 
-function write(path, headHTML, mainHTML) {
+function write(path, headHTML, mainHTML, htmlClass = "") {
   const file = join(root, path, "index.html");
   mkdirSync(dirname(file), { recursive: true });
   writeFileSync(
     file,
     template
+      .replace("{{HTMLCLASS}}", htmlClass ? ` class="${htmlClass}"` : "")
       .replace("{{HEAD}}", headHTML)
       .replace("{{MAIN}}", mainHTML)
-      .replace("{{CLIENTS}}", clientsMarkup())
       .replace(
         "{{ANALYTICS}}",
         goatcounter
@@ -140,53 +139,60 @@ write(
         publisher: { "@id": person["@id"] },
       },
       person,
-      itemList(film),
+      itemList(work),
     ],
   }),
   homeMarkup(),
 );
 
-// Section pages
-for (const [slug, label, heading, list, blurb] of [
-  [
-    "film",
-    "Selected films",
-    "Films by Nicoló Lombardi",
-    film,
-    "AI-generated TV commercials, fashion campaigns, music video VFX and educational animation",
-  ],
-  [
-    "visuals",
-    "Visual projects",
-    "Visual projects by Nicoló Lombardi",
-    visuals,
-    "AI product shots, photoreal digital assets and virtual production environments",
-  ],
-]) {
-  write(
-    slug,
-    head({
-      title: `${slug[0].toUpperCase() + slug.slice(1)} — ${NAME}, AI Filmmaker`,
-      description: `${blurb} by ${NAME}, AI filmmaker and art director in Madrid: ${list.map((p) => p.brand).join(", ")}.`,
-      path: `/${slug}/`,
-      image: `/assets/og/${list[0].id}.jpg`,
-      imageAlt: fullName(list[0]),
-      schema: [
-        {
-          "@type": "CollectionPage",
-          url: `${SITE}/${slug}/`,
-          name: heading,
-          author: { "@id": person["@id"] },
-          mainEntity: itemList(list),
-        },
-        breadcrumbs([
-          [NAME, "/"],
-          [heading, `/${slug}/`],
-        ]),
-        person,
-      ],
-    }),
-    listMarkup(list, label, heading),
+// About page
+write(
+  "about",
+  head({
+    title: `About — ${NAME}, AI Filmmaker & Art Director`,
+    description: `${NAME} is an AI filmmaker, creative technologist and art director based in Madrid, working with ${brands} and more.`,
+    path: "/about/",
+    image: "/assets/og-image.jpg",
+    imageAlt: NAME,
+    schema: [
+      {
+        "@type": "ProfilePage",
+        url: `${SITE}/about/`,
+        name: `About ${NAME}`,
+        mainEntity: { "@id": person["@id"] },
+      },
+      breadcrumbs([
+        [NAME, "/"],
+        ["About", "/about/"],
+      ]),
+      person,
+    ],
+  }),
+  aboutMarkup(),
+  "light",
+);
+
+// The Film and Visuals lists now live on the landing page: their old addresses forward there.
+for (const slug of ["film", "visuals"]) {
+  const file = join(root, slug, "index.html");
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(
+    file,
+    `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="robots" content="noindex" />
+    <title>${NAME}</title>
+    <link rel="canonical" href="${SITE}/" />
+    <meta http-equiv="refresh" content="0; url=/#work" />
+    <script>location.replace("/#work");</script>
+  </head>
+  <body>
+    <p><a href="/#work">See the work of ${NAME}</a></p>
+  </body>
+</html>
+`,
   );
 }
 
@@ -196,8 +202,6 @@ for (const p of projects) {
   const og = existsSync(join(root, "assets/og", `${p.id}.jpg`))
     ? `/assets/og/${p.id}.jpg`
     : "/assets/og-image.jpg";
-  const section =
-    visuals.includes(p) && !film.includes(p) ? ["Visuals", "/visuals/"] : ["Film", "/film/"];
   write(
     `work/${p.id}`,
     head({
@@ -220,11 +224,14 @@ for (const p of projects) {
           about: { "@type": "Brand", name: p.brand },
           ...(p.externalVideo || p.youtube ? { sameAs: p.externalVideo || p.youtube } : {}),
         },
-        breadcrumbs([[NAME, "/"], section, [fullName(p), path]]),
+        breadcrumbs([
+          [NAME, "/"],
+          [fullName(p), path],
+        ]),
         person,
       ],
     }),
-    projectMarkup(p, section[1] + `#p-${p.id}`),
+    projectMarkup(p),
   );
 }
 
@@ -268,9 +275,8 @@ write(
 );
 
 const pages = [
-  ["/", ["/assets/og-image.jpg"]],
-  ["/film/", film.map((p) => p.cover)],
-  ["/visuals/", visuals.map((p) => p.cover)],
+  ["/", ["/assets/og-image.jpg", ...work.map((p) => p.cover)]],
+  ["/about/", []],
   ["/privacy/", []],
   ...projects.map((p) => [`/work/${p.id}/`, [p.cover, ...projectImages(p)]]),
 ];

@@ -6,7 +6,7 @@
 //   brand / title   shown on the project page (title is hidden if it equals brand)
 //   type            small label under the title (e.g. "TVC", "VFX")
 //   description     the "About the project" text (use \n\n for a new paragraph)
-//   cover           full-screen image used in the Film / Visuals scroll
+//   cover           full-screen image used in the Work scroll on the landing page
 //   images          optional vertical image gallery
 //   videos          optional .webm files; a matching .mp4 with the same name must
 //                   sit next to each one (Safari / older iPhones play the .mp4)
@@ -26,7 +26,7 @@
 //                   (with `stills`, `images` becomes a row of portrait key visuals)
 //
 // The order of `projects` is the order of the "Next project" links.
-// `filmOrder` and `visualsOrder` decide what appears in each section, in order.
+// `workOrder` decides which projects the landing page lists, in order.
 // ─────────────────────────────────────────────────────────────────────────────
 const img = (src, w, h) => ({ src, w, h });
 export const projects = [
@@ -337,7 +337,7 @@ export const projects = [
 
 // Sections shown in the top navigation, as lists of project ids.
 // The landing page shows the hero video followed by the film list.
-export const filmOrder = [
+export const workOrder = [
   "elaguila",
   "wppproduction",
   "schweppes",
@@ -349,10 +349,10 @@ export const filmOrder = [
   "wichita",
   "wichita-666",
   "melia",
+  "soapandglory",
 ];
-export const visualsOrder = ["soapandglory", "toyota", "elaguila", "anaya", "wppproduction"];
 
-// "Selected clients" logo strip in the About panel, in this order.
+// "Selected clients" logo strip on the About page, in this order.
 // ratio = logo width ÷ height (used to give every logo the same visual weight).
 export const clients = [
   { name: "Coca-Cola", logo: "/assets/clients/cocacola.webp", ratio: 3.184 },

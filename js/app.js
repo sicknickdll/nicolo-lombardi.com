@@ -1,33 +1,17 @@
-// Portfolio behaviour. Every page (/, /film/, /visuals/, /work/<id>/) is a real,
-// pre-built HTML file (see tools/build.mjs) so search engines can read it; this
-// script re-renders the same markup and adds the interactions: snap scrolling,
-// previous/next logo hover, carousels, the About panel.
+// Portfolio behaviour. Every page (/, /about/, /work/<id>/) is a real, pre-built
+// HTML file (see tools/build.mjs) so search engines can read it; this script
+// re-renders the same markup and adds the interactions: snap scrolling, carousels,
+// the menu (js/menu.js) and the 3D head on the About page (js/head.js).
 import { projects } from "./data.js";
 import { bindGalleries } from "./galleries.js";
 import { bindScramble } from "./scramble.js";
 import { bindPlayers } from "./player.js";
-import { pixelCurtain } from "./pixels.js";
 import { eyeTracking } from "./eye.js";
-import { film, visuals, homeMarkup, listMarkup, projectMarkup, projectURL } from "./views.js";
+import { isMenuOpen } from "./menu.js";
+import { work, homeMarkup, projectMarkup, projectURL, aboutMarkup } from "./views.js";
 const main = document.querySelector("#main");
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
-let cleanup = () => {},
-  returnFocus = null;
-// Remembers which list the visitor came from, so "back" on a project returns there.
-const memory = {
-  get: () => {
-    try {
-      return sessionStorage.getItem("lastList");
-    } catch {
-      return null;
-    }
-  },
-  set: (v) => {
-    try {
-      sessionStorage.setItem("lastList", v);
-    } catch {}
-  },
-};
+let cleanup = () => {};
 function announce(s) {
   document.querySelector("#announcer").textContent = s;
 }
@@ -37,36 +21,13 @@ function showHome() {
   // Under the landing intro the video waits: js/intro.js starts it when the page appears.
   if (reduce.matches || document.documentElement.classList.contains("intro")) v.pause();
   else v.play().catch(() => {});
-  // Easter egg: 5 quick clicks on the name open "Nicoló OS". Clicking the name does
-  // nothing else (it sits inside the hero link, so the click is swallowed).
-  const name = main.querySelector(".animated-name");
-  let clicks = 0,
-    clickTimer;
-  name.style.cursor = "default";
-  name.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    clearTimeout(clickTimer);
-    clicks++;
-    name.classList.toggle("tease", clicks >= 3);
-    if (clicks >= 5) {
-      clicks = 0;
-      name.classList.remove("tease");
-      openOS();
-      return;
-    }
-    clickTimer = setTimeout(() => {
-      clicks = 0;
-      name.classList.remove("tease");
-    }, 420);
-  });
   // Landing intro: html.intro is set by the inline script in the page head.
   const root = document.documentElement;
   if (root.classList.contains("intro"))
     import("./intro.js")
       .then((m) => m.playIntro())
       .catch(() => root.classList.remove("intro"));
-  const scrollCleanup = bindProjectScroll(film),
+  const scrollCleanup = bindProjectScroll(work),
     eyeCleanup = eyeTracking(v);
   cleanup = () => {
     v.pause();
@@ -111,7 +72,7 @@ function bindProjectScroll(list) {
     });
   };
   const key = (e) => {
-    if (isOverlayOpen() || e.target.closest?.("a,button,input,textarea,select")) return;
+    if (isMenuOpen() || e.target.closest?.("a,button,input,textarea,select")) return;
     if (["ArrowDown", "ArrowRight", "PageDown"].includes(e.key)) {
       e.preventDefault();
       move(1);
@@ -144,9 +105,7 @@ function bindProjectScroll(list) {
   const returnToLanding = () => {
     returning = true;
     announce("Back to Nicoló Lombardi");
-    if (location.pathname === "/")
-      window.scrollTo({ top: 0, behavior: reduce.matches ? "auto" : "smooth" });
-    else location.href = "/";
+    window.scrollTo({ top: 0, behavior: reduce.matches ? "auto" : "smooth" });
   };
   const wheel = (e) => {
     const now = performance.now(),
@@ -156,7 +115,7 @@ function bindProjectScroll(list) {
     if (
       !end ||
       returning ||
-      isOverlayOpen() ||
+      isMenuOpen() ||
       e.ctrlKey ||
       e.deltaY <= 0 ||
       Math.abs(e.deltaX) > Math.abs(e.deltaY)
@@ -186,7 +145,7 @@ function bindProjectScroll(list) {
     touchStart = null;
     if (
       e.touches.length !== 1 ||
-      isOverlayOpen() ||
+      isMenuOpen() ||
       returning ||
       !checkEnd() ||
       performance.now() - endSince < 240
@@ -197,7 +156,7 @@ function bindProjectScroll(list) {
   const touchEnd = (e) => {
     const start = touchStart;
     touchStart = null;
-    if (!start || !checkEnd() || isOverlayOpen() || e.changedTouches.length !== 1) return;
+    if (!start || !checkEnd() || isMenuOpen() || e.changedTouches.length !== 1) return;
     const distance = start.y - e.changedTouches[0].clientY,
       elapsed = performance.now() - start.time;
     if (distance >= Math.max(110, innerHeight * 0.16) && elapsed <= 650) returnToLanding();
@@ -228,22 +187,10 @@ function bindProjectScroll(list) {
     window.removeEventListener("touchcancel", touchCancel);
   };
 }
-function showProjects(list, label, heading) {
-  main.innerHTML = listMarkup(list, label, heading);
-  cleanup = bindProjectScroll(list);
-}
 function showProject(id) {
   const p = projects.find((x) => x.id === id);
-  if (!p) return location.replace("/film/");
-  // Back to the list the visitor came from, if this project is in it.
-  const inList = { "/": film, "/film/": film, "/visuals/": visuals };
-  const remembered = memory.get();
-  const list = inList[remembered]?.includes(p)
-    ? remembered
-    : film.includes(p)
-      ? "/film/"
-      : "/visuals/";
-  main.innerHTML = projectMarkup(p, `${list}#p-${p.id}`);
+  if (!p) return location.replace("/");
+  main.innerHTML = projectMarkup(p);
   main.querySelectorAll("video").forEach((v) =>
     v.addEventListener("play", () =>
       main.querySelectorAll("video").forEach((other) => {
@@ -275,104 +222,47 @@ function showProject(id) {
     main.querySelectorAll("video").forEach((v) => v.pause());
   };
 }
-// Old ChatGPT-site links used #film, #visuals and #project/<id>: send them to the real pages.
+function showAbout() {
+  main.innerHTML = aboutMarkup();
+  const stage = main.querySelector(".about-head");
+  let headCleanup = () => {},
+    gone = false;
+  import("./head.js")
+    .then((m) => {
+      if (!gone) headCleanup = m.mountHead(stage);
+    })
+    .catch(() => stage.classList.add("failed"));
+  cleanup = () => {
+    gone = true;
+    headCleanup();
+  };
+}
+// Old links: #film, #visuals and #project/<id> from the ChatGPT site go to the real pages.
 function redirectLegacyHash() {
   const h = location.hash.slice(1);
-  if (h === "film" || h === "visuals") return (location.replace(`/${h}/`), true);
+  if (h === "film" || h === "visuals") return (location.replace("/#work"), true);
   if (h.startsWith("project/")) return (location.replace(`/work/${h.slice(8)}/`), true);
   if (h === "home") history.replaceState(null, "", "/");
   return false;
 }
 function render() {
   const path = location.pathname.replace(/index\.html$/, "");
-  const work = path.match(/^\/work\/([^/]+)\/?$/);
-  document.documentElement.classList.toggle("snap-pages", !work);
-  document.querySelectorAll(".header a").forEach((a) => {
-    if (a.pathname === path) a.setAttribute("aria-current", "page");
-    else a.removeAttribute("aria-current");
-  });
-  if (path === "/privacy/") {
-    document.documentElement.classList.remove("snap-pages");
-    return;
-  }
-  if (path === "/film/") showProjects(film, "Selected films", "Films by Nicoló Lombardi");
-  else if (path === "/visuals/")
-    showProjects(visuals, "Visual projects", "Visual projects by Nicoló Lombardi");
-  else if (work) showProject(work[1]);
+  const project = path.match(/^\/work\/([^/]+)\/?$/);
+  document.documentElement.classList.toggle("snap-pages", path === "/");
+  document.documentElement.classList.toggle("light", path === "/about/");
+  if (path === "/privacy/") return;
+  if (path === "/about/") showAbout();
+  else if (project) showProject(project[1]);
   else showHome();
-  if (!work) memory.set(path === "/film/" || path === "/visuals/" ? path : "/");
-  // Arriving from "back" (…#p-<id>): land on that project's slide.
-  const target = location.hash.startsWith("#p-") && document.getElementById(location.hash.slice(1));
+  // Arriving with a hash (…/#work, …/#p-<id> from "back"): land on that slide.
+  const target = location.hash.length > 1 && document.getElementById(location.hash.slice(1));
   window.scrollTo({ top: target ? target.offsetTop : 0, behavior: "instant" });
 }
-const about = document.querySelector("#about"),
-  aboutToggle = document.querySelector("#about-toggle");
-// Opens the Easter egg. Its sounds need an AudioContext made during the click itself,
-// since browsers only allow sound right after a user gesture.
-function openOS() {
-  const Context = window.AudioContext || window.webkitAudioContext;
-  let audio = null;
-  try {
-    audio = Context ? new Context() : null;
-  } catch {}
-  import("./xp/os.js").then((m) => m.launch(audio));
-}
-function isOverlayOpen() {
-  return !about.hidden;
-}
-function closeOverlay() {
-  const was = isOverlayOpen();
-  about.hidden = true;
-  document.body.style.overflow = "";
-  main.inert = false;
-  aboutToggle.setAttribute("aria-expanded", "false");
-  if (was && returnFocus?.isConnected) returnFocus.focus();
-}
-function openAbout() {
-  returnFocus = document.activeElement;
-  about.hidden = false;
-  main.inert = true;
-  document.body.style.overflow = "hidden";
-  aboutToggle.setAttribute("aria-expanded", "true");
-  document.querySelector("#about-close").focus();
-}
-about.insertAdjacentHTML(
-  "afterbegin",
-  '<button id="about-close" aria-label="Close about">close</button>',
-);
-aboutToggle.onclick = () => pixelCurtain(() => (about.hidden ? openAbout() : closeOverlay()));
-document.querySelector("#about-close").onclick = () => pixelCurtain(closeOverlay);
-window.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && isOverlayOpen()) {
+// Clicking the name while on the landing page scrolls back to the top.
+document.querySelector(".header .brand").addEventListener("click", (e) => {
+  if (location.pathname === "/" && !isMenuOpen()) {
     e.preventDefault();
-    pixelCurtain(closeOverlay);
-  }
-  if (e.key === "Tab" && isOverlayOpen()) {
-    const els = [...about.querySelectorAll("a,button")],
-      first = els[0],
-      last = els.at(-1);
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
+    window.scrollTo({ top: 0, behavior: reduce.matches ? "auto" : "smooth" });
   }
 });
-// Clicking the link of the page you're already on scrolls back to the top.
-document.querySelectorAll(".header a").forEach((a) =>
-  a.addEventListener("click", (e) => {
-    if (a.pathname === location.pathname) {
-      e.preventDefault();
-      window.scrollTo({ top: 0, behavior: reduce.matches ? "auto" : "smooth" });
-    }
-  }),
-);
-document.querySelector("#year").textContent = new Date().getFullYear();
-// Second way into the Easter egg: the "CLICK ME" button at the bottom of About.
-document.querySelector("#click-me").onclick = () => {
-  closeOverlay();
-  openOS();
-};
 if (!redirectLegacyHash()) render();
