@@ -75,6 +75,7 @@ export const projects = [
   },
   {
     id: "malik-cross",
+    year: "2025",
     brand: "Malik Cross",
     title: "Malik Cross",
     type: "Short Film · Bionic Awards Entry",
@@ -99,6 +100,7 @@ export const projects = [
   },
   {
     id: "toyota",
+    year: "2025",
     brand: "Toyota",
     title: "Ma Toyota est Fantastique",
     type: "Digital Asset",
@@ -112,6 +114,7 @@ export const projects = [
   },
   {
     id: "lexus",
+    year: "2025",
     brand: "Lexus",
     title: "Electrified",
     type: "TVC",
@@ -128,6 +131,7 @@ export const projects = [
   },
   {
     id: "schweppes",
+    year: "2026",
     brand: "Schweppes",
     title: "Schweppes",
     type: "AI Film · Advertising",
@@ -144,6 +148,7 @@ export const projects = [
   },
   {
     id: "elaguila",
+    year: "2025",
     brand: "El Águila",
     title: "La hora dorada",
     type: "Virtual Production",
@@ -170,6 +175,7 @@ export const projects = [
   },
   {
     id: "melia",
+    year: "2025",
     brand: "Meliá",
     title: "Hotel Meliá",
     type: "Social Media Content",
@@ -194,6 +200,7 @@ export const projects = [
   },
   {
     id: "wichita",
+    year: "2026",
     brand: "Wichita Production",
     title: "Kill the Boy",
     type: "VFX",
@@ -236,6 +243,7 @@ export const projects = [
   },
   {
     id: "anaya",
+    year: "2026",
     externalVideo: "https://vimeo.com/1199356201?share=copy&fl=sv&fe=ci",
     brand: "Anaya",
     title: "ANAYA",
@@ -249,6 +257,7 @@ export const projects = [
   },
   {
     id: "wppproduction",
+    year: "2024",
     brand: "WPP Production",
     title: "Virtual Production",
     type: "Virtual Production",
@@ -299,6 +308,7 @@ export const projects = [
   },
   {
     id: "soapandglory",
+    year: "2026",
     brand: "Soap & Glory",
     title: "Soap & Glory",
     type: "AI Product Shot",
@@ -323,6 +333,7 @@ export const projects = [
   },
   {
     id: "wichita-666",
+    year: "2026",
     brand: "Wichita Production",
     title: "666",
     type: "Music Video · Edit & VFX",
