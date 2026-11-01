@@ -5,6 +5,7 @@
 //   id              short unique name, used in the URL (#project/<id>)
 //   brand / title   shown on the project page (title is hidden if it equals brand)
 //   type            small label under the title (e.g. "TVC", "VFX")
+//   year, client    shown beside the text (Year / Client / Discipline); client defaults to brand
 //   description     the "About the project" text (use \n\n for a new paragraph)
 //   cover           full-screen image used in the Work scroll on the landing page
 //   images          optional vertical image gallery
