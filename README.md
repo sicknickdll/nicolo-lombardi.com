@@ -10,7 +10,7 @@ js/data.js          ← ALL CONTENT: projects, texts, videos, order of the Work 
 js/views.js         page markup (landing, About, projects), shared by the browser and the generator
 js/app.js           interactions: snap scrolling, carousels, About page
 js/menu.js          the "Menu +" button and the full-screen menu (Work, About, Archive, Playground, Contact)
-js/head.js          About page: 3D head that looks at the cursor and stretches when grabbed
+js/head.js          About page: 3D head (follows the cursor, rotates on drag / two-finger scroll, reacts to taps)
 js/vendor/three.js  the parts of three.js the head needs   (npm install && npm run vendor:three)
 js/intro.js         landing intro: words rolling inside a ring of spinning frames
 js/eye.js           landing video: the eye follows the cursor
@@ -73,6 +73,11 @@ commit and push.
   exist, give them a page in `tools/build.mjs` like About.
 - **3D head**: `npm install`, then `node tools/optimize-model.mjs scan.glb assets/about/head.glb`.
   If a new scan doesn't face the camera, change `FACE_TURN` at the top of `js/head.js`.
+  The eyes, nose and mouth positions (`FACE` in `js/head.js`) are measured for this scan; a new
+  scan needs them re-measured.
+- **Head reactions** (`js/head.js`): drag or two-finger scroll rotates (too much = dizzy, eyes roll);
+  move over the head = smile; tap an eye = hurt; tap the nose 3 times = it grows; tap the mouth =
+  pucker; tap elsewhere = boop; press and hold, then pull = stretch (Mario 64); idle 14 s = sleeps.
 - **Landing intro**: the words and the frames that orbit the name are `intro` in `js/data.js`.
   The frames' clips are 4-second, 360px cuts of the project videos: list a new one in
   `tools/make-intro-clips.sh`, run it, then add it to `intro.frames`. It plays when someone enters the site or reloads the landing page, not when they come back
