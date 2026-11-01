@@ -44,7 +44,7 @@ const FACE = {
   ],
   lid: { rx: 0.09, ry: 0.042 }, // area the eyelids can cover
   open: { rx: 0.062, ry: 0.019 }, // the visible eye opening (where the iris can move)
-  gaze: { x: 0.024, y: 0.0095 }, // furthest the iris travels
+  gaze: { x: 0.012, y: 0.004 }, // furthest the iris travels
   skinY: -0.115, // cheek height: eyelids are painted with the skin colour found here
   nose: { x: -0.003, y: -0.195 },
   mouth: { x: -0.001, y: -0.318, cl: -0.115, cr: 0.113 },
@@ -94,8 +94,8 @@ const FRAG_MAP = `
     vec2 d = q / uLidR;
     float inside = (1.0 - smoothstep(0.85, 1.05, length(d))) * front;
     // Gaze: inside the eye opening the iris slides toward uGaze, the lids stay put.
-    float gw = (1.0 - smoothstep(0.55, 1.0, abs(q.x) / uOpenR.x))
-             * (1.0 - smoothstep(0.8, 1.0, abs(q.y) / uOpenR.y)) * front;
+    float gw = (1.0 - smoothstep(0.2, 1.0, abs(q.x) / uOpenR.x))
+             * (1.0 - smoothstep(0.5, 1.0, abs(q.y) / uOpenR.y)) * front;
     muv -= uEyeJ[i].xy * (uGaze[i].x * gw) + uEyeJ[i].zw * (uGaze[i].y * gw);
     // Lids: the upper one comes down in an arc, a squint also raises the lower one.
     float arc = max(1.0 - d.x * d.x, 0.0);
@@ -344,7 +344,6 @@ export function mountHead(stage) {
     dizzy = { t: -1, sum: 0 },
     kiss = { t: -1 };
   let lid = 0,
-    blink = { t: -1, next: 2.5 },
     pet = 0,
     sleepy = 0,
     lastActivity = performance.now(),
@@ -622,16 +621,7 @@ export function mountHead(stage) {
     spring(squash, 0, 190, 11, dt);
     spring(shake, 0, 520, 9, dt);
 
-    // Blinking.
-    let blinkAmt = 0;
-    if (!reduce) {
-      if (blink.t < 0 && time > blink.next) blink.t = 0;
-      if (blink.t >= 0) {
-        blink.t += dt;
-        blinkAmt = Math.sin(clamp(blink.t / 0.17, 0, 1) * Math.PI);
-        if (blink.t > 0.17) (blink.t = -1), (blink.next = time + 2.2 + Math.random() * 3.6);
-      }
-    }
+    const blinkAmt = 0; // no idle blinking
 
     // What the face wants right now.
     const hurtAmt = hurt.t < 0 ? 0 : smooth(0, 0.05, hurt.t) * (1 - smooth(1.5, 1.9, hurt.t));
@@ -644,7 +634,7 @@ export function mountHead(stage) {
     spring(smile, smileTo, 150, 14, dt);
     spring(pucker, kissAmt, 220, 16, dt);
 
-    // Eyelids: blink, wince, sleep; a happy face squints.
+    // Eyelids: wince, sleep; a happy face squints.
     const lidTo = Math.max(blinkAmt, hurtAmt, sleepy * 0.95);
     lid += (lidTo - lid) * (1 - Math.exp(-dt * (lidTo > lid ? 32 : 14)));
     const squint = Math.max(0, smile.x) * 0.7;
