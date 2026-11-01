@@ -247,9 +247,15 @@ video {
   text-shadow: 0 1px 16px rgba(0, 0, 0, 0.7);
 }
 .snap-pages {
-  scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
   scrollbar-width: none;
+}
+/* Touch and reduced motion: the browser snaps to each cover. With a mouse or trackpad,
+   js/smooth.js glides and settles on the nearest one instead. */
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .snap-pages {
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+  }
 }
 .snap-pages::-webkit-scrollbar {
   display: none;
@@ -342,6 +348,24 @@ video {
 .detail-text h2 {
   font-size: 14px;
   font-weight: 700;
+}
+.facts {
+  margin: 28px 0 0;
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: normal;
+}
+.facts div {
+  margin-bottom: 18px;
+}
+.facts dt {
+  font-weight: 700;
+  opacity: 0.55;
+  margin-bottom: 3px;
+}
+.facts dd {
+  margin: 0;
+  font-weight: 400;
 }
 /* Text decode on scroll (js/scramble.js): hidden until it enters the screen, then every
    character keeps its real width while it shuffles, so nothing reflows. */

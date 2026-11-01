@@ -62,6 +62,17 @@ function closingMarkup(p) {
   return `${heading}<section class="case-film" aria-label="${esc(p.brand)} — ${esc(v.label || "closing film")}"><div class="player" data-brand="${esc(v.label || p.brand)}"><video controls muted loop playsinline preload="none" data-inview poster="${v.poster}" style="--ratio:${v.ratio || 16 / 9}">${videoSources(v.src)}</video></div></section>`;
 }
 
+// Year / Client / Discipline beside the project text (set `year` and, if different from the
+// brand, `client` in js/data.js; a project without a year just leaves that line out).
+function factsMarkup(p) {
+  const rows = [
+    ["Year", p.year],
+    ["Client", p.client || p.brand],
+    ["Discipline", p.type],
+  ].filter(([, v]) => v);
+  return `<dl class="facts">${rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>`;
+}
+
 export function projectMarkup(p, backHref = `/#p-${p.id}`) {
   const local =
     p.videos.length === 1
@@ -98,7 +109,7 @@ export function projectMarkup(p, backHref = `/#p-${p.id}`) {
   // "Next project" follows the Work order for projects in it, otherwise the `projects` order.
   const order = work.includes(p) ? work : projects;
   const next = order[(order.indexOf(p) + 1) % order.length];
-  return `<article class="detail"><a class="back" href="${backHref}">back</a>${media}${fullImage}${images}${fallback}<header class="detail-heading"><h1>${esc(p.brand)}${p.title === p.brand ? "" : "<br>" + esc(p.title)}</h1><p>${esc(p.type)}</p></header><div class="detail-text"><h2>About the project</h2><p>${esc(p.description)}</p></div>${stillsMarkup(p)}${posters}${btsMarkup(p)}${closingMarkup(p)}${p.externalVideo ? `<p class="media-note"><a href="${esc(p.externalVideo)}" target="_blank" rel="noopener noreferrer">Open film on Vimeo</a></p>` : ""}<a class="next-project" href="${projectURL(next)}"><span>Next project</span><strong>${esc(next.brand)}</strong></a></article>`;
+  return `<article class="detail"><a class="back" href="${backHref}">back</a>${media}${fullImage}${images}${fallback}<header class="detail-heading"><h1>${esc(p.brand)}${p.title === p.brand ? "" : "<br>" + esc(p.title)}</h1><p>${esc(p.type)}</p></header><div class="detail-text"><div><h2>About the project</h2>${factsMarkup(p)}</div><p>${esc(p.description)}</p></div>${stillsMarkup(p)}${posters}${btsMarkup(p)}${closingMarkup(p)}${p.externalVideo ? `<p class="media-note"><a href="${esc(p.externalVideo)}" target="_blank" rel="noopener noreferrer">Open film on Vimeo</a></p>` : ""}<a class="next-project" href="${projectURL(next)}"><span>Next project</span><strong>${esc(next.brand)}</strong></a></article>`;
 }
 
 // About page: the name and the text on the left, the 3D head (js/head.js) on the right.
