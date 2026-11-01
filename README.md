@@ -1,24 +1,31 @@
 # nicolo-lombardi.com
 
-Nicoló Lombardi's portfolio (film and visuals) as a plain static website: every page is a
+Nicoló Lombardi's portfolio as a plain static website: every page is a
 ready-made HTML file, so it runs on any static host (GitHub Pages, Cloudflare Pages, Netlify,
 or plain FTP hosting) and search engines can read every project.
 
 ```
-template.html       page shell (header, About panel) used for every page
-js/data.js          ← ALL CONTENT: projects, texts, videos, order of Film / Visuals
-js/views.js         page markup, shared by the browser and the page generator
-js/app.js           interactions: snap scrolling, logo hover, carousels, About panel
+template.html       page shell (header, "Menu" button, full-screen menu) used for every page
+js/data.js          ← ALL CONTENT: projects, texts, videos, order of the Work list
+js/views.js         page markup (landing, About, projects), shared by the browser and the generator
+js/app.js           interactions: snap scrolling, carousels, About page
+js/menu.js          the "Menu +" button and the full-screen menu (Work, About, Archive, Playground, Contact)
+js/head.js          About page: 3D head that looks at the cursor and stretches when grabbed
+js/vendor/three.js  the parts of three.js the head needs   (npm install && npm run vendor:three)
 js/intro.js         landing intro: words rolling inside a ring of spinning frames
+js/eye.js           landing video: the eye follows the cursor
 js/galleries.js     video and image carousels on project pages
 js/player.js        custom film interface: wheel scrub, bottom progress line, text controls
 js/scramble.js      text "decode" effect for the About block of every project page
 tools/build.mjs     generates the pages below + sitemap.xml   (npm run build)
+tools/optimize-model.mjs  shrinks a 3D scan for the web (assets/about/head.glb)
+tools/vendor-three.mjs    rebuilds js/vendor/three.js
 tools/make-og-images.py  link-preview images in assets/og/
 tools/prepare-video.sh   converts a new video into the needed formats
 tools/make-intro-clips.sh  short, light loop clips for the landing intro (assets/intro/)
-index.html, film/, visuals/, work/<id>/   GENERATED pages, don't edit by hand
-assets/             images (.webp), videos (.webm + .mp4 fallback), icons, previews
+index.html, about/, work/<id>/   GENERATED pages, don't edit by hand
+film/, visuals/     GENERATED redirects: old addresses forward to the Work list on the landing page
+assets/             images (.webp), videos (.webm + .mp4 fallback), icons, previews, about/head.glb
 CNAME, .nojekyll    GitHub Pages settings · _headers for Netlify / Cloudflare
 404.html, robots.txt, sitemap.xml
 ```
@@ -27,11 +34,14 @@ Pages and addresses:
 
 | Address | Page |
 | --- | --- |
-| `/` | landing video + film list |
-| `/film/`, `/visuals/` | full-screen project lists |
+| `/` | landing video + the full-screen Work list (`/#work`) |
+| `/about/` | bio, contact, clients, and the 3D head |
 | `/work/<id>/` | one page per project, e.g. `/work/lexus/` |
+| `/archive/`, `/playground/` | in the menu, not built yet: they show the 404 page |
 
-Old links from the previous site (`/#film`, `/#project/lexus`) redirect to the new addresses.
+Old links from the previous site (`/#film`, `/#project/lexus`) and the old `/film/` and
+`/visuals/` pages redirect to the new addresses.
+
 
 ## Preview on your computer
 
@@ -46,19 +56,23 @@ commit and push.
 
 - **Edit a text**: change `title`, `type` or `description` of the project. The first ~155
   characters of `description` become the Google snippet, so lead with what and for whom.
-- **Reorder / hide projects**: edit `filmOrder` and `visualsOrder` at the bottom of the file.
+- **Reorder / hide projects**: edit `workOrder` at the bottom of the file.
 - **Add a project**:
   1. Put a full-screen cover image in `assets/` (`.webp` or `.jpg`, ~2560 px wide).
   2. For each video run `tools/prepare-video.sh path/to/video.mov myproject-01` (needs `ffmpeg`).
   3. Copy an existing project block in `projects`, give it a new `id` (it becomes the address
-     `/work/<id>/`), fill in the fields, and add the `id` to `filmOrder` and/or `visualsOrder`.
+     `/work/<id>/`), fill in the fields, and add the `id` to `workOrder`.
   4. `python3 tools/make-og-images.py` (link-preview image), then `node tools/build.mjs`.
 - **Case layout** (WPP Production, El Águila, Malik Cross): a project with `stills` shows its
   film on top, the text, a two-column grid of stills (`img(path, width, height)`), then an
   optional "Behind the scenes" strip (`bts.images`, scrolls on its own) and an optional
   closing film (`closingVideo`, plays muted while on screen). Videos: `MAX=1440
   tools/prepare-video.sh <file> <name>` makes the .webm, .mp4, poster and thumbnail.
-- **About text / contact**: edit `template.html`, then rebuild.
+- **About text / contact**: edit `aboutMarkup()` in `js/views.js`, then rebuild.
+- **Menu links**: edit the menu in `template.html`, then rebuild. When Archive or Playground
+  exist, give them a page in `tools/build.mjs` like About.
+- **3D head**: `npm install`, then `node tools/optimize-model.mjs scan.glb assets/about/head.glb`.
+  If a new scan doesn't face the camera, change `FACE_TURN` at the top of `js/head.js`.
 - **Landing intro**: the words and the frames that orbit the name are `intro` in `js/data.js`.
   The frames' clips are 4-second, 360px cuts of the project videos: list a new one in
   `tools/make-intro-clips.sh`, run it, then add it to `intro.frames`. It plays when someone enters the site or reloads the landing page, not when they come back
@@ -76,24 +90,6 @@ Keep every file under 24 MB so it fits all free hosts.
 3. Link the site from Instagram bio, LinkedIn (Contact info + Featured), Vimeo and YouTube
    profiles. Ask collaborators and press to link to the project pages.
 4. Test link previews: paste a project address into LinkedIn's Post Inspector.
-
-## Easter egg: Nicoló OS
-
-Click the name on the landing page 5 times: the page glitches into a Windows XP desktop, with a
-glitch sound and then the XP startup chime.
-Code: `js/xp/` (`os.js` desktop + small apps, `solitaire.js`, `paint.js`, `sound.js`) and `xp.css`, only
-downloaded when someone triggers it. Projects and videos come from `js/data.js` automatically.
-
-Third-party material used there:
-- Windows XP icons, Bliss wallpaper and Minesweeper sprites (`assets/xp/`), taken from the
-  open-source [winXP](https://github.com/ShizukuIchi/winXP) recreation. They are Microsoft's.
-- Card art: Vectorized Playing Cards (LGPL, licence in `assets/xp/cards/`).
-- Windows XP startup sound (`assets/xp/sounds/startup.mp3`, from the Internet Archive). It is
-  Microsoft's. The glitch sound before it is generated in the browser (`js/xp/sound.js`).
-- Windows XP shutdown sound (`assets/xp/sounds/shutdown.mp3`, from the Internet Archive). It is
-  Microsoft's too; it plays when Turn Off is chosen.
-- 3D Pinball Space Cadet is embedded from the [98.js.org](https://98.js.org) web port, so it
-  needs that site to be online.
 
 ## Hosting (GitHub Pages + OVH domain)
 

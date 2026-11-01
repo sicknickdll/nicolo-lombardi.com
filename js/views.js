@@ -1,7 +1,7 @@
 // Page markup, shared by the browser (js/app.js) and the page generator
 // (tools/build.mjs), so the pre-built HTML Google reads is exactly what visitors see.
 // Pure string functions: no DOM access here.
-import { projects, filmOrder, visualsOrder, hero, heroPoster, clients } from "./data.js";
+import { projects, workOrder, hero, heroPoster, clients } from "./data.js";
 import { videoGalleryMarkup, imageGalleryMarkup, tickerMarkup, videoSources } from "./galleries.js";
 
 export const esc = (s) =>
@@ -10,8 +10,7 @@ export const esc = (s) =>
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
   );
 const byIds = (ids) => ids.map((id) => projects.find((p) => p.id === id)).filter(Boolean);
-export const film = byIds(filmOrder);
-export const visuals = byIds(visualsOrder);
+export const work = byIds(workOrder);
 export const projectURL = (p) => `/work/${p.id}/`;
 // Every image a project shows, for the sitemap and structured data.
 export const projectImages = (p) => [
@@ -29,12 +28,12 @@ export function homeMarkup() {
         `<span class="name-letter" style="--letter:${i}" aria-hidden="true">${letter === " " ? "&nbsp;" : esc(letter)}</span>`,
     )
     .join("");
-  return `<section class="home" aria-label="Portfolio introduction"><img class="poster" src="${heroPoster}" alt=""><video id="entrance-video" poster="${heroPoster}" autoplay loop muted playsinline preload="auto" aria-hidden="true">${videoSources(hero)}</video><a class="home-entry" href="/film/" aria-label="Explore films by Nicoló Lombardi"><h1 class="animated-name" aria-label="Nicoló Lombardi">${letters}</h1><p class="home-tagline">AI Production Specialist</p><span class="down" aria-hidden="true"></span></a></section>${listMarkup(film, "Selected films")}`;
+  return `<section class="home" aria-label="Portfolio introduction"><img class="poster" src="${heroPoster}" alt=""><video id="entrance-video" poster="${heroPoster}" autoplay loop muted playsinline preload="auto" aria-hidden="true">${videoSources(hero)}</video><a class="home-entry" href="#work" aria-label="See the work of Nicoló Lombardi"><h1 class="animated-name" aria-label="Nicoló Lombardi">${letters}</h1><p class="home-tagline">AI Production Specialist</p><span class="down" aria-hidden="true"></span></a></section>${listMarkup(work, "Selected work")}`;
 }
 
 // Full-screen scrolling covers. `heading` adds a screen-reader/search heading.
 export function listMarkup(list, label, heading) {
-  return `${heading ? `<h1 class="sr-only">${esc(heading)}</h1>` : ""}<div class="project-scroll" aria-label="${label}">${list.map((p, i) => `<section class="project-section" id="p-${p.id}" data-project="${p.id}" style="--cover:url(${p.cover})" aria-label="${esc(fullName(p))}"><a class="project-open" href="${projectURL(p)}" aria-label="Open ${esc(fullName(p))} project"></a><img src="${p.cover}" alt="${esc(`${fullName(p)} — ${p.type} by Nicoló Lombardi`)}" loading="${i === 0 ? "eager" : "lazy"}" decoding="async"></section>`).join("")}</div><a class="view-project" href="${projectURL(list[0])}" aria-label="View ${esc(list[0].brand)} project" hidden>view project</a>`;
+  return `${heading ? `<h1 class="sr-only">${esc(heading)}</h1>` : ""}<div class="project-scroll" id="work" aria-label="${label}">${list.map((p, i) => `<section class="project-section" id="p-${p.id}" data-project="${p.id}" style="--cover:url(${p.cover})" aria-label="${esc(fullName(p))}"><a class="project-open" href="${projectURL(p)}" aria-label="Open ${esc(fullName(p))} project"></a><img src="${p.cover}" alt="${esc(`${fullName(p)} — ${p.type} by Nicoló Lombardi`)}" loading="${i === 0 ? "eager" : "lazy"}" decoding="async"></section>`).join("")}</div><a class="view-project" href="${projectURL(list[0])}" aria-label="View ${esc(list[0].brand)} project" hidden>view project</a>`;
 }
 
 // "Case" layout (projects with `stills`): film on top, text, a two-column grid of stills,
@@ -63,7 +62,7 @@ function closingMarkup(p) {
   return `${heading}<section class="case-film" aria-label="${esc(p.brand)} — ${esc(v.label || "closing film")}"><div class="player" data-brand="${esc(v.label || p.brand)}"><video controls muted loop playsinline preload="none" data-inview poster="${v.poster}" style="--ratio:${v.ratio || 16 / 9}">${videoSources(v.src)}</video></div></section>`;
 }
 
-export function projectMarkup(p, backHref = "/film/") {
+export function projectMarkup(p, backHref = `/#p-${p.id}`) {
   const local =
     p.videos.length === 1
       ? `<section class="single-film" aria-label="${esc(p.brand)} film"><div class="player" data-brand="${esc(p.brand)}" data-title="${esc(p.title === p.brand ? "" : p.title)}" data-type="${esc(p.type)}"><video controls playsinline ${p.autoplay ? 'autoplay muted preload="auto"' : 'preload="metadata"'} poster="${p.videoPosters?.[0] || p.cover}" aria-label="${esc(fullName(p))}">${videoSources(p.videos[0])}</video></div></section>`
@@ -96,10 +95,38 @@ export function projectMarkup(p, backHref = "/film/") {
     !media && !images
       ? `<section class="detail-header"><img src="${p.cover}" alt="${esc(fullName(p))}"></section>`
       : "";
-  // "Next project" follows the Film order for projects in it, otherwise the `projects` order.
-  const order = film.includes(p) ? film : projects;
+  // "Next project" follows the Work order for projects in it, otherwise the `projects` order.
+  const order = work.includes(p) ? work : projects;
   const next = order[(order.indexOf(p) + 1) % order.length];
   return `<article class="detail"><a class="back" href="${backHref}">back</a>${media}${fullImage}${images}${fallback}<header class="detail-heading"><h1>${esc(p.brand)}${p.title === p.brand ? "" : "<br>" + esc(p.title)}</h1><p>${esc(p.type)}</p></header><div class="detail-text"><h2>About the project</h2><p>${esc(p.description)}</p></div>${stillsMarkup(p)}${posters}${btsMarkup(p)}${closingMarkup(p)}${p.externalVideo ? `<p class="media-note"><a href="${esc(p.externalVideo)}" target="_blank" rel="noopener noreferrer">Open film on Vimeo</a></p>` : ""}<a class="next-project" href="${projectURL(next)}"><span>Next project</span><strong>${esc(next.brand)}</strong></a></article>`;
+}
+
+// About page: the name and the text on the left, the 3D head (js/head.js) on the right.
+export function aboutMarkup() {
+  return `<article class="about-page">
+  <div class="about-text">
+    <h1 class="about-title">Nicoló Lombardi</h1>
+    <p class="bio">AI Filmmaker, Creative Technologist and Art Director specializing in the design and production of next-generation visual content. Combining artificial intelligence, storytelling, motion, sound and creative direction, he creates campaigns and experiences for global brands.</p>
+    <div class="about-columns">
+      <div>
+        <p>Film &amp; visual production</p>
+        <p>Art direction<br>AI filmmaking<br>Motion &amp; sound<br>Virtual production</p>
+      </div>
+      <div>
+        <p>Based in Madrid, Spain</p>
+        <a href="mailto:hello.nicolombardi@gmail.com">hello.nicolombardi@gmail.com</a><br>
+        <a href="tel:+34643868613">+34 643 868 613</a>
+      </div>
+      <div>
+        <a href="https://www.instagram.com/nickprods/" target="_blank" rel="noopener noreferrer">Instagram</a><br>
+        <a href="https://www.linkedin.com/in/nicolo-lombardi/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      </div>
+    </div>
+    ${clientsMarkup()}
+    <p class="copyright">© ${new Date().getFullYear()} Nicoló Lombardi · <a href="/privacy/">Privacy</a></p>
+  </div>
+  <div class="about-head" aria-hidden="true"><p class="about-head-hint">Grab the head</p></div>
+</article>`;
 }
 
 // "Selected clients" strip. Each logo gets the same visual area whatever its shape:
