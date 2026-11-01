@@ -7,7 +7,7 @@ import { bindGalleries } from "./galleries.js";
 import { bindScramble } from "./scramble.js";
 import { bindPlayers } from "./player.js";
 import { eyeTracking } from "./eye.js";
-import { isMenuOpen } from "./menu.js";
+import { isMenuOpen, setNavigator } from "./menu.js";
 import { work, homeMarkup, projectMarkup, projectURL, aboutMarkup } from "./views.js";
 const main = document.querySelector("#main");
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
@@ -258,11 +258,40 @@ function render() {
   const target = location.hash.length > 1 && document.getElementById(location.hash.slice(1));
   window.scrollTo({ top: target ? target.offsetTop : 0, behavior: "instant" });
 }
-// Clicking the name while on the landing page scrolls back to the top.
+// Moves to another page without reloading, so the menu can lift and show it underneath.
+// Returns false for addresses that only exist as pre-built pages (Privacy, 404).
+const titles = new Map([[location.pathname, document.title]]);
+function go(href) {
+  const url = new URL(href, location.href);
+  if (!(url.pathname === "/" || url.pathname === "/about/" || /^\/work\/[^/]+\/?$/.test(url.pathname))) return false;
+  cleanup();
+  cleanup = () => {};
+  history.pushState(null, "", url);
+  render();
+  const known = titles.get(url.pathname);
+  if (known) document.title = known;
+  else
+    fetch(url.pathname)
+      .then((r) => r.text())
+      .then((t) => {
+        const title = t.match(/<title>([^<]*)<\/title>/)?.[1];
+        if (title) titles.set(url.pathname, (document.title = new DOMParser().parseFromString(title, "text/html").body.textContent));
+      })
+      .catch(() => {});
+  return true;
+}
+setNavigator(go);
+addEventListener("popstate", () => {
+  cleanup();
+  cleanup = () => {};
+  render();
+});
+// Clicking the name goes home: it scrolls up on the landing page, swaps the page elsewhere.
 document.querySelector(".header .brand").addEventListener("click", (e) => {
-  if (location.pathname === "/" && !isMenuOpen()) {
+  if (isMenuOpen()) return;
+  if (location.pathname === "/") {
     e.preventDefault();
     window.scrollTo({ top: 0, behavior: reduce.matches ? "auto" : "smooth" });
-  }
+  } else if (go("/")) e.preventDefault();
 });
 if (!redirectLegacyHash()) render();
