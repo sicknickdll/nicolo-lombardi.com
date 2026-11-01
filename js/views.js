@@ -125,7 +125,7 @@ export function aboutMarkup() {
     ${clientsMarkup()}
     <p class="copyright">© ${new Date().getFullYear()} Nicoló Lombardi · <a href="/privacy/">Privacy</a></p>
   </div>
-  <div class="about-head" aria-hidden="true"><p class="about-head-hint">Grab the head</p></div>
+  <div class="about-head" aria-hidden="true"></div>
 </article>`;
 }
 

@@ -249,6 +249,7 @@ function render() {
   const path = location.pathname.replace(/index\.html$/, "");
   const project = path.match(/^\/work\/([^/]+)\/?$/);
   document.documentElement.classList.toggle("snap-pages", path === "/");
+  document.documentElement.classList.toggle("light", path === "/about/");
   if (path === "/privacy/") return;
   if (path === "/about/") showAbout();
   else if (project) showProject(project[1]);

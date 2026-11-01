@@ -82,12 +82,13 @@ function head({ title, description, path, image, imageAlt, schema, preload }) {
     .join("\n");
 }
 
-function write(path, headHTML, mainHTML) {
+function write(path, headHTML, mainHTML, htmlClass = "") {
   const file = join(root, path, "index.html");
   mkdirSync(dirname(file), { recursive: true });
   writeFileSync(
     file,
     template
+      .replace("{{HTMLCLASS}}", htmlClass ? ` class="${htmlClass}"` : "")
       .replace("{{HEAD}}", headHTML)
       .replace("{{MAIN}}", mainHTML)
       .replace(
@@ -168,6 +169,7 @@ write(
     ],
   }),
   aboutMarkup(),
+  "light",
 );
 
 // The Film and Visuals lists now live on the landing page: their old addresses forward there.
