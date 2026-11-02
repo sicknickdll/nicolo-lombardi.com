@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <title>Archive — Nicoló Lombardi</title>
+    <meta name="description" content="Collections found and kept by Nicoló Lombardi: LA BARRA." />
+    <link rel="canonical" href="https://nicolo-lombardi.com/archive/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Nicoló Lombardi" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:title" content="Archive — Nicoló Lombardi" />
+    <meta property="og:description" content="Collections found and kept by Nicoló Lombardi: LA BARRA." />
+    <meta property="og:url" content="https://nicolo-lombardi.com/archive/" />
+    <meta property="og:image" content="https://nicolo-lombardi.com/assets/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Nicoló Lombardi" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Nicoló Lombardi",
+                "item": "https://nicolo-lombardi.com/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Archive",
+                "item": "https://nicolo-lombardi.com/archive/"
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/assets/anime-eye-icon-64.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=anime-eye" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/anime-eye-touch-180.png" />
+    <link rel="stylesheet" href="/style.css" />
+    <script>
+      // Landing intro (js/intro.js): on entering the site or reloading the landing page,
+      // not when coming back to it from another page of the site.
+      (function () {
+        try {
+          var nav = performance.getEntriesByType("navigation")[0],
+            type = nav && nav.type,
+            ref = document.referrer,
+            internal = ref && new URL(ref).origin === location.origin;
+          if (
+            location.pathname === "/" &&
+            !location.hash &&
+            type !== "back_forward" &&
+            !(internal && type !== "reload") &&
+            !matchMedia("(prefers-reduced-motion: reduce)").matches
+          ) {
+            document.documentElement.classList.add("intro");
+            // Failsafe: never leave the page covered if the intro doesn't start.
+            setTimeout(function () {
+              if (!document.querySelector(".intro-overlay"))
+                document.documentElement.classList.remove("intro");
+            }, 5000);
+          }
+        } catch (e) {}
+      })();
+    </script>
+
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="header">
+      <a class="brand" href="/">Nicoló Lombardi</a>
+      <!-- Opens the full-screen menu below (js/menu.js) -->
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
+        <span class="menu-toggle-text" aria-hidden="true"><span class="menu-toggle-roll"><span>Menu</span></span></span>
+        <span class="menu-toggle-icon" aria-hidden="true"><span></span><span></span></span>
+      </button>
+    </header>
+
+    <!-- Pre-built by tools/build.mjs; js/app.js re-renders it with interactions -->
+    <main id="main"><section class="arch-index" aria-labelledby="arch-title"><h1 id="arch-title" class="arch-title">Archive</h1><p class="arch-lede">Collections, found and kept.</p><ul class="arch-collections"><li><a class="arch-tile" href="/archive/la-barra/"><span class="arch-icon placeholder" aria-hidden="true"><i></i><i></i><i></i></span><span class="arch-tile-name">LA BARRA</span><span class="arch-tile-meta">06 pieces</span></a></li></ul></section></main>
+
+    <div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="Menu" data-open="false" inert>
+      <div class="menu-layer" aria-hidden="true"></div>
+      <div class="menu-panel">
+        <nav aria-label="Main navigation">
+          <ol class="menu-items">
+            <li><a href="/#work" style="--i: 0"><span>Work</span></a></li>
+            <li><a href="/about/" style="--i: 1"><span>About</span></a></li>
+            <li><a href="/archive/" style="--i: 2"><span>Archive</span></a></li>
+            <li><a href="/playground/" style="--i: 3"><span>Playground</span></a></li>
+            <li><a href="mailto:hello.nicolombardi@gmail.com?subject=Project%20enquiry" style="--i: 4"><span>Contact</span></a></li>
+          </ol>
+        </nav>
+        <p class="menu-small">
+          Madrid, Spain ·
+          <a href="https://www.instagram.com/nickprods/" target="_blank" rel="noopener noreferrer">Instagram</a> ·
+          <a href="https://www.linkedin.com/in/nicolo-lombardi/" target="_blank" rel="noopener noreferrer">LinkedIn</a> ·
+          <a href="/privacy/">Privacy</a>
+        </p>
+      </div>
+    </div>
+    <div id="announcer" class="sr-only" aria-live="polite"></div>
+    <script type="module" src="/js/app.js"></script>
+  </body>
+</html>

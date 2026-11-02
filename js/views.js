@@ -2,6 +2,7 @@
 // (tools/build.mjs), so the pre-built HTML Google reads is exactly what visitors see.
 // Pure string functions: no DOM access here.
 import { projects, workOrder, hero, heroPoster, clients } from "./data.js";
+import { collections } from "./archive-data.js";
 import { videoGalleryMarkup, imageGalleryMarkup, tickerMarkup, videoSources } from "./galleries.js";
 
 export const esc = (s) =>
@@ -151,3 +152,31 @@ export function clientsMarkup() {
     })
     .join("")}</ul></div>`;
 }
+
+// ── Archive ──────────────────────────────────────────────────────────────────
+export const collectionURL = (c) => `/archive/${c.id}/`;
+const pad = (n) => String(n).padStart(2, "0");
+const searchText = (it) => [it.name, it.type, it.country, it.location].filter(Boolean).join(" ").toLowerCase();
+
+// /archive/: one tile per collection. A collection without an icon gets a placeholder.
+export function archiveMarkup() {
+  return `<section class="arch-index" aria-labelledby="arch-title"><h1 id="arch-title" class="arch-title">Archive</h1><p class="arch-lede">Collections, found and kept.</p><ul class="arch-collections">${collections
+    .map(
+      (c) =>
+        `<li><a class="arch-tile" href="${collectionURL(c)}"><span class="arch-icon${c.icon ? "" : " placeholder"}" aria-hidden="true">${c.icon ? `<img src="${c.icon}" alt="" loading="lazy">` : `<i></i><i></i><i></i>`}</span><span class="arch-tile-name">${esc(c.title)}</span><span class="arch-tile-meta">${pad(c.items.length)} pieces</span></a></li>`,
+    )
+    .join("")}</ul></section>`;
+}
+
+// /archive/<id>/: the pieces laid out on a shelf (front scans), a search bar at the bottom,
+// and the viewer (js/archive.js) that opens a piece as an interactive 3D card.
+export function collectionMarkup(c) {
+  const n = c.items.length;
+  const piece = (it, i) =>
+    `<li class="arch-cell" data-search="${esc(searchText(it))}"><button type="button" class="arch-piece" data-id="${it.id}" aria-label="${esc(it.name)}${it.country ? `, ${esc(it.country)}` : ""}" style="--r:${it.ratio}"><img src="${it.thumb}" alt="${esc(`${it.name}, ${it.type.toLowerCase()}${it.location ? ` from ${it.location}` : ""} (front)`)}" width="720" height="${Math.round(720 / it.ratio)}" loading="${i < 3 ? "eager" : "lazy"}" decoding="async"><span class="arch-cap"><b>${pad(i + 1)}</b><span>${esc(it.name)}</span></span></button></li>`;
+  return `<section class="arch-wall" data-collection="${c.id}" aria-labelledby="arch-title"><header class="arch-head"><nav class="arch-crumb" aria-label="Breadcrumb"><a href="/archive/">Archive</a></nav><h1 id="arch-title" class="arch-title caslon">${esc(c.title)}</h1><p class="arch-blurb">${esc(c.blurb)}</p><p class="arch-count"><span id="arch-shown">${pad(n)}</span> / ${pad(n)}</p></header><ul class="arch-shelf" id="arch-shelf">${c.items.map(piece).join("")}</ul><p class="arch-empty" id="arch-empty" hidden>Nothing like that on the shelf yet.</p><form class="arch-search" role="search" autocomplete="off"><label class="sr-only" for="arch-q">Search the collection</label><input id="arch-q" type="search" placeholder="Search a servilleta, a bar, a country…" spellcheck="false" enterkeyhint="search"><kbd aria-hidden="true">/</kbd></form></section>${viewerMarkup(c)}`;
+}
+function viewerMarkup(c) {
+  return `<div class="arch-viewer" id="arch-viewer" role="dialog" aria-modal="true" aria-label="${esc(c.title)} piece" hidden><button type="button" class="arch-close" aria-label="Close viewer">Close <span aria-hidden="true">×</span></button><div class="arch-stage" id="arch-stage" aria-label="3D view of the piece. Drag to turn it, double-click to flip."></div><aside class="arch-info"><p class="arch-no"><span id="arch-no">01</span> / ${pad(c.items.length)}</p><h2 class="arch-name caslon" id="arch-name"></h2><p class="arch-type" id="arch-type"></p><dl class="arch-facts"><div><dt>(COUNTRY)</dt><dd id="arch-country"></dd></div><div><dt>(LOCATION)</dt><dd id="arch-location"></dd></div></dl><div class="arch-actions"><button type="button" id="arch-flip">See the back</button><span class="arch-steps"><button type="button" id="arch-prev" aria-label="Previous piece">←</button><button type="button" id="arch-next" aria-label="Next piece">→</button></span></div><p class="arch-hint">Drag to turn it over · double-click to flip · move over it for the foil</p></aside></div>`;
+}
+export const archiveCollections = collections;

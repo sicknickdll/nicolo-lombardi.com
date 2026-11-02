@@ -10,7 +10,7 @@ await build({
   stdin: {
     contents: `
       export { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight,
-        Group, Vector2, Vector3, Vector4, Matrix4, Plane, Raycaster,
+        Group, Vector2, Vector3, Vector4, Matrix4, Plane, Raycaster, Mesh, PlaneGeometry, ShaderMaterial, TextureLoader,
         BufferAttribute, SRGBColorSpace } from "three";
       export { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
       export { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
