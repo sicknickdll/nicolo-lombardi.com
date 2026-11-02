@@ -4,7 +4,7 @@
 //   · Drag (or two-finger scroll) to turn it over and see the back. When you let go it settles
 //     face-on, front or back, with a little momentum. Double-click, or the Flip button, turns it.
 // The scans are transparent cut-outs, drawn on two thin planes (front and back), so the card
-// has exactly the shape of the real napkin or sachet. Three.js comes from js/vendor/three.js.
+// has the shape of the real napkin or sachet. Three.js comes from js/vendor/three.js.
 import {
   WebGLRenderer,
   Scene,
@@ -27,7 +27,7 @@ varying vec3 vNormal;
 void main() {
   vUv = uv;
   vec3 p = position;
-  // A paper bulge: a sachet is plump in the middle, a napkin barely.
+  // Paper bulge: a sachet swells in the middle, a napkin barely does.
   vec2 c = uv * 2.0 - 1.0;
   p.z += uBulge * (1.0 - c.x * c.x) * (1.0 - c.y * c.y);
   vNormal = normalize(normalMatrix * normal);
@@ -79,12 +79,10 @@ export function mountCard(stage) {
   scene.add(pivot);
 
   let faces = [],
-    item = null,
     token = 0;
   // yaw / pitch: the card's turn. `rest` is where it wants to be (0 front, π back).
   const turn = { yaw: 0, pitch: 0, vy: 0, vp: 0, rest: 0 };
   const pointer = new Vector2(0, 0), // -1…1 over the stage
-    local = new Vector2(0, 0), // cursor in card coordinates
     hover = { x: 0 };
   let drag = null,
     hovering = false,
@@ -111,7 +109,7 @@ export function mountCard(stage) {
     const mat = new ShaderMaterial({
       uniforms: {
         uMap: { value: null },
-        uBulge: { value: bulge * (back ? 1 : 1) },
+        uBulge: { value: bulge },
         uPointer: { value: new Vector2() },
         uHolo: { value: 0 },
         uTilt: { value: new Vector2() },
@@ -122,19 +120,17 @@ export function mountCard(stage) {
     });
     const mesh = new Mesh(geo, mat);
     mesh.position.z = back ? -THICK : THICK;
-    if (back) mesh.rotation.y = Math.PI; // its own front faces away; seen from behind it reads correctly
+    if (back) mesh.rotation.y = Math.PI; // its front faces away, so from behind the back scan reads the right way round
     return mesh;
   };
 
   // Show another item.
   function setItem(next) {
     const mine = ++token;
-    item = next;
     for (const f of faces) (pivot.remove(f), f.geometry.dispose(), f.material.uniforms.uMap.value?.dispose(), f.material.dispose());
     faces = [];
     turn.yaw = turn.rest = 0;
     turn.pitch = turn.vy = turn.vp = 0;
-    shown = false;
     const [w, h] = next.ratio >= 1 ? [SIZE, SIZE / next.ratio] : [SIZE * next.ratio, SIZE];
     const front = makeFace(next.front, w, h, next.bulge, false),
       back = makeFace(next.back, w, h, next.bulge, true);
@@ -156,13 +152,6 @@ export function mountCard(stage) {
     });
   }
 
-  // Tell the page which side the card is settling on (for the "See back" button).
-  let shown = false;
-  const emit = () => {
-    const back = Math.round(turn.rest / Math.PI) % 2 !== 0;
-    if (back !== shown) stage.dispatchEvent(new CustomEvent("face", { detail: { back } }));
-    shown = back;
-  };
   const toCard = (e) => {
     const r = canvas.getBoundingClientRect();
     pointer.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
@@ -195,7 +184,6 @@ export function mountCard(stage) {
     stage.releasePointerCapture?.(e.pointerId);
     // Settle face-on, on the side it is closest to (a flick carries it further).
     turn.rest = Math.round((turn.yaw + turn.vy * 0.12) / Math.PI) * Math.PI;
-    emit();
   };
   const onWheel = (e) => {
     if (e.ctrlKey) return;
@@ -206,11 +194,9 @@ export function mountCard(stage) {
     turn.vy = turn.vp = 0;
     wheelUntil = performance.now() + 220;
     turn.rest = Math.round(turn.yaw / Math.PI) * Math.PI;
-    emit();
   };
   const flip = () => {
     turn.rest = Math.round(turn.yaw / Math.PI) * Math.PI + Math.PI;
-    emit();
   };
   const onEnter = () => (hovering = true);
   const onLeave = () => ((hovering = false), pointer.set(0, 0));
@@ -247,7 +233,7 @@ export function mountCard(stage) {
     const want = calm && hovering ? pointer : { x: 0, y: 0 };
     tilt.x += (want.x - tilt.x) * (1 - Math.exp(-dt * 9));
     tilt.y += (want.y - tilt.y) * (1 - Math.exp(-dt * 9));
-    hover.x += ((hovering ? 1 : 0.0) - hover.x) * (1 - Math.exp(-dt * 6));
+    hover.x += ((hovering ? 1 : 0) - hover.x) * (1 - Math.exp(-dt * 6));
     entry = Math.max(0, entry - dt * 2.4);
     const ease = 1 - Math.pow(1 - (1 - entry), 3);
     pivot.rotation.set(turn.pitch - tilt.y * 0.32, turn.yaw + tilt.x * 0.36, 0);
@@ -281,7 +267,6 @@ export function mountCard(stage) {
   return {
     setItem,
     flip,
-    isBack: () => Math.round(turn.rest / Math.PI) % 2 !== 0,
     dispose() {
       cancelAnimationFrame(raf);
       io.disconnect();

@@ -1710,12 +1710,6 @@ html.arch-open .header {
   letter-spacing: 0.01em;
   font-weight: 400;
 }
-.arch-tile-meta {
-  font-family: var(--futura);
-  font-size: 13px;
-  opacity: 0.55;
-  margin-top: -8px;
-}
 
 /* /archive/la-barra/: an infinite, pannable grid on a diagonal (tiles placed by js/archive.js).
    Black, no tile backgrounds: just the cut-out of each piece. */
@@ -2072,17 +2066,11 @@ html.arch-grid-page body {
   left: 5px;
   width: 2px;
 }
-.plus.tl {
-  left: 6px;
-  top: 52%;
-  display: none;
-}
 .plus.tl,
 .plus.tr {
   top: 46%;
 }
 .plus.tl {
-  display: block;
   left: 6px;
 }
 .plus.tr {

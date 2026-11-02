@@ -1,5 +1,5 @@
 // Hover effect on buttons and links (desktop mouse only, off with reduced motion): the label
-// glitches for a moment: letters scramble, the colours split and the text jitters.
+// glitches for a moment. Letters scramble, the colours split and the text jitters.
 // Delegated from `document`, so pages swapped in place keep working.
 const GLITCH = "a[href], button";
 const SKIP_GLITCH = ".menu-toggle, .project-open, .brand, .video-thumbnail, .gallery-prev, .gallery-next, .skip, .view-project";

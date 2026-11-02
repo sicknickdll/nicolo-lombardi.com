@@ -155,12 +155,10 @@ export function clientsMarkup() {
 
 // ── Archive ──────────────────────────────────────────────────────────────────
 export const collectionURL = (c) => `/archive/${c.id}/`;
-const pad = (n) => String(n).padStart(2, "0");
-const searchText = (it) => [it.name, it.type, it.country, it.location].filter(Boolean).join(" ").toLowerCase();
 
 // /archive/: one tile per collection. A collection without an icon gets a placeholder.
 export function archiveMarkup() {
-  return `<section class="arch-index" aria-labelledby="arch-title"><h1 id="arch-title" class="arch-title">Archive</h1><p class="arch-lede">Collections, found and kept.</p><ul class="arch-collections">${collections
+  return `<section class="arch-index" aria-labelledby="arch-title"><h1 id="arch-title" class="arch-title">Archive</h1><p class="arch-lede">Collections of found objects.</p><ul class="arch-collections">${collections
     .map(
       (c) =>
         `<li><a class="arch-tile" href="${collectionURL(c)}"><span class="arch-icon${c.icon ? "" : " placeholder"}" aria-hidden="true">${c.icon ? `<img src="${c.icon}" alt="" loading="lazy">` : `<i></i><i></i><i></i>`}</span><span class="arch-tile-name">${esc(c.title)}</span></a></li>`,
@@ -172,11 +170,10 @@ export function archiveMarkup() {
 // a search bar at the bottom, and the viewer that opens a piece as an interactive 3D card.
 // The list below is for search engines and screen readers.
 export function collectionMarkup(c) {
-  const n = c.items.length;
   const list = c.items
-    .map((it) => `<li>${esc(it.name)} — ${esc(it.type)}${it.country ? `, ${esc(it.country)}` : ""}${it.location ? `, ${esc(it.location)}` : ""}</li>`)
+    .map((it) => `<li>${esc(it.name)}, ${esc(it.type.toLowerCase())}${it.country ? `, ${esc(it.country)}` : ""}${it.location ? `, ${esc(it.location)}` : ""}</li>`)
     .join("");
-  return `<section class="arch-wall" data-collection="${c.id}" aria-labelledby="arch-title"><header class="arch-head"><nav class="arch-crumb" aria-label="Breadcrumb"><a href="/archive/">Archive</a></nav><h1 id="arch-title" class="arch-title caslon">${esc(c.title)}</h1><p class="arch-count">${esc(c.blurb)}</p></header><div class="arch-grid" id="arch-grid" role="region" aria-roledescription="gallery" aria-label="${esc(c.title)}: drag or scroll to explore, click a piece to open it"></div><ul class="sr-only" aria-label="Pieces in ${esc(c.title)}">${list}</ul><p class="arch-empty" id="arch-empty" hidden>Nothing like that in the archive yet.</p><form class="arch-search" role="search" autocomplete="off"><label class="sr-only" for="arch-q">Search the collection</label><input id="arch-q" type="search" placeholder="Search a servilleta, a bar, a country…" spellcheck="false" enterkeyhint="search"><kbd aria-hidden="true">/</kbd></form></section>${viewerMarkup(c)}`;
+  return `<section class="arch-wall" data-collection="${c.id}" aria-labelledby="arch-title"><header class="arch-head"><nav class="arch-crumb" aria-label="Breadcrumb"><a href="/archive/">Archive</a></nav><h1 id="arch-title" class="arch-title caslon">${esc(c.title)}</h1><p class="arch-count">${esc(c.blurb)}</p></header><div class="arch-grid" id="arch-grid" role="region" aria-roledescription="gallery" aria-label="${esc(c.title)}: drag or scroll to explore, click a piece to open it"></div><ul class="sr-only" aria-label="Pieces in ${esc(c.title)}">${list}</ul><p class="arch-empty" id="arch-empty" hidden>No match.</p><form class="arch-search" role="search" autocomplete="off"><label class="sr-only" for="arch-q">Search the collection</label><input id="arch-q" type="search" placeholder="Search a servilleta, a bar, a country…" spellcheck="false" enterkeyhint="search"><kbd aria-hidden="true">/</kbd></form></section>${viewerMarkup(c)}`;
 }
 function viewerMarkup(c) {
   return `<div class="arch-viewer" id="arch-viewer" role="dialog" aria-modal="true" aria-label="${esc(c.title)} piece" hidden><span class="plus tl" aria-hidden="true"></span><span class="plus tr" aria-hidden="true"></span><span class="plus bl" aria-hidden="true"></span><span class="plus br" aria-hidden="true"></span><button type="button" class="arch-close" aria-label="Close viewer"><span>Close</span></button><h2 class="arch-name caslon" id="arch-name"></h2><div class="arch-stage" id="arch-stage" aria-label="3D view of the piece. Drag to turn it, double-click to flip."></div><dl class="arch-facts"><div><dt>Country</dt><dd id="arch-country"></dd></div><div><dt>Location</dt><dd id="arch-location"></dd></div></dl></div>`;

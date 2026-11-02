@@ -25,7 +25,6 @@ export function bindCollection(main) {
   const $ = (id) => viewer.querySelector(id);
   let card = null,
     index = -1,
-    opener = null,
     loading = null;
 
   // ── the infinite grid ──
@@ -42,7 +41,7 @@ export function bindCollection(main) {
     raf = 0,
     last = performance.now();
 
-  const ANGLE = (-13 * Math.PI) / 180; // how far the grid is turned: rows and columns run diagonally
+  const ANGLE = (-13 * Math.PI) / 180; // rows and columns tilt by this angle, so the grid runs on a diagonal
   const cos = Math.cos(ANGLE),
     sin = Math.sin(ANGLE);
   let entering = true; // the first tiles rise in one after another
@@ -196,7 +195,7 @@ export function bindCollection(main) {
     grid.classList.remove("panning");
     kick();
     // Pointer capture sends the click to the grid, so a tap is recognised here.
-    if (!moved && piece && e.type === "pointerup") open(piece.dataset.id, null);
+    if (!moved && piece && e.type === "pointerup") open(piece.dataset.id);
   };
   grid.addEventListener("pointerup", release);
   grid.addEventListener("pointercancel", release);
@@ -242,7 +241,7 @@ export function bindCollection(main) {
   // Enter opens the first match.
   wall.querySelector(".arch-search").addEventListener("submit", (e) => {
     e.preventDefault();
-    if (list.length) (q.blur(), open(list[0].id, null));
+    if (list.length) (q.blur(), open(list[0].id));
   });
 
   // ── viewer ──
@@ -264,8 +263,8 @@ export function bindCollection(main) {
       name.append(w);
       if (i < all.length - 1) name.append(" ");
     });
-    $("#arch-country").textContent = it.country || "—";
-    $("#arch-location").textContent = it.location || "—";
+    $("#arch-country").textContent = it.country || "Unknown";
+    $("#arch-location").textContent = it.location || "Unknown";
     viewer.classList.remove("shown");
     void viewer.offsetWidth; // restart the animation
     viewer.classList.add("shown");
@@ -278,10 +277,9 @@ export function bindCollection(main) {
     await ensureCard().catch(() => stage.classList.add("failed"));
     if (card && items[index] === it) card.setItem(it);
   };
-  const open = (id, from) => {
+  const open = (id) => {
     const i = items.findIndex((it) => it.id === id);
     if (i < 0) return;
-    opener = from || null;
     viewer.hidden = false;
     root.classList.add("arch-open");
     wall.inert = true;
@@ -298,14 +296,8 @@ export function bindCollection(main) {
     document.querySelector(".header").inert = false;
     history.replaceState(null, "", location.pathname);
     setTimeout(() => (viewer.hidden = true), 280);
-    (opener?.isConnected ? opener : null)?.focus({ preventScroll: true });
   };
 
-  const onClick = (e) => {
-    const piece = e.target.closest(".arch-piece");
-    if (piece && wall.contains(piece)) open(piece.dataset.id, null);
-  };
-  main.addEventListener("click", onClick);
   viewer.querySelector(".arch-close").addEventListener("click", close);
   viewer.addEventListener("click", (e) => {
     if (e.target === viewer) close();
@@ -337,14 +329,13 @@ export function bindCollection(main) {
 
   // A shared address opens its piece straight away.
   const id = location.hash.slice(1);
-  if (id) open(id, null);
+  if (id) open(id);
 
   return () => {
     removeEventListener("keydown", onKey, true);
     removeEventListener("keydown", onGridKey);
     cancelAnimationFrame(raf);
     root.classList.remove("arch-grid-page");
-    main.removeEventListener("click", onClick);
     card?.dispose();
     root.classList.remove("arch-open");
     wall.inert = false;
