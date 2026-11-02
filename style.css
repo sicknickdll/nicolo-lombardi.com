@@ -1544,23 +1544,7 @@ html.light .client-logos img {
   filter: invert(1);
 }
 
-/* Hover effects (js/fx.js) */
-.fx-char {
-  transition:
-    opacity 1.1s ease-out,
-    text-shadow 1.1s ease-out;
-}
-.fx-on .fx-char {
-  opacity: 0.5;
-}
-.fx-on .fx-char.lit {
-  opacity: 1;
-  text-shadow:
-    0 0 calc(18px * var(--k, 1)) currentColor,
-    0 0 calc(5px * var(--k, 1)) currentColor;
-  transition: none;
-}
-/* Buttons and links: a short glitch (letters scramble, colours split, label jitters) */
+/* Hover glitch on buttons and links (js/fx.js): letters scramble, colours split, label jitters */
 .fx-glitch {
   animation: fx-glitch 0.38s steps(1, end);
   white-space: nowrap;
