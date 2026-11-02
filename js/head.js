@@ -292,7 +292,7 @@ export function mountHead(stage) {
       const x = rest[i * 3],
         y = rest[i * 3 + 1],
         z = rest[i * 3 + 2];
-      if (z < 0.02) continue; // front of the head only
+      if (z < 0.02) continue; // front half of the head
       // Nose: an egg-shaped falloff, longer than wide.
       const dx = x - nose.tip.x,
         dy = y - nose.tip.y,
@@ -621,8 +621,6 @@ export function mountHead(stage) {
     spring(squash, 0, 190, 11, dt);
     spring(shake, 0, 520, 9, dt);
 
-    const blinkAmt = 0; // no idle blinking
-
     // What the face wants right now.
     const hurtAmt = hurt.t < 0 ? 0 : smooth(0, 0.05, hurt.t) * (1 - smooth(1.5, 1.9, hurt.t));
     const dizzyAmt = dizzy.t < 0 ? 0 : Math.min(smooth(0, 0.25, dizzy.t), 1 - smooth(3.2, 3.8, dizzy.t));
@@ -635,7 +633,7 @@ export function mountHead(stage) {
     spring(pucker, kissAmt, 220, 16, dt);
 
     // Eyelids: wince, sleep; a happy face squints.
-    const lidTo = Math.max(blinkAmt, hurtAmt, sleepy * 0.95);
+    const lidTo = Math.max(hurtAmt, sleepy * 0.95);
     lid += (lidTo - lid) * (1 - Math.exp(-dt * (lidTo > lid ? 32 : 14)));
     const squint = Math.max(0, smile.x) * 0.7;
     U.uLid.value[0] = U.uLid.value[1] = lid;
@@ -671,7 +669,7 @@ export function mountHead(stage) {
     // The visitor's spin: follows the hand, keeps its momentum when thrown, then swings back.
     if (interacting) {
       if (!holding) {
-        // a trackpad scroll only moves it in bursts: let the last push fade
+        // a trackpad scroll arrives in bursts: let the last push fade
         rot.vy *= Math.exp(-dt * 6);
         rot.vp *= Math.exp(-dt * 6);
       }

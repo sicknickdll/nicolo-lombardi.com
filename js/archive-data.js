@@ -1,11 +1,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// ARCHIVE CONTENT — collections shown on /archive/, each with its own page.
+// ARCHIVE CONTENT: the collections listed on /archive/, each with its own page.
 //
 // Each collection:  id (address: /archive/<id>/), title, blurb, icon (image, or null for a
 //                   placeholder tile), items.
-// Each item:        id, name, type, country, location (leave "" if unknown: the page shows —),
+// Each item:        id, name, type, country, location (use "Unknown" if you do not know),
 //                   front / back: transparent scans in assets/archive/<collection>/,
-//                   tone: background colour of its tile in the grid,
 //                   ratio: front width ÷ height (sets the card's shape in 3D),
 //                   bulge: how plump it is (sachets 0.04, napkins 0.01).
 // Add a scan: put <id>-front.webp, <id>-back.webp and <id>-thumb.webp in the folder (see
@@ -26,7 +25,6 @@ export const collections = [
     items: [
       {
         id: "bar-luce",
-        tone: "#e48fa2",
         name: "Bar Luce",
         type: "Napkin",
         country: "Italy",
@@ -37,7 +35,6 @@ export const collections = [
       },
       {
         id: "museo-del-jamon",
-        tone: "#4d7a5a",
         name: "Museo del Jamón",
         type: "Napkin",
         country: "Spain",
@@ -48,7 +45,6 @@ export const collections = [
       },
       {
         id: "gracias-por-su-visita-01",
-        tone: "#c8643a",
         name: "Gracias por su visita (I)",
         type: "Napkin",
         country: "Unknown",
@@ -59,7 +55,6 @@ export const collections = [
       },
       {
         id: "gracias-por-su-visita-02",
-        tone: "#3b6c9c",
         name: "Gracias por su visita (II)",
         type: "Napkin",
         country: "Unknown",
@@ -70,7 +65,6 @@ export const collections = [
       },
       {
         id: "good-news-kraft",
-        tone: "#a9c0da",
         name: "Good News, kraft",
         type: "Sweetener sachet",
         country: "Spain",
@@ -81,7 +75,6 @@ export const collections = [
       },
       {
         id: "good-news-white",
-        tone: "#ebc86e",
         name: "Good News, white",
         type: "Sweetener sachet",
         country: "Spain",

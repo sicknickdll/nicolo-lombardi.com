@@ -1,7 +1,7 @@
 // Smooth scrolling ("inertia scrolling" / "momentum scroll", the effect libraries like Lenis
 // popularised). The mouse wheel and trackpad no longer jump the page: each notch moves a
-// target, and the page glides toward it, braking gently the same way every time.
-// Not used on the landing page, where each scroll moves to exactly one project cover.
+// target and the page glides toward it, easing out the same way every time.
+// The landing page does not use it: each scroll there moves to one project cover.
 // Touch screens, the keyboard and reduced-motion keep the browser's own scrolling.
 const EASE = 14; // higher = arrives sooner (the reference page uses 9; this is a bit snappier)
 

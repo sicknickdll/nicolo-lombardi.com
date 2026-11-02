@@ -16,8 +16,8 @@ export const isMenuOpen = () => open;
 // js/app.js registers a function that swaps the page without reloading: it returns true when it
 // handled the address. The menu then lifts (the opening curtain played backwards) and reveals
 // the new page underneath.
-let navigator = null;
-export const setNavigator = (fn) => (navigator = fn);
+let navigate = null;
+export const setNavigator = (fn) => (navigate = fn);
 
 // The label rolls through Menu / Close a few times before it settles on the new word.
 function rollLabel(opening) {
@@ -117,7 +117,7 @@ menu.addEventListener("click", (e) => {
   if (a.protocol === "mailto:") return closeMenu({ focus: false });
   if (a.origin === location.origin && a.pathname !== location.pathname) {
     e.preventDefault();
-    if (navigator?.(a.href)) closeMenu({ focus: false });
+    if (navigate?.(a.href)) closeMenu({ focus: false });
     else {
       // A page that can't be swapped in place (Privacy, 404): lift the curtain, then go there.
       closeMenu({ focus: false });
