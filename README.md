@@ -11,7 +11,7 @@ js/views.js         page markup (landing, About, projects), shared by the browse
 js/app.js           interactions: snap scrolling, carousels, About page
 js/menu.js          the "Menu +" button and the full-screen menu (Work, About, Archive, Playground, Contact)
 js/archive-data.js  ← ARCHIVE CONTENT: collections and their pieces (name, country, location, scans)
-js/archive.js       archive collection page: search bar and the 3D viewer
+js/archive.js       archive collection page: infinite pannable grid, search bar, 3D viewer
 js/card3d.js        the 3D card (tilt + holographic foil, drag to turn it over)
 js/head.js          About page: 3D head (follows the cursor, rotates on drag / two-finger scroll, reacts to taps)
 js/vendor/three.js  the parts of three.js the head needs   (npm install && npm run vendor:three)
@@ -41,7 +41,7 @@ Pages and addresses:
 | `/about/` | bio, contact, clients, and the 3D head |
 | `/work/<id>/` | one page per project, e.g. `/work/lexus/` |
 | `/archive/` | the archive's collections |
-| `/archive/la-barra/` | LA BARRA: the pieces on a shelf, search bar, 3D viewer (`#<piece id>` opens one) |
+| `/archive/la-barra/` | LA BARRA: infinite pannable grid of the pieces, search bar, 3D viewer (`#<piece id>` opens one) |
 | `/playground/` | in the menu, not built yet: shows the 404 page |
 
 Old links from the previous site (`/#film`, `/#project/lexus`) and the old `/film/` and

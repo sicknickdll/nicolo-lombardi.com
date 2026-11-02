@@ -1717,20 +1717,105 @@ html.arch-open .header {
   margin-top: -8px;
 }
 
-/* /archive/la-barra/: the wall */
-.arch-wall {
-  position: relative;
-  min-height: 100svh;
-  padding: 100px 0 150px;
-  background:
-    radial-gradient(120% 80% at 8% 0%, rgb(255 224 180 / 0.1), transparent 55%),
-    #0f0e0d;
+/* /archive/la-barra/: an infinite, pannable grid (tiles placed by js/archive.js) */
+html.arch-grid-page,
+html.arch-grid-page body {
+  overflow: hidden;
+  overscroll-behavior: none;
 }
-.arch-head {
-  padding: 0 20px;
+.arch-wall {
+  position: fixed;
+  inset: 0;
+  background: #0b0b0a;
+}
+.arch-grid {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: var(--cursor-grab);
+}
+.arch-grid.panning {
+  cursor: var(--cursor-grabbing);
+}
+.arch-piece {
+  position: absolute;
+  left: 0;
+  top: 0;
   display: grid;
-  gap: 14px;
-  position: relative;
+  place-items: center;
+  padding: 0;
+  background: var(--tone, #2a2824);
+  border-radius: 10px;
+  overflow: visible;
+  will-change: transform;
+  transition: filter 0.35s;
+}
+.arch-piece img {
+  width: 72%;
+  height: 72%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 12px 14px rgb(0 0 0 / 0.35));
+  transition: transform 0.5s var(--ease);
+}
+.arch-piece:hover {
+  opacity: 1;
+  filter: brightness(1.08);
+}
+.arch-piece:hover img {
+  transform: scale(1.06) rotate(-1.5deg);
+}
+.arch-grid.panning .arch-piece img {
+  transform: none;
+}
+.arch-cap {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 10px;
+  display: flex;
+  gap: 8px;
+  font-size: 11px;
+  color: #111;
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 0.3s,
+    transform 0.3s;
+  pointer-events: none;
+}
+.arch-cap b {
+  font-weight: 400;
+  opacity: 0.55;
+}
+.arch-cap span {
+  font-family: var(--caslon);
+  font-size: 14px;
+  line-height: 1.1;
+}
+.arch-piece:hover .arch-cap,
+.arch-piece:focus-visible .arch-cap {
+  opacity: 1;
+  transform: none;
+}
+/* Title over the grid, on a soft fade so it stays readable */
+.arch-head {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 70px 20px 64px;
+  display: grid;
+  gap: 8px;
+  background: linear-gradient(#0b0b0a 78%, #0b0b0a00);
+  pointer-events: none;
+}
+.arch-head a {
+  pointer-events: auto;
 }
 .arch-crumb {
   font-size: 13px;
@@ -1742,102 +1827,27 @@ html.arch-open .header {
 }
 .arch-wall .arch-title {
   font-family: var(--caslon);
-  font-size: clamp(64px, 13vw, 210px);
-  letter-spacing: -0.02em;
-  line-height: 0.82;
-  margin-top: 6px;
-}
-.arch-blurb {
-  font-family: var(--futura);
-  font-weight: 400;
-  max-width: 44ch;
-  line-height: 1.35;
-  font-size: clamp(15px, 1.4vw, 19px);
-  opacity: 0.75;
+  font-size: clamp(44px, 6.4vw, 104px);
+  letter-spacing: -0.01em;
+  line-height: 0.85;
 }
 .arch-count {
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  opacity: 0.55;
-}
-.arch-shelf {
-  list-style: none;
-  margin: 70px 0 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-}
-/* Each row of cells shares one ledge: the pieces stand on it. */
-.arch-cell {
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  height: clamp(250px, 42vh, 420px);
-  padding: 0 clamp(14px, 3vw, 50px) 0;
-  border-bottom: 3px solid #2d2a25;
-  box-shadow: 0 14px 22px -14px rgb(0 0 0 / 0.9);
-  transition:
-    opacity 0.4s,
-    filter 0.4s;
-}
-.arch-cell.off {
-  opacity: 0.08;
-  filter: grayscale(1);
-  pointer-events: none;
-}
-.arch-piece {
-  position: relative;
-  display: block;
-  height: min(78%, 300px);
-  max-width: 100%;
-  aspect-ratio: var(--r);
-  margin-bottom: 14px;
-  transition:
-    transform 0.5s var(--ease),
-    filter 0.5s;
-  filter: drop-shadow(0 16px 16px rgb(0 0 0 / 0.55));
-}
-.arch-piece img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-.arch-piece:hover {
-  opacity: 1;
-  transform: translateY(-10px) rotate(-1.2deg) scale(1.03);
-  filter: drop-shadow(0 26px 22px rgb(0 0 0 / 0.6));
-}
-.arch-cap {
-  position: absolute;
-  left: 50%;
-  bottom: -2px;
-  transform: translate(-50%, 100%);
-  white-space: nowrap;
-  display: flex;
-  gap: 10px;
-  font-size: 12px;
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-}
-.arch-cap b {
+  font-family: var(--futura);
   font-weight: 400;
-  opacity: 0.5;
-}
-.arch-cap span {
-  font-family: var(--caslon);
-  font-size: 15px;
-}
-.arch-piece:hover .arch-cap,
-.arch-piece:focus-visible .arch-cap {
-  opacity: 1;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  opacity: 0.65;
+  max-width: 60ch;
 }
 .arch-empty {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  right: 0;
+  top: 50%;
   font-family: var(--caslon);
-  font-size: 26px;
+  font-size: 28px;
   text-align: center;
-  margin-top: 60px;
   opacity: 0.6;
 }
 
@@ -2009,9 +2019,6 @@ html.arch-open .header {
   opacity: 0.4;
 }
 @media (max-width: 860px) {
-  .arch-shelf {
-    grid-template-columns: repeat(2, 1fr);
-  }
   .arch-viewer {
     grid-template-columns: 1fr;
     grid-template-rows: minmax(0, 52svh) auto;
@@ -2040,6 +2047,6 @@ html.arch-open .header {
     padding: 110px 16px 50px;
   }
   .arch-head {
-    padding: 0 16px;
+    padding: 64px 16px 56px;
   }
 }
