@@ -9,6 +9,7 @@ import { bindPlayers } from "./player.js";
 import { eyeTracking } from "./eye.js";
 import { isMenuOpen, setNavigator } from "./menu.js";
 import { smoothScroll } from "./smooth.js";
+import { hoverFx } from "./fx.js";
 import { work, homeMarkup, projectMarkup, projectURL, aboutMarkup } from "./views.js";
 const main = document.querySelector("#main");
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
@@ -296,4 +297,5 @@ document.querySelector(".header .brand").addEventListener("click", (e) => {
   } else if (go("/")) e.preventDefault();
 });
 if (!redirectLegacyHash()) render();
+hoverFx();
 smoothScroll(); // last, so the wheel handlers above get the first say
