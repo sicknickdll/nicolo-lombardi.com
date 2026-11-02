@@ -41,7 +41,7 @@ Pages and addresses:
 | `/about/` | bio, contact, clients, and the 3D head |
 | `/work/<id>/` | one page per project, e.g. `/work/lexus/` |
 | `/archive/` | the archive's collections |
-| `/archive/la-barra/` | LA BARRA: infinite pannable grid of the pieces, search bar, 3D viewer (`#<piece id>` opens one) |
+| `/archive/la-barra/` | LA BARRA: diagonal infinite pannable grid of the cut-outs on black, search bar, 3D viewer (editorial layout) (`#<piece id>` opens one) |
 | `/playground/` | in the menu, not built yet: shows the 404 page |
 
 Old links from the previous site (`/#film`, `/#project/lexus`) and the old `/film/` and

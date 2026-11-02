@@ -98,7 +98,7 @@ export function mountCard(stage) {
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     // Fit the card (and room to turn it) in portrait and landscape.
-    const dist = 1.25 / Math.tan((camera.fov * Math.PI) / 360) / Math.min(1, camera.aspect * 1.15);
+    const dist = 0.95 / Math.tan((camera.fov * Math.PI) / 360) / Math.min(1, camera.aspect * 1.05);
     camera.position.set(0, 0, dist);
     camera.updateProjectionMatrix();
   };

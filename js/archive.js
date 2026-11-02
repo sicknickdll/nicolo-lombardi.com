@@ -4,8 +4,10 @@
 //     coasts to a stop. Tiles are created and recycled as they come into view.
 //   · Typing in the bar (or pressing "/") keeps only the pieces that match the name, type,
 //     country or location; the grid fills with those.
-//   · Clicking a piece opens it as an interactive 3D card (js/card3d.js) with its details on
-//     the right. ← / → change piece, F flips, Esc closes. The address keeps the piece
+//   · The grid runs on a diagonal: the tiles stay upright but their rows and columns are tilted.
+//   · Clicking a piece opens it as an interactive 3D card (js/card3d.js) under its name, with
+//     country and location in ruled rows (an editorial layout). ← / → change piece, F flips,
+//     Esc closes. The address keeps the piece
 //     (…/la-barra/#bar-luce) so it can be shared.
 import { collections } from "./archive-data.js";
 
@@ -18,11 +20,8 @@ export function bindCollection(main) {
     stage = viewer.querySelector("#arch-stage"),
     q = wall.querySelector("#arch-q"),
     empty = wall.querySelector("#arch-empty"),
-    shown = wall.querySelector("#arch-shown"),
-    grid = wall.querySelector("#arch-grid"),
-    flipBtn = viewer.querySelector("#arch-flip");
+    grid = wall.querySelector("#arch-grid");
   const root = document.documentElement;
-  const pad = (n) => String(n).padStart(2, "0");
   const $ = (id) => viewer.querySelector(id);
   let card = null,
     index = -1,
@@ -43,23 +42,32 @@ export function bindCollection(main) {
     raf = 0,
     last = performance.now();
 
+  const ANGLE = (-13 * Math.PI) / 180; // how far the grid is turned: rows and columns run diagonally
+  const cos = Math.cos(ANGLE),
+    sin = Math.sin(ANGLE);
+  let entering = true; // the first tiles rise in one after another
+  setTimeout(() => (entering = false), 1600);
   const measure = () => {
     const vw = grid.clientWidth;
-    dim.w = Math.max(138, Math.min(250, vw * (vw < 700 ? 0.38 : 0.155)));
-    dim.h = dim.w * 1.38;
-    dim.gap = vw < 700 ? 14 : 20;
+    dim.w = Math.max(150, Math.min(290, vw * (vw < 700 ? 0.4 : 0.17)));
+    dim.h = dim.w * 1.28;
+    dim.gap = vw < 700 ? 6 : 14;
   };
-  const tileFor = (c, r) => {
+  const tileFor = (c, r, dist) => {
     const it = list[(((c + 2 * r) % list.length) + list.length) % list.length];
     const el = document.createElement("button");
     el.type = "button";
     el.className = "arch-piece";
     el.dataset.id = it.id;
-    el.style.setProperty("--tone", it.tone || "#2a2824");
     el.setAttribute("aria-label", `${it.name}${it.country ? `, ${it.country}` : ""}`);
     el.tabIndex = -1;
-    el.innerHTML = `<img src="${it.thumb}" alt="" draggable="false" decoding="async"><span class="arch-cap"><b>${String(items.indexOf(it) + 1).padStart(2, "0")}</b><span></span></span>`;
-    el.querySelector(".arch-cap span").textContent = it.name;
+    // A piece keeps its shape: it is sized by its own proportions inside the cell.
+    const wide = it.ratio > dim.w / dim.h;
+    el.innerHTML = `<img src="${it.thumb}" alt="" draggable="false" decoding="async" style="${wide ? "width:78%;height:auto" : "height:70%;width:auto"}">`;
+    if (entering) {
+      el.classList.add("rise");
+      el.style.setProperty("--d", Math.min(1.1, dist / 1800).toFixed(2) + "s");
+    }
     return el;
   };
   // Create the tiles that are on screen (plus a margin), drop the ones that left.
@@ -68,13 +76,31 @@ export function bindCollection(main) {
       vh = grid.clientHeight,
       px = dim.w + dim.gap,
       py = dim.h + dim.gap;
-    // Grid origin: tile (0, 0) starts centred on the screen.
-    const ox = vw / 2 - dim.w / 2 + pos.x,
-      oy = vh / 2 - dim.h / 2 + pos.y;
-    const c0 = Math.floor(-ox / px) - 1,
-      c1 = Math.ceil((vw - ox) / px) + 1,
-      r0 = Math.floor(-oy / py) - 1,
-      r1 = Math.ceil((vh - oy) / py) + 1;
+    // Screen position of a tile = middle of the screen + the pan + the lattice point turned by ANGLE.
+    // To know which tiles are visible, turn the screen corners back into lattice coordinates.
+    let c0 = Infinity,
+      c1 = -Infinity,
+      r0 = Infinity,
+      r1 = -Infinity;
+    for (const [sx, sy] of [
+      [0, 0],
+      [vw, 0],
+      [0, vh],
+      [vw, vh],
+    ]) {
+      const dx = sx - vw / 2 - pos.x,
+        dy = sy - vh / 2 - pos.y;
+      const u = (dx * cos + dy * sin) / px,
+        v = (-dx * sin + dy * cos) / py;
+      c0 = Math.min(c0, u);
+      c1 = Math.max(c1, u);
+      r0 = Math.min(r0, v);
+      r1 = Math.max(r1, v);
+    }
+    c0 = Math.floor(c0) - 1;
+    c1 = Math.ceil(c1) + 1;
+    r0 = Math.floor(r0) - 1;
+    r1 = Math.ceil(r1) + 1;
     for (const [key, el] of tiles) {
       const [c, r] = key.split(",").map(Number);
       if (c < c0 || c > c1 || r < r0 || r > r1) (el.remove(), tiles.delete(key));
@@ -82,22 +108,29 @@ export function bindCollection(main) {
     if (list.length)
       for (let r = r0; r <= r1; r++)
         for (let c = c0; c <= c1; c++) {
+          const u = c * px,
+            v = r * py;
+          const cx = vw / 2 + pos.x + u * cos - v * sin, // centre of the cell on screen
+            cy = vh / 2 + pos.y + u * sin + v * cos;
+          if (cx < -dim.w || cx > vw + dim.w || cy < -dim.h || cy > vh + dim.h) {
+            const old = tiles.get(c + "," + r);
+            if (old) (old.remove(), tiles.delete(c + "," + r));
+            continue;
+          }
           const key = c + "," + r;
           let el = tiles.get(key);
           if (!el) {
-            el = tileFor(c, r);
+            el = tileFor(c, r, Math.hypot(cx - vw / 2, cy - vh / 2));
             el.style.width = dim.w + "px";
             el.style.height = dim.h + "px";
             tiles.set(key, el);
             grid.append(el);
           }
           // Tiles near the middle of the screen sit a little larger: a hint of depth.
-          const x = ox + c * px,
-            y = oy + r * py;
-          const dx = (x + dim.w / 2 - vw / 2) / vw,
-            dy = (y + dim.h / 2 - vh / 2) / vh;
-          const s = 1 - Math.min(0.1, (dx * dx + dy * dy) * 0.16);
-          el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale(${s.toFixed(3)})`;
+          const dx = (cx - vw / 2) / vw,
+            dy = (cy - vh / 2) / vh;
+          const s = 1 - Math.min(0.12, (dx * dx + dy * dy) * 0.2);
+          el.style.transform = `translate3d(${(cx - dim.w / 2).toFixed(1)}px, ${(cy - dim.h / 2).toFixed(1)}px, 0) scale(${s.toFixed(3)})`;
         }
   };
   const frame = (now) => {
@@ -199,7 +232,6 @@ export function bindCollection(main) {
   const filter = () => {
     const words = q.value.toLowerCase().split(/\s+/).filter(Boolean);
     list = items.filter((it) => words.every((w) => searchText(it).includes(w)));
-    shown.textContent = pad(list.length);
     empty.hidden = list.length > 0;
     for (const el of tiles.values()) el.remove();
     tiles.clear();
@@ -217,17 +249,31 @@ export function bindCollection(main) {
   const ensureCard = () =>
     (loading ||= import("./card3d.js").then((m) => {
       card = m.mountCard(stage);
-      stage.addEventListener("face", (e) => (flipBtn.textContent = e.detail.back ? "See the front" : "See the back"));
     }));
+  // The name and the rows slide up from behind masks, one after another; the rules draw in.
+  const reveal = (it) => {
+    const name = $("#arch-name");
+    name.innerHTML = "";
+    it.name.split(" ").forEach((word, i, all) => {
+      const w = document.createElement("span");
+      w.className = "mask";
+      const inner = document.createElement("span");
+      inner.textContent = word;
+      inner.style.setProperty("--i", i);
+      w.append(inner);
+      name.append(w);
+      if (i < all.length - 1) name.append(" ");
+    });
+    $("#arch-country").textContent = it.country || "—";
+    $("#arch-location").textContent = it.location || "—";
+    viewer.classList.remove("shown");
+    void viewer.offsetWidth; // restart the animation
+    viewer.classList.add("shown");
+  };
   const show = async (i) => {
     index = (i + items.length) % items.length;
     const it = items[index];
-    $("#arch-no").textContent = pad(index + 1);
-    $("#arch-name").textContent = it.name;
-    $("#arch-type").textContent = it.type;
-    $("#arch-country").textContent = it.country || "—";
-    $("#arch-location").textContent = it.location || "—";
-    flipBtn.textContent = "See the back";
+    reveal(it);
     history.replaceState(null, "", `#${it.id}`);
     await ensureCard().catch(() => stage.classList.add("failed"));
     if (card && items[index] === it) card.setItem(it);
@@ -261,9 +307,6 @@ export function bindCollection(main) {
   };
   main.addEventListener("click", onClick);
   viewer.querySelector(".arch-close").addEventListener("click", close);
-  flipBtn.addEventListener("click", () => card?.flip());
-  $("#arch-prev").addEventListener("click", () => show(index - 1));
-  $("#arch-next").addEventListener("click", () => show(index + 1));
   viewer.addEventListener("click", (e) => {
     if (e.target === viewer) close();
   });
