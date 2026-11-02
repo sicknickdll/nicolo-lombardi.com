@@ -1548,3 +1548,54 @@ html.light .menu-toggle-icon > span {
 html.light .client-logos img {
   filter: invert(1);
 }
+
+/* Hover effects (js/fx.js) */
+.fx-char {
+  transition:
+    opacity 1.1s ease-out,
+    text-shadow 1.1s ease-out;
+}
+.fx-on .fx-char {
+  opacity: 0.5;
+}
+.fx-on .fx-char.lit {
+  opacity: 1;
+  text-shadow:
+    0 0 calc(18px * var(--k, 1)) currentColor,
+    0 0 calc(5px * var(--k, 1)) currentColor;
+  transition: none;
+}
+/* Buttons and links: a short glitch (letters scramble, colours split, label jitters) */
+.fx-glitch {
+  animation: fx-glitch 0.38s steps(1, end);
+  white-space: nowrap;
+}
+@keyframes fx-glitch {
+  0% {
+    transform: translate(-2px, 0) skewX(-6deg);
+    text-shadow: 2px 0 #ff2bd6, -2px 0 #00f0ff;
+  }
+  20% {
+    transform: translate(2px, -1px);
+    text-shadow: -3px 0 #ff2bd6, 3px 0 #00f0ff;
+    clip-path: inset(0 0 55% 0);
+  }
+  35% {
+    transform: translate(-1px, 1px) skewX(5deg);
+    text-shadow: 2px 1px #ff2bd6, -2px -1px #00f0ff;
+    clip-path: inset(45% 0 0 0);
+  }
+  55% {
+    transform: translate(3px, 0);
+    text-shadow: -2px 0 #ff2bd6, 2px 0 #00f0ff;
+    clip-path: none;
+  }
+  75% {
+    transform: translate(-1px, 0) skewX(-3deg);
+    text-shadow: 1px 0 #ff2bd6, -1px 0 #00f0ff;
+  }
+  100% {
+    transform: none;
+    text-shadow: none;
+  }
+}
