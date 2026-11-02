@@ -10,7 +10,7 @@ import { eyeTracking } from "./eye.js";
 import { isMenuOpen, setNavigator } from "./menu.js";
 import { smoothScroll } from "./smooth.js";
 import { hoverFx } from "./fx.js";
-import { work, homeMarkup, projectMarkup, projectURL, aboutMarkup } from "./views.js";
+import { work, homeMarkup, projectMarkup, projectURL, aboutMarkup, archiveMarkup, collectionMarkup, archiveCollections } from "./views.js";
 const main = document.querySelector("#main");
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
 let cleanup = () => {};
@@ -224,6 +224,23 @@ function showProject(id) {
     main.querySelectorAll("video").forEach((v) => v.pause());
   };
 }
+function showArchive() {
+  main.innerHTML = archiveMarkup();
+}
+function showCollection(id) {
+  const c = archiveCollections.find((x) => x.id === id);
+  if (!c) return location.replace("/archive/");
+  main.innerHTML = collectionMarkup(c);
+  let off = () => {},
+    gone = false;
+  import("./archive.js").then((m) => {
+    if (!gone) off = m.bindCollection(main);
+  });
+  cleanup = () => {
+    gone = true;
+    off();
+  };
+}
 function showAbout() {
   main.innerHTML = aboutMarkup();
   const stage = main.querySelector(".about-head");
@@ -253,7 +270,10 @@ function render() {
   document.documentElement.classList.toggle("snap-pages", path === "/");
   document.documentElement.classList.toggle("light", path === "/about/");
   if (path === "/privacy/") return;
+  const collection = path.match(/^\/archive\/([^/]+)\/?$/);
   if (path === "/about/") showAbout();
+  else if (path === "/archive/") showArchive();
+  else if (collection) showCollection(collection[1]);
   else if (project) showProject(project[1]);
   else showHome();
   // Arriving with a hash (…/#work, …/#p-<id> from "back"): land on that slide.
@@ -265,7 +285,7 @@ function render() {
 const titles = new Map([[location.pathname, document.title]]);
 function go(href) {
   const url = new URL(href, location.href);
-  if (!(url.pathname === "/" || url.pathname === "/about/" || /^\/work\/[^/]+\/?$/.test(url.pathname))) return false;
+  if (!(url.pathname === "/" || url.pathname === "/about/" || url.pathname === "/archive/" || /^\/archive\/[^/]+\/?$/.test(url.pathname) || /^\/work\/[^/]+\/?$/.test(url.pathname))) return false;
   cleanup();
   cleanup = () => {};
   history.pushState(null, "", url);

@@ -10,6 +10,9 @@ js/data.js          ← ALL CONTENT: projects, texts, videos, order of the Work 
 js/views.js         page markup (landing, About, projects), shared by the browser and the generator
 js/app.js           interactions: snap scrolling, carousels, About page
 js/menu.js          the "Menu +" button and the full-screen menu (Work, About, Archive, Playground, Contact)
+js/archive-data.js  ← ARCHIVE CONTENT: collections and their pieces (name, country, location, scans)
+js/archive.js       archive collection page: infinite pannable grid, search bar, 3D viewer
+js/card3d.js        the 3D card (tilt + holographic foil, drag to turn it over)
 js/head.js          About page: 3D head (follows the cursor, rotates on drag / two-finger scroll, reacts to taps)
 js/vendor/three.js  the parts of three.js the head needs   (npm install && npm run vendor:three)
 js/intro.js         landing intro: words rolling inside a ring of spinning frames
@@ -37,7 +40,9 @@ Pages and addresses:
 | `/` | landing video + the full-screen Work list (`/#work`) |
 | `/about/` | bio, contact, clients, and the 3D head |
 | `/work/<id>/` | one page per project, e.g. `/work/lexus/` |
-| `/archive/`, `/playground/` | in the menu, not built yet: they show the 404 page |
+| `/archive/` | the archive's collections |
+| `/archive/la-barra/` | LA BARRA: infinite pannable grid of the pieces, search bar, 3D viewer (`#<piece id>` opens one) |
+| `/playground/` | in the menu, not built yet: shows the 404 page |
 
 Old links from the previous site (`/#film`, `/#project/lexus`) and the old `/film/` and
 `/visuals/` pages redirect to the new addresses.
@@ -75,6 +80,13 @@ commit and push.
   If a new scan doesn't face the camera, change `FACE_TURN` at the top of `js/head.js`.
   The eyes, nose and mouth positions (`FACE` in `js/head.js`) are measured for this scan; a new
   scan needs them re-measured.
+- **Archive pieces** (`js/archive-data.js`): export each scan on a transparent background
+  (the originals were on black: the cut-out was made with a threshold + flood fill, see the
+  commit that added LA BARRA), then save `<id>-front.webp` and `<id>-back.webp` (about 1400 px
+  on the long side), plus `<id>-thumb.webp` (720 px), in `assets/archive/<collection>/`.
+  `ratio` is front width ÷ height. Leave `country` / `location` empty if unknown (shows —).
+  Fonts: Caslon Antique (`assets/fonts/`, used unmodified under its licence), Futura with Jost
+  as fallback, Helvetica.
 - **Head reactions** (`js/head.js`): drag or two-finger scroll rotates (too much = dizzy, eyes roll);
   move over the head = smile; tap an eye = hurt; tap the nose 3 times = it grows; tap the mouth =
   pucker; tap elsewhere = boop; press and hold, then pull = stretch (Mario 64); idle 14 s = sleeps.

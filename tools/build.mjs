@@ -15,6 +15,9 @@ import {
   fullName,
   homeMarkup,
   aboutMarkup,
+  archiveMarkup,
+  collectionMarkup,
+  archiveCollections,
   projectImages,
   projectMarkup,
 } from "../js/views.js";
@@ -172,6 +175,53 @@ write(
   "light",
 );
 
+// Archive: the list of collections, and one page per collection
+write(
+  "archive",
+  head({
+    title: `Archive — ${NAME}`,
+    description: `Collections found and kept by ${NAME}: ${archiveCollections.map((c) => c.title).join(", ")}.`,
+    path: "/archive/",
+    image: "/assets/og-image.jpg",
+    imageAlt: NAME,
+    schema: [
+      breadcrumbs([
+        [NAME, "/"],
+        ["Archive", "/archive/"],
+      ]),
+    ],
+  }),
+  archiveMarkup(),
+);
+for (const c of archiveCollections) {
+  write(
+    `archive/${c.id}`,
+    head({
+      title: `${c.title} — Archive, ${NAME}`,
+      description: `${c.blurb} ${c.items.length} pieces: ${c.items.map((i) => i.name).join(", ")}.`,
+      path: `/archive/${c.id}/`,
+      image: existsSync(join(root, "assets/og", `${c.id}.jpg`)) ? `/assets/og/${c.id}.jpg` : "/assets/og-image.jpg",
+      imageAlt: `${c.title}: ${c.items[0].name}`,
+      schema: [
+        {
+          "@type": "CollectionPage",
+          url: `${SITE}/archive/${c.id}/`,
+          name: c.title,
+          description: c.blurb,
+          author: { "@id": person["@id"] },
+        },
+        breadcrumbs([
+          [NAME, "/"],
+          ["Archive", "/archive/"],
+          [c.title, `/archive/${c.id}/`],
+        ]),
+        person,
+      ],
+    }),
+    collectionMarkup(c),
+  );
+}
+
 // The Film and Visuals lists now live on the landing page: their old addresses forward there.
 for (const slug of ["film", "visuals"]) {
   const file = join(root, slug, "index.html");
@@ -277,6 +327,8 @@ write(
 const pages = [
   ["/", ["/assets/og-image.jpg", ...work.map((p) => p.cover)]],
   ["/about/", []],
+  ["/archive/", []],
+  ...archiveCollections.map((c) => [`/archive/${c.id}/`, c.items.map((i) => i.front)]),
   ["/privacy/", []],
   ...projects.map((p) => [`/work/${p.id}/`, [p.cover, ...projectImages(p)]]),
 ];

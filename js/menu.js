@@ -36,7 +36,7 @@ function rollLabel(opening) {
 // The page you're on is marked in the menu (Work covers the landing and every project).
 function markCurrent() {
   const path = location.pathname.replace(/index\.html$/, "");
-  const section = path === "/" || path.startsWith("/work/") ? "/" : path;
+  const section = path === "/" || path.startsWith("/work/") ? "/" : path.startsWith("/archive/") ? "/archive/" : path;
   menu.querySelectorAll(".menu-items a").forEach((a) => {
     const here = a.protocol !== "mailto:" && a.pathname === section;
     if (here) a.setAttribute("aria-current", "page");
