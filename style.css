@@ -246,16 +246,11 @@ video {
   white-space: nowrap;
   text-shadow: 0 1px 16px rgba(0, 0, 0, 0.7);
 }
+/* Landing page: one wheel notch = one project cover (the browser snaps; js/smooth.js stays out). */
 .snap-pages {
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
   scrollbar-width: none;
-}
-/* Touch and reduced motion: the browser snaps to each cover. With a mouse or trackpad,
-   js/smooth.js glides and settles on the nearest one instead. */
-@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
-  .snap-pages {
-    scroll-snap-type: y mandatory;
-    scroll-behavior: smooth;
-  }
 }
 .snap-pages::-webkit-scrollbar {
   display: none;

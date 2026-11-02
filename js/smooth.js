@@ -1,8 +1,7 @@
 // Smooth scrolling ("inertia scrolling" / "momentum scroll", the effect libraries like Lenis
 // popularised). The mouse wheel and trackpad no longer jump the page: each notch moves a
 // target, and the page glides toward it, braking gently the same way every time.
-// On the landing page, when the wheel stops the page also settles on the nearest project
-// (a light flick goes to the next one), replacing the browser's snap, which can't be eased.
+// Not used on the landing page, where each scroll moves to exactly one project cover.
 // Touch screens, the keyboard and reduced-motion keep the browser's own scrolling.
 const EASE = 14; // higher = arrives sooner (the reference page uses 9; this is a bit snappier)
 
@@ -14,10 +13,7 @@ export function smoothScroll() {
     current = scrollY,
     raf = 0,
     last = 0,
-    written = -1,
-    snapTimer = 0,
-    startTop = null,
-    dir = 0;
+    written = -1;
 
   const maxY = () => root.scrollHeight - innerHeight;
   const locked = () => {
@@ -62,42 +58,19 @@ export function smoothScroll() {
     }
   };
 
-  // Landing page: settle on a project cover.
-  const settle = () => {
-    if (!root.classList.contains("snap-pages")) return;
-    const tops = [...document.querySelectorAll(".home,.project-section")].map(
-      (s) => Math.round(s.getBoundingClientRect().top + scrollY),
-    );
-    if (tops.length < 2 || target > tops.at(-1) + 4) return;
-    let best = 0;
-    tops.forEach((t, i) => {
-      if (Math.abs(t - target) < Math.abs(tops[best] - target)) best = i;
-    });
-    // A short flick still moves on to the next project.
-    const from = tops.reduce((b, t, i) => (Math.abs(t - startTop) < Math.abs(tops[b] - startTop) ? i : b), 0);
-    if (best === from && Math.abs(target - tops[from]) > innerHeight * 0.1) best = clamp(from + dir, 0, tops.length - 1);
-    target = tops[best];
-    glide();
-  };
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
   const onWheel = (e) => {
     if (e.defaultPrevented || e.ctrlKey || !e.cancelable) return;
     if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-    if (locked() || maxY() <= 0) return;
+    // The landing page keeps the browser's one-cover-per-scroll snapping.
+    if (root.classList.contains("snap-pages") || locked() || maxY() <= 0) return;
     const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1);
     if (e.target instanceof Element && ownScroller(e.target, dy)) return;
     e.preventDefault();
     if (!raf) (current = scrollY), (target = scrollY);
-    if (!snapTimer) startTop = target;
-    dir = Math.sign(dy) || dir;
     target = clamp(target + dy, 0, maxY());
     glide();
-    clearTimeout(snapTimer);
-    snapTimer = setTimeout(() => {
-      snapTimer = 0;
-      settle();
-    }, 130);
   };
   // Keys, anchor links and the scrollbar move the page on their own: keep the target in step.
   addEventListener(
