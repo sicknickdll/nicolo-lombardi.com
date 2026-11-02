@@ -288,17 +288,15 @@ export const projects = [
         img("/assets/wppproduction-bts-06.webp", 3840, 2160),
       ],
     },
-    videos: ["/assets/wppproduction-hero.webm", "/assets/Ldb4lUOdpBMLqQgyUIvXayYlE.webm"],
+    videos: ["/assets/Ldb4lUOdpBMLqQgyUIvXayYlE.webm"],
     youtube: null,
     videoPosters: [
-      "/assets/wppproduction-hero-poster.webp",
       "/assets/Ldb4lUOdpBMLqQgyUIvXayYlE-poster.webp",
     ],
     videoThumbnails: [
-      "/assets/wppproduction-hero-thumb.webp",
       "/assets/Ldb4lUOdpBMLqQgyUIvXayYlE-thumb.webp",
     ],
-    videoRatios: [2.3529, 1.7777777777777777],
+    videoRatios: [1.7777777777777777],
     closingVideo: {
       src: "/assets/wppproduction-bts.webm",
       poster: "/assets/wppproduction-bts-poster.webp",
