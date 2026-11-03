@@ -23,8 +23,8 @@ export function mountClock(el) {
     R = Math.max(90, Math.min(175, Math.min(innerWidth * 0.11, innerHeight * 0.2)));
     S = Math.ceil(2 * R + 80);
     const fs = parseFloat(getComputedStyle(timeEl).fontSize);
-    dotY = fs * 0.19;
-    dotR = Math.max(2.4, fs * 0.055);
+    dotY = fs * 0.293; // measured: the colon's lower dot, from the middle of the digits
+    dotR = fs * 0.076;
     canvas.width = canvas.height = S * dpr;
     canvas.style.cssText = `width:${S}px;height:${S}px;left:${-S / 2}px;top:${-S / 2}px`;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -88,10 +88,13 @@ export function mountClock(el) {
       const u = reduce ? 1 : Math.min(1, (now - d.born) / 1000 / FALL_S);
       const [x, y] = place((d.shown * 2 * Math.PI) / 60, R);
       if (u < 1) {
-        // Falling from the colon to the bottom of the circle, speeding up as it goes.
+        // It starts behind the colon's lower dot (the digits are drawn above this canvas, so it is
+        // hidden), swells out of it on a thin neck like a drip, then lets go and speeds up.
+        const y = dotY + (R - dotY) * u ** 2.4;
         ctx.fillStyle = "#fff";
+        if (u < 0.35) ctx.fillRect(-(dotR * 1.5 * (1 - u / 0.35)) / 2, dotY, dotR * 1.5 * (1 - u / 0.35), y - dotY);
         ctx.beginPath();
-        ctx.arc(0, dotY + (R - dotY) * u * u, dotR + (3 - dotR) * u, 0, 2 * Math.PI);
+        ctx.arc(0, y, dotR + (3 - dotR) * u, 0, 2 * Math.PI);
         ctx.fill();
       } else {
         d.landed = true;

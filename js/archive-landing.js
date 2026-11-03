@@ -7,7 +7,6 @@
 //     second is on the right (js/archive-clock.js).
 import { navigateTo } from "./menu.js";
 import { mountTrail } from "./archive-trail.js";
-import { play } from "./sound.js";
 import { mountClock } from "./archive-clock.js";
 
 const STEP_PX = 70; // wheel distance for one title
@@ -54,7 +53,7 @@ export function bindLanding(main) {
       introT += dt;
       const u = Math.min(1, introT / INTRO_S);
       pos = -intro * (1 - u) ** 4; // ease out: fast at first, settling onto the title
-      if (u === 1) (intro = 0), (pos = target), play("loaded");
+      if (u === 1) (intro = 0), (pos = target);
     } else {
       pos += (target - pos) * (1 - Math.exp(-(reduce ? 30 : 8) * dt));
       if (Math.abs(target - pos) < 0.001) pos = target;

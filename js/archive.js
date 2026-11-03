@@ -235,7 +235,6 @@ export function bindCollection(main) {
   // into the grid. The grid waits (paused) behind it, so its entrance plays when the screen goes.
   const revealGrid = () => {
     grid.classList.remove("wait");
-    play("loaded");
     setTimeout(() => (entering = false), 1800);
   };
   const runLoader = (loader) =>
@@ -245,7 +244,9 @@ export function bindCollection(main) {
         sub = loader.querySelector(".arch-load-sub");
       const images = Promise.all(items.map((it) => new Promise((r) => Object.assign(new Image(), { src: it.thumb, onload: r, onerror: r }))));
       const FORM = 2600,
-        HOLD = 4300; // earliest the screen may leave
+        HOLD = 4300, // earliest the screen may leave
+        SOUND = 3500; // the "loaded" sound is this long: it starts so it ends as the screen starts to go
+      let sounded = false;
       let skip = false,
         out = 0;
       loader.addEventListener("pointerdown", () => (skip = true));
@@ -257,6 +258,7 @@ export function bindCollection(main) {
         let sigma = 16 * (1 - ease) + 0.4,
           scale = 16 * (1 - ease) + 3;
         if (t > FORM * 0.75) sub.classList.add("in");
+        if (!sounded && t > HOLD - SOUND) (sounded = true), play("loaded");
         if (!out && (skip || t > HOLD) && ready) {
           out = now;
           loader.classList.add("out");
