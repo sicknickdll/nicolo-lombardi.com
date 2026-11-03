@@ -775,8 +775,8 @@ export function mountHead(stage) {
     last = performance.now();
     raf = requestAnimationFrame(step);
   };
-  const io = new IntersectionObserver(([entry]) => {
-    visible = entry.isIntersecting;
+  const io = new IntersectionObserver((entries) => {
+    visible = entries.at(-1).isIntersecting; // the latest entry: several can arrive at once
     if (visible) start();
   });
   io.observe(stage);

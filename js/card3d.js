@@ -408,8 +408,8 @@ export function mountCard(stage) {
       raf = requestAnimationFrame(step);
     }
   };
-  const io = new IntersectionObserver(([entry_]) => {
-    visible = entry_.isIntersecting;
+  const io = new IntersectionObserver((entries) => {
+    visible = entries.at(-1).isIntersecting; // the latest entry: several can arrive at once
     if (visible) start();
   });
   io.observe(stage);
