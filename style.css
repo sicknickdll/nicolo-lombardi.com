@@ -2048,6 +2048,7 @@ html.arch-land-page body {
   background: #000;
 }
 .arch-wheel {
+  z-index: 3;
   position: absolute;
   left: clamp(24px, 6vw, 110px);
   right: 20px;
@@ -2095,4 +2096,52 @@ html.arch-land-page body {
   width: 100%;
   height: 100%;
   pointer-events: none;
+}
+.arch-ascii {
+  z-index: 1;
+}
+/* Clock on the right: place, time, and a droplet for every second (js/archive-clock.js) */
+.arch-clock {
+  position: absolute;
+  z-index: 2;
+  right: clamp(60px, 14vw, 260px);
+  top: 50%;
+  width: 0;
+  height: 0;
+}
+.arch-clock canvas {
+  position: absolute;
+  pointer-events: none;
+}
+.arch-clock-place,
+.arch-clock-time {
+  position: absolute;
+  left: 0;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+.arch-clock-place {
+  top: -4.2em;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+.arch-clock-time {
+  top: 0;
+  transform: translate(-50%, -50%);
+  font-size: clamp(38px, 4.2vw, 68px);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 700px) {
+  .arch-clock {
+    right: 50%;
+    top: auto;
+    bottom: 24vh;
+  }
+}
+.arch-item a:hover {
+  opacity: 1;
 }

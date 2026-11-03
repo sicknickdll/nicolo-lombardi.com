@@ -3,9 +3,11 @@
 //     loops, so scrolling never runs out. Scroll, swipe or use ↑ / ↓ to move; click a title to
 //     bring it up, click the selected one to open it.
 //   · On arrival the wheel spins through the titles and slows down onto the first one.
-//   · An ASCII field drifts in the background and reacts to the cursor (js/archive-ascii.js).
+//   · An ASCII field of my specialties, clients and projects drifts behind it and reacts to the
+//     cursor (js/archive-ascii.js). A clock with a droplet for every second is on the right.
 import { navigateTo } from "./menu.js";
 import { mountAscii } from "./archive-ascii.js";
+import { mountClock } from "./archive-clock.js";
 
 const STEP_PX = 70; // wheel distance for one title
 
@@ -119,10 +121,15 @@ export function bindLanding(main) {
     setTimeout(() => navigateTo(a.getAttribute("href")), reduce ? 0 : 450);
   });
 
-  const asciiOff = mountAscii(land.querySelector(".arch-ascii"));
+  const ascii = mountAscii(land.querySelector(".arch-ascii"));
+  // Over a title the ASCII effect steps aside, so the two never clash.
+  wheel.addEventListener("pointerover", (e) => ascii.suppress(Boolean(e.target.closest(".arch-item"))));
+  wheel.addEventListener("pointerleave", () => ascii.suppress(false));
+  const clockOff = mountClock(land.querySelector(".arch-clock"));
 
   return () => {
-    asciiOff();
+    ascii.off();
+    clockOff();
     root.classList.remove("arch-land-page");
     cancelAnimationFrame(raf);
     ro.disconnect();
