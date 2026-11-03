@@ -2,7 +2,7 @@
 // glitches for a moment. Letters scramble, the colours split and the text jitters.
 // Delegated from `document`, so pages swapped in place keep working.
 const GLITCH = "a[href], button";
-const SKIP_GLITCH = ".menu-toggle, .project-open, .brand, .video-thumbnail, .gallery-prev, .gallery-next, .skip, .view-project";
+const SKIP_GLITCH = ".menu-items a, .menu-toggle, .project-open, .brand, .video-thumbnail, .gallery-prev, .gallery-next, .skip, .view-project";
 const GLYPHS = "!<>-_\\/[]{}=+*^?#$%&~";
 const GLITCH_MS = 380;
 
