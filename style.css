@@ -2135,3 +2135,11 @@ html.arch-land-page body {
   position: absolute;
   pointer-events: none;
 }
+/* Fallback list (its script failed): readable titles, no half-built clock */
+.arch-land.plain .arch-item > a,
+.arch-land.plain .arch-item > span {
+  color: inherit;
+}
+.arch-land.plain .arch-clock {
+  display: none;
+}
