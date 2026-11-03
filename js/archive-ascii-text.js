@@ -1,11 +1,12 @@
 // ASCII titles for the Archive wheel, after React Bits' ASCII Text: each title is drawn as
-// characters picked by how bright the letter shapes are underneath. While the page loads they
-// wave and flicker; then they settle and stay as still ASCII type.
+// characters picked by how bright the letter shapes are underneath, with a wave running through
+// them. Hovering a title slows its wave. While the page loads they flicker and wave hard; then
+// they settle into a gentler, endless wave.
 //   · The real text stays in the page (transparent) for layout, clicks and screen readers; a canvas
 //     over it draws the ASCII.
-//   · `setResolve(r)`: 0 is a coarse, noisy, heavily waving field of characters; 1 is the clean,
-//     still title. The landing drives it with a bezier when the page loads.
-// Reduced motion: the still ASCII right away.
+//   · `setResolve(r)`: 0 is a coarse, noisy, heavily waving field of characters; 1 is the clean
+//     title. The landing drives it with a bezier when the page loads.
+// Reduced motion: still ASCII, no wave.
 const RAMP = " .:-=+*#%@";
 const PAD = 14;
 const CH = 7; // cell height, px
@@ -60,7 +61,11 @@ export function mountAsciiTitles(items, reduce) {
     const lum = new Float32Array(cols * rows);
     for (let i = 0; i < lum.length; i++) lum[i] = Math.min(1, (data[i * 4 + 3] / 255) * 1.6);
 
-    titles.push({ li, canvas, ctx, cols, rows, cw, lum, phase: Math.random() * 10, clock: 0 });
+    const t = { li, canvas, ctx, cols, rows, cw, lum, speed: 1, want: 1, phase: Math.random() * 10, clock: 0 };
+    // Hovering a title slows its wave.
+    li.addEventListener("pointerenter", () => (t.want = 0.2));
+    li.addEventListener("pointerleave", () => (t.want = 1));
+    titles.push(t);
   }
 
   const sample = (t, x, y) => {
@@ -70,11 +75,12 @@ export function mountAsciiTitles(items, reduce) {
   let last = performance.now(),
     raf = 0;
   const draw = (t, dt) => {
-    t.clock += dt;
+    t.speed += (t.want - t.speed) * (1 - Math.exp(-dt * 6));
+    t.clock += dt * t.speed; // the wave's own time, so slowing it never makes it jump
     const { ctx, cols, rows, cw } = t;
     ctx.clearRect(0, 0, cols * cw, rows * CH);
     const r = resolve,
-      amp = 12 * (1 - r) ** 2; // how far the wave pushes a cell sideways: none once settled
+      amp = 1.1 + 12 * (1 - r) ** 2; // how far the wave pushes a cell sideways
     for (let y = 0; y < rows; y++) {
       const wave = Math.sin(y * 0.55 + (t.clock + t.phase) * 2.4) * amp + Math.sin(y * 0.19 - t.clock * 1.3) * amp * 0.5;
       for (let x = 0; x < cols; x++) {
@@ -100,9 +106,9 @@ export function mountAsciiTitles(items, reduce) {
     last = now;
     for (const t of titles) {
       if (parseFloat(t.li.style.opacity || 1) <= 0.02) continue;
-      if (resolve >= 1) {
-        if (!t.still) (draw(t, 0), (t.still = true)); // settled: draw once and leave it
-      } else (t.still = false), draw(t, dt);
+      if (reduce) {
+        if (!t.still) (draw(t, 0), (t.still = true)); // reduced motion: draw once, no wave
+      } else draw(t, dt);
     }
   };
   raf = requestAnimationFrame(frame);
