@@ -11,6 +11,7 @@
 //     (…/la-barra/#bar-luce) so it can be shared.
 import { collections } from "./archive-data.js";
 import { navigateTo } from "./menu.js";
+import { play } from "./sound.js";
 
 export function bindCollection(main) {
   const wall = main.querySelector(".arch-wall");
@@ -234,6 +235,7 @@ export function bindCollection(main) {
   // into the grid. The grid waits (paused) behind it, so its entrance plays when the screen goes.
   const revealGrid = () => {
     grid.classList.remove("wait");
+    play("loaded");
     setTimeout(() => (entering = false), 1800);
   };
   const runLoader = (loader) =>

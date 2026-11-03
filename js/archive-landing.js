@@ -3,10 +3,11 @@
 //     loops, so scrolling never runs out. Scroll, swipe or use ↑ / ↓ to move; click a title to
 //     bring it up, click the selected one to open it.
 //   · On arrival the wheel spins through the titles and slows down onto the first one.
-//   · An ASCII field of my specialties, clients and projects drifts behind it and reacts to the
-//     cursor (js/archive-ascii.js). A clock with a droplet for every second is on the right.
+//   · A pixel trail follows the cursor (js/archive-trail.js). A clock with a droplet for every
+//     second is on the right (js/archive-clock.js).
 import { navigateTo } from "./menu.js";
-import { mountAscii } from "./archive-ascii.js";
+import { mountTrail } from "./archive-trail.js";
+import { play } from "./sound.js";
 import { mountClock } from "./archive-clock.js";
 
 const STEP_PX = 70; // wheel distance for one title
@@ -53,7 +54,7 @@ export function bindLanding(main) {
       introT += dt;
       const u = Math.min(1, introT / INTRO_S);
       pos = -intro * (1 - u) ** 4; // ease out: fast at first, settling onto the title
-      if (u === 1) (intro = 0), (pos = target);
+      if (u === 1) (intro = 0), (pos = target), play("loaded");
     } else {
       pos += (target - pos) * (1 - Math.exp(-(reduce ? 30 : 8) * dt));
       if (Math.abs(target - pos) < 0.001) pos = target;
@@ -121,14 +122,15 @@ export function bindLanding(main) {
     setTimeout(() => navigateTo(a.getAttribute("href")), reduce ? 0 : 450);
   });
 
-  const ascii = mountAscii(land.querySelector(".arch-ascii"));
-  // Over a title the ASCII effect steps aside, so the two never clash.
-  wheel.addEventListener("pointerover", (e) => ascii.suppress(Boolean(e.target.closest(".arch-item"))));
-  wheel.addEventListener("pointerleave", () => ascii.suppress(false));
+  const trail = mountTrail(land.querySelector(".arch-trail"));
+  // Over a title the trail steps aside, so the two never clash.
+  wheel.addEventListener("pointerover", (e) => trail.suppress(Boolean(e.target.closest(".arch-item"))));
+  wheel.addEventListener("pointerleave", () => trail.suppress(false));
   const clockOff = mountClock(land.querySelector(".arch-clock"));
+  land.classList.add("ready"); // until now the titles and the clock are hidden, so they never show stacked
 
   return () => {
-    ascii.off();
+    trail.off();
     clockOff();
     root.classList.remove("arch-land-page");
     cancelAnimationFrame(raf);

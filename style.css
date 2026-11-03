@@ -13,12 +13,12 @@
 /* Custom pixel cursors on desktop (mouse) only; touch devices keep the system ones */
 @media (hover: hover) and (pointer: fine) {
   :root {
-    --cursor-default: url("/assets/cursors/default.png") 6 4, default;
-    --cursor-pointer: url("/assets/cursors/click.png") 22 10, pointer;
-    --cursor-click: url("/assets/cursors/click.png") 22 10, pointer;
-    --cursor-grab: url("/assets/cursors/grab.png") 22 24, grab;
-    --cursor-grabbing: url("/assets/cursors/grabbing.png") 22 24, grabbing;
-    --cursor-not-allowed: url("/assets/cursors/not-allowed.png") 24 24, not-allowed;
+    --cursor-default: url("/assets/cursors/default.png") 4 3, default;
+    --cursor-pointer: url("/assets/cursors/click.png") 15 7, pointer;
+    --cursor-click: url("/assets/cursors/click.png") 15 7, pointer;
+    --cursor-grab: url("/assets/cursors/grab.png") 15 17, grab;
+    --cursor-grabbing: url("/assets/cursors/grabbing.png") 15 17, grabbing;
+    --cursor-not-allowed: url("/assets/cursors/not-allowed.png") 17 17, not-allowed;
   }
   html {
     cursor: var(--cursor-default);
@@ -2090,21 +2090,21 @@ html.arch-land-page body {
     left: 20px;
   }
 }
-.arch-ascii {
+.arch-trail {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
 }
-.arch-ascii {
+.arch-trail {
   z-index: 1;
 }
-/* Clock on the right: place, time, and a droplet for every second (js/archive-clock.js) */
+/* Clock on the right: the time, and a droplet for every second (js/archive-clock.js) */
 .arch-clock {
   position: absolute;
   z-index: 2;
-  right: clamp(60px, 14vw, 260px);
+  right: clamp(150px, 24vw, 430px);
   top: 50%;
   width: 0;
   height: 0;
@@ -2113,22 +2113,11 @@ html.arch-land-page body {
   position: absolute;
   pointer-events: none;
 }
-.arch-clock-place,
 .arch-clock-time {
   position: absolute;
   left: 0;
-  white-space: nowrap;
-  transform: translateX(-50%);
-}
-.arch-clock-place {
-  top: -4.2em;
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  opacity: 0.6;
-}
-.arch-clock-time {
   top: 0;
+  white-space: nowrap;
   transform: translate(-50%, -50%);
   font-size: clamp(38px, 4.2vw, 68px);
   font-weight: 600;
@@ -2144,4 +2133,9 @@ html.arch-land-page body {
 }
 .arch-item a:hover {
   opacity: 1;
+}
+/* Nothing shows until js/archive-landing.js has placed it, so the titles never appear stacked */
+.arch-land:not(.ready) .arch-wheel,
+.arch-land:not(.ready) .arch-clock {
+  visibility: hidden;
 }
