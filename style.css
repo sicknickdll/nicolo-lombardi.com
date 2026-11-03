@@ -2140,3 +2140,13 @@ html.arch-land-page body {
 .arch-land:not(.ready) .arch-clock {
   visibility: hidden;
 }
+.arch-land.plain .arch-wheel {
+  position: static;
+  padding: 120px 24px;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.arch-land.plain .arch-item {
+  position: static;
+  margin-bottom: 16px;
+}
