@@ -228,9 +228,13 @@ function showArchive() {
   main.innerHTML = archiveMarkup();
   let off = () => {},
     gone = false;
-  import("./archive-landing.js").then((m) => {
-    if (!gone) off = m.bindLanding(main);
-  });
+  import("./archive-landing.js")
+    .then((m) => {
+      if (!gone) off = m.bindLanding(main);
+    })
+    // If the script cannot load (an old cached copy, say), show the titles as a plain list
+    // instead of leaving the page empty.
+    .catch(() => main.querySelector(".arch-land")?.classList.add("ready", "plain"));
   cleanup = () => {
     gone = true;
     off();
