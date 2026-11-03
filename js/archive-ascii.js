@@ -1,11 +1,20 @@
-// ASCII background for the Archive landing, after lamalama.com:
-//   · A field of characters drifts slowly across the page at low opacity (the "base" canvas).
-//   · The cursor is followed with easing; under it a dotted lattice forms, and the characters
-//     it passes over light up and fade out behind it like a trail (the "heat" canvas).
+// ASCII background for the Archive landing, after lamalama.com. It is an Easter egg: the
+// characters are not random, they spell my specialties, my clients and my projects, in rows that
+// drift slowly in opposite directions.
+//   · At low opacity the words are barely there (the "base" canvas).
+//   · The cursor is followed with easing; under it a dotted lattice forms, and the letters it
+//     passes over light up, so the words can be read, then fade like a trail (the "heat" canvas).
+//   · While the pointer is over a title the effect steps aside (`suppress`), so they never clash.
 // Everything on the heat canvas runs at the display's frame rate and uses time-based easing, so
 // the trail stays smooth. The slow base field is redrawn about 15 times a second.
 // Reduced motion gets a still frame and no cursor effect.
-const RAMP = " .:-=+*#%@";
+import { clients, projects } from "./data.js";
+
+const SPECIALTIES = ["AI Filmmaking", "Art Direction", "Creative Technology", "Virtual Production", "VFX", "Motion & Sound", "Generative AI Video", "Digital Assets", "Film & Visual Production"];
+// Three kinds of rows: specialties, clients, projects; each is one long line, repeated.
+const LINES = [SPECIALTIES, clients.map((c) => c.name), projects.map((p) => (p.title === p.brand ? p.brand : `${p.brand} ${p.title}`))].map(
+  (words) => (words.join("   ·   ") + "   ·   ").toUpperCase(),
+);
 const CELL_H = 17;
 const RADIUS = 130; // reach of the cursor, in px
 
@@ -23,6 +32,8 @@ export function mountAscii(base) {
     cols = 0,
     rows = 0,
     cellW = 9,
+    shiftT = 0, // time the rows were last shifted (the base canvas and the heat canvas share it)
+    quiet = 0, // 1 while a title is under the pointer: the cursor effect fades out
     heat = new Float32Array(0);
   const mouse = { x: -999, y: -999 }, // where the pointer is
     soft = { x: -999, y: -999 }; // where the effect is: it eases toward the pointer
@@ -48,16 +59,24 @@ export function mountAscii(base) {
     drawBase(performance.now());
   };
 
-  // The drifting field: three crossing waves, 0…1.
+  // The letter at a cell: each row reads one of the lines and slides along it, left or right.
+  const letter = (i, j) => {
+    const line = LINES[j % 3];
+    const speed = (j % 2 ? 1 : -1) * (0.5 + (j % 5) * 0.12);
+    const at = Math.floor(i + shiftT * speed + j * 17);
+    return line[((at % line.length) + line.length) % line.length];
+  };
+  // The drifting field: three crossing waves set how visible each letter is.
   const drawBase = (now) => {
     const t = now / 1000;
+    shiftT = t;
     bctx.clearRect(0, 0, w, h);
     for (let y = 0; y < rows; y++)
       for (let x = 0; x < cols; x++) {
-        const v = (Math.sin(x * 0.11 + t * 0.5) + Math.sin(y * 0.16 - t * 0.35) + Math.sin((x + y) * 0.07 + t * 0.25) + 3) / 6;
-        const ch = RAMP[Math.min(RAMP.length - 1, (v * RAMP.length * 0.6) | 0)];
+        const ch = letter(x, y);
         if (ch === " ") continue;
-        bctx.fillStyle = `rgba(255,255,255,${(0.05 + v * 0.09).toFixed(3)})`;
+        const v = (Math.sin(x * 0.11 + t * 0.5) + Math.sin(y * 0.16 - t * 0.35) + Math.sin((x + y) * 0.07 + t * 0.25) + 3) / 6;
+        bctx.fillStyle = `rgba(255,255,255,${(0.025 + v * 0.07).toFixed(3)})`;
         bctx.fillText(ch, x * cellW, y * CELL_H);
       }
   };
@@ -74,7 +93,8 @@ export function mountAscii(base) {
       }
   };
 
-  let last = performance.now(),
+  let suppressed = false,
+    last = performance.now(),
     lastBase = 0,
     raf = 0,
     prev = null;
@@ -85,7 +105,8 @@ export function mountAscii(base) {
     last = now;
     if (now - lastBase > 66) (drawBase(now), (lastBase = now));
 
-    if (fine && mouse.x > -900) {
+    quiet += ((suppressed ? 1 : 0) - quiet) * (1 - Math.exp(-dt * 10));
+    if (fine && mouse.x > -900 && !suppressed) {
       if (soft.x < -900) (soft.x = mouse.x), (soft.y = mouse.y);
       const k = 1 - Math.exp(-dt * 12);
       soft.x += (mouse.x - soft.x) * k;
@@ -102,7 +123,6 @@ export function mountAscii(base) {
     // Draw what is lit, then let it cool (time-based, so the fade does not depend on frame rate).
     hctx.clearRect(0, 0, w, h);
     const cool = Math.exp(-dt * 2.4);
-    const flicker = (now / 120) | 0;
     for (let j = 0; j < rows; j++)
       for (let i = 0; i < cols; i++) {
         const idx = j * cols + i,
@@ -111,14 +131,12 @@ export function mountAscii(base) {
           heat[idx] = 0;
           continue;
         }
-        let r = Math.min(RAMP.length - 1, (hv * RAMP.length) | 0);
-        if (hv > 0.55) r = Math.max(4, r - ((((i * 73856093) ^ (j * 19349663) ^ (flicker * 83492791)) >>> 0) % 3)); // bright cells shimmer a little
-        hctx.fillStyle = `rgba(255,255,255,${Math.min(0.9, hv * 0.95).toFixed(3)})`;
-        hctx.fillText(RAMP[r], i * cellW, j * CELL_H);
+        hctx.fillStyle = `rgba(255,255,255,${(Math.min(0.9, hv * 0.95) * (1 - quiet)).toFixed(3)})`;
+        hctx.fillText(letter(i, j), i * cellW, j * CELL_H);
         heat[idx] = hv * cool;
       }
     // A lattice of dots under the pointer.
-    if (fine && soft.x > -900) {
+    if (fine && soft.x > -900 && quiet < 0.98) {
       const g = 9;
       for (let dy = -5; dy <= 5; dy++)
         for (let dx = -5; dx <= 5; dx++) {
@@ -127,7 +145,7 @@ export function mountAscii(base) {
           const d = Math.hypot(px - soft.x, py - soft.y);
           if (d > 46) continue;
           const size = 2.2 * (1 - d / 50);
-          hctx.fillStyle = `rgba(255,255,255,${(0.9 * (1 - d / 50)).toFixed(3)})`;
+          hctx.fillStyle = `rgba(255,255,255,${(0.9 * (1 - d / 50) * (1 - quiet)).toFixed(3)})`;
           hctx.fillRect(px - size / 2, py - size / 2, size, size);
         }
     }
@@ -144,10 +162,13 @@ export function mountAscii(base) {
   resize();
   if (!reduce) raf = requestAnimationFrame(frame);
 
-  return () => {
-    cancelAnimationFrame(raf);
-    ro.disconnect();
-    removeEventListener("pointermove", onMove);
-    heatCanvas.remove();
+  return {
+    suppress: (on) => (suppressed = on),
+    off() {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      removeEventListener("pointermove", onMove);
+      heatCanvas.remove();
+    },
   };
 }
