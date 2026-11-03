@@ -1,28 +1,30 @@
-// Archive landing clock, after quynh.moe: the place, and the time in large digits. Each second
-// a droplet falls from the clock onto the bottom of an invisible circle around it, and every
-// droplet already there moves one step to the left along that circle. After 60 seconds the ring
-// is closed; at the next minute the droplets dissolve and it starts again.
+// Archive landing clock, after quynh.moe: the visitor's own time in large digits. Each second a
+// droplet leaves the lower dot of the colon and falls onto the bottom of an invisible circle
+// around the clock, and every droplet already there moves one step to the left along that
+// circle. After 60 seconds the ring is closed; at the next minute the droplets dissolve (with a
+// soft sound) and it starts again.
+import { play } from "./sound.js";
+
 const FALL_S = 0.5; // a droplet takes this long to fall
 const SHIFT_RATE = 9; // how fast droplets slide to their next place
-const PLACE = "Madrid, Spain";
-const ZONE = "Europe/Madrid";
 
 export function mountClock(el) {
   const canvas = el.querySelector("canvas"),
-    timeEl = el.querySelector(".arch-clock-time"),
-    placeEl = el.querySelector(".arch-clock-place");
+    timeEl = el.querySelector(".arch-clock-time");
   const ctx = canvas.getContext("2d");
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  placeEl.textContent = PLACE;
-  const fmt = new Intl.DateTimeFormat("en-GB", { timeZone: ZONE, hour: "2-digit", minute: "2-digit", hour12: false });
+  const fmt = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false }); // the visitor's own time zone
   let R = 140, // radius of the invisible circle
     S = 0, // canvas size
-    top = 0; // where droplets leave the clock, from the circle's centre
+    dotY = 0, // where droplets leave the clock (the colon's lower dot), from the circle's centre
+    dotR = 3; // the size of that dot
   const resize = () => {
     const dpr = Math.min(devicePixelRatio, 2);
     R = Math.max(90, Math.min(175, Math.min(innerWidth * 0.11, innerHeight * 0.2)));
     S = Math.ceil(2 * R + 80);
-    top = timeEl.offsetHeight / 2 + 4;
+    const fs = parseFloat(getComputedStyle(timeEl).fontSize);
+    dotY = fs * 0.19;
+    dotR = Math.max(2.4, fs * 0.055);
     canvas.width = canvas.height = S * dpr;
     canvas.style.cssText = `width:${S}px;height:${S}px;left:${-S / 2}px;top:${-S / 2}px`;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -33,7 +35,6 @@ export function mountClock(el) {
   // eases toward it. `born` is when it left the clock; it lands FALL_S later.
   let drops = [],
     dissolving = [],
-    ripples = [],
     sec = -1;
   const spawn = (age, born, landed) => ({ age, shown: age, born, landed });
   const place = (a, r) => [-r * Math.sin(a), r * Math.cos(a)]; // from the bottom, turning left
@@ -55,6 +56,7 @@ export function mountClock(el) {
     if (nowSec === 0 && drops.length) {
       dissolving = drops.map((d) => ({ ...d, at: now }));
       drops = [];
+      play("timepass", 0.7);
     }
     for (const d of drops) d.age += 1;
     drops.push(spawn(0, now, reduce));
@@ -86,28 +88,18 @@ export function mountClock(el) {
       const u = reduce ? 1 : Math.min(1, (now - d.born) / 1000 / FALL_S);
       const [x, y] = place((d.shown * 2 * Math.PI) / 60, R);
       if (u < 1) {
-        // Falling from the clock to the bottom of the circle, faster and longer as it goes.
-        const e = u * u;
-        const fy = top + (R - top) * e;
-        drawDrop(ctx, 0, fy, 3.4, 0.4 + 1.6 * u, 1);
+        // Falling from the colon to the bottom of the circle, speeding up as it goes.
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.arc(0, dotY + (R - dotY) * u * u, dotR + (3 - dotR) * u, 0, 2 * Math.PI);
+        ctx.fill();
       } else {
-        if (!d.landed) (d.landed = true), ripples.push({ x: 0, y: R, at: now });
-        const squash = Math.max(0, 1 - (now - d.born - FALL_S * 1000) / 260);
+        d.landed = true;
         ctx.fillStyle = `rgba(255,255,255,${(1 - d.age * 0.009).toFixed(3)})`;
         ctx.beginPath();
-        ctx.ellipse(x, y, 3 + squash * 1.6, 3 - squash * 1.1, 0, 0, 2 * Math.PI);
+        ctx.arc(x, y, 3, 0, 2 * Math.PI);
         ctx.fill();
       }
-    }
-    // Ripple where a droplet lands.
-    ripples = ripples.filter((r) => now - r.at < 800);
-    for (const r of ripples) {
-      const p = (now - r.at) / 800;
-      ctx.strokeStyle = `rgba(255,255,255,${(0.35 * (1 - p)).toFixed(3)})`;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.ellipse(r.x, r.y, 4 + p * 16, 2 + p * 6, 0, 0, 2 * Math.PI);
-      ctx.stroke();
     }
     // The old ring dissolves: droplets drift outward, shrink and fade.
     dissolving = dissolving.filter((d) => now - d.at < 1400);
@@ -123,22 +115,11 @@ export function mountClock(el) {
     ctx.restore();
   };
   resize();
+  showTime();
   raf = requestAnimationFrame(frame);
 
   return () => {
     cancelAnimationFrame(raf);
     removeEventListener("resize", resize);
   };
-}
-
-// A teardrop with its point up (it is falling), `stretch` makes it longer.
-function drawDrop(ctx, x, y, r, stretch, alpha) {
-  const h = r * (1 + stretch * 1.4);
-  ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-  ctx.beginPath();
-  ctx.moveTo(x, y - h);
-  ctx.bezierCurveTo(x + r * 0.15, y - h * 0.55, x + r, y - r * 0.9, x + r, y);
-  ctx.arc(x, y, r, 0, Math.PI);
-  ctx.bezierCurveTo(x - r, y - r * 0.9, x - r * 0.15, y - h * 0.55, x, y - h);
-  ctx.fill();
 }
