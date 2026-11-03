@@ -4,6 +4,7 @@
 //   · Drag (or two-finger scroll) to turn it over and see the back. When you let go it settles
 //     face-on, front or back, with a little momentum. The F key flips it too.
 //   · Click a napkin and it folds in half; click again and it opens. A sachet squeezes instead.
+//     Click a coaster three times and it spins round like one left spinning on a table.
 //   · Swipe across it from one side to the other, starting at the edge (or just outside it), and
 //     it is cut along your line. Both halves fall away; a few seconds later it fades back in whole.
 // The scans are transparent cut-outs drawn on thin planes, so the card has the shape of the real
@@ -77,7 +78,7 @@ void main() {
   vec2 c = vUv * 2.0 - 1.0;
   vec3 col = tex.rgb;
   float d = distance(c, uPointer);
-  col += vec3(1.0) * exp(-d * d * 3.2) * 0.34 * uHolo;
+  col += vec3(1.0) * exp(-d * d * 3.2) * 0.2 * uHolo;
   // Light from above-left, so a face darkens a little as it turns away (and inside a fold).
   float shade = 0.9 + 0.1 * clamp(dot(normalize(vNormal), normalize(vec3(-0.3, 0.5, 0.8))), 0.0, 1.0);
   col *= shade;
@@ -113,7 +114,9 @@ export function mountCard(stage) {
     card = { w: 1, h: 1, fold: false };
   const turn = { yaw: 0, pitch: 0, vy: 0, vp: 0, rest: 0 };
   const fold = { t: 0, to: 0 }, // 0…1, eased in the shader
-    pulse = { x: 0, v: 0 }; // sachet squeeze
+    pulse = { x: 0, v: 0 }, // sachet squeeze
+    spin = { a: 0, v: 0 }, // coaster spin: angle and speed
+    clicks = { n: 0, t: 0 }; // quick clicks in a row
   let fall = -1; // seconds since the cut, -1 when whole
   const pointer = new Vector2(0, 0);
   let drag = null,
@@ -173,7 +176,9 @@ export function mountCard(stage) {
     fall = -1;
     halves.forEach((h) => Object.assign(h.p, { x: 0, y: 0, r: 0, vx: 0, vy: 0, vr: 0 }));
     const [w, h] = next.ratio >= 1 ? [SIZE, SIZE / next.ratio] : [SIZE * next.ratio, SIZE];
-    card = { w, h, fold: /napkin/i.test(next.type) };
+    card = { w, h, fold: /napkin/i.test(next.type), spin: /coaster/i.test(next.type) };
+    spin.a = spin.v = 0;
+    clicks.n = 0;
     const geoFront = new PlaneGeometry(w, h, 24, 24),
       geoBack = new PlaneGeometry(w, h, 24, 24);
     geos = [geoFront, geoBack];
@@ -292,8 +297,12 @@ export function mountCard(stage) {
   // ── reactions ──
   function click() {
     if (fall >= 0) return;
-    if (card.fold) fold.to = 1 - fold.to;
-    else pulse.v += 9;
+    if (card.fold) return void (fold.to = 1 - fold.to);
+    pulse.v += 9;
+    const now = performance.now();
+    clicks.n = now - clicks.t < 700 ? clicks.n + 1 : 1;
+    clicks.t = now;
+    if (card.spin && clicks.n >= 3) ((spin.v = 15), (clicks.n = 0));
   }
   // Both halves fly off the cut line, tumble and fall; later they return, fading in.
   function cut(a, b) {
@@ -349,6 +358,10 @@ export function mountCard(stage) {
     pulse.x += pulse.v * dt;
     body.position.y = f * card.h * 0.25; // a folded card is half as tall: keep it centred
     body.scale.set(1 + pulse.x * 0.05, 1 - pulse.x * 0.05, 1);
+    spin.v *= Math.exp(-1.15 * dt);
+    spin.a += spin.v * dt;
+    if (Math.abs(spin.v) < 0.8) spin.a += (Math.round(spin.a / (2 * Math.PI)) * 2 * Math.PI - spin.a) * (1 - Math.exp(-6 * dt)); // come to rest upright
+    body.rotation.z = spin.a;
 
     // The cut: pieces fall under gravity, then everything comes back whole.
     let alpha = 1;

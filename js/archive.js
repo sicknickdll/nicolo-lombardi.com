@@ -228,7 +228,7 @@ export function bindCollection(main) {
   addEventListener("keydown", onGridKey);
 
   // ── loading screen ──
-  // The title forms as ink stains: a blur that sharpens through a threshold, so it starts as
+  // The title forms like an ink stain: a blur that sharpens through a threshold, so it starts as
   // blobs and settles into letters. Then the line under it appears, and the screen dissolves
   // into the grid. The grid waits (paused) behind it, so its entrance plays when the screen goes.
   const revealGrid = () => {
@@ -239,13 +239,7 @@ export function bindCollection(main) {
     new Promise((done) => {
       const blur = loader.querySelector("#arch-blur"),
         disp = loader.querySelector("#arch-disp"),
-        sub = loader.querySelector(".arch-load-sub"),
-        stains = loader.querySelector(".arch-stains");
-      for (let i = 0; i < 7; i++) {
-        const s = document.createElement("i");
-        s.style.cssText = `left:${10 + Math.random() * 80}%;top:${15 + Math.random() * 70}%;--s:${90 + Math.random() * 190}px;animation-delay:${(Math.random() * 1.6).toFixed(2)}s`;
-        stains.append(s);
-      }
+        sub = loader.querySelector(".arch-load-sub");
       const images = Promise.all(items.map((it) => new Promise((r) => Object.assign(new Image(), { src: it.thumb, onload: r, onerror: r }))));
       const FORM = 2600,
         HOLD = 4300; // earliest the screen may leave

@@ -2087,7 +2087,7 @@ html.arch-grid-page body {
   transform: translateX(-4px);
 }
 
-/* Loading screen: the title forms like ink stains, then the line under it appears */
+/* Loading screen: the title forms like an ink stain, then the line under it appears */
 .arch-loader {
   position: fixed;
   z-index: 90;
@@ -2127,27 +2127,6 @@ html.arch-grid-page body {
 .arch-load-sub.in {
   opacity: 0.85;
   transform: none;
-}
-.arch-stains {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-/* Coffee-ring stains that bloom behind the title */
-.arch-stains i {
-  position: absolute;
-  width: var(--s);
-  height: var(--s);
-  margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
-  border-radius: 50%;
-  background: radial-gradient(circle, #f3eee314 0 52%, #f3eee326 58%, #f3eee30d 66%, transparent 68%);
-  transform: scale(0);
-  animation: arch-stain 2.2s var(--ease) both;
-}
-@keyframes arch-stain {
-  to {
-    transform: scale(1);
-  }
 }
 .arch-grid.wait .arch-piece img {
   animation-play-state: paused;
