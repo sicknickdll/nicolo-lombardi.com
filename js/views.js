@@ -157,14 +157,14 @@ export function clientsMarkup() {
 export const collectionURL = (c) => `/archive/${c.id}/`;
 
 // /archive/: a wheel of titles (js/archive-landing.js). The collections are links; the empty
-// slots say "Coming soon". The eye logo on the left follows the cursor.
+// slots say "Coming soon".
 const SOON_SLOTS = 3;
 export function archiveMarkup() {
   const rows = [
     ...collections.map((c) => `<li class="arch-item"><a href="${collectionURL(c)}">${esc(c.title)}</a></li>`),
     ...Array.from({ length: SOON_SLOTS }, () => `<li class="arch-item soon"><span>Coming soon</span></li>`),
   ];
-  return `<section class="arch-land" aria-labelledby="arch-title"><h1 id="arch-title" class="sr-only">Archive</h1><canvas class="arch-ascii" aria-hidden="true"></canvas><div class="arch-logo" aria-hidden="true"><video autoplay loop muted playsinline preload="auto">${videoSources(hero)}</video></div><ul class="arch-wheel">${rows.join("")}</ul></section>`;
+  return `<section class="arch-land" aria-labelledby="arch-title"><h1 id="arch-title" class="sr-only">Archive</h1><canvas class="arch-ascii" aria-hidden="true"></canvas><ul class="arch-wheel">${rows.join("")}</ul></section>`;
 }
 
 // /archive/<id>/: an infinite, pannable grid of the pieces (tiles are drawn by js/archive.js),

@@ -2036,7 +2036,7 @@ html.arch-grid-page body {
   }
 }
 
-/* /archive/: a wheel of titles; the eye logo on the left follows the cursor */
+/* /archive/: a wheel of titles over an ASCII field */
 html.arch-land-page,
 html.arch-land-page body {
   overflow: hidden;
@@ -2047,31 +2047,9 @@ html.arch-land-page body {
   inset: 0;
   background: #000;
 }
-.arch-logo {
-  position: absolute;
-  left: clamp(16px, 2.6vw, 44px);
-  top: 50%;
-  width: 112px;
-  height: 112px;
-  margin-top: -56px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 1px solid #fff5;
-}
-/* The eye video, cropped so only the eye shows (the canvas of js/eye.js covers it) */
-.arch-logo video,
-.arch-logo canvas {
-  position: absolute;
-  left: -94px;
-  top: -34px;
-  width: 300px;
-  height: 169px;
-  max-width: none;
-  object-fit: cover;
-}
 .arch-wheel {
   position: absolute;
-  left: clamp(150px, 15vw, 260px);
+  left: clamp(24px, 6vw, 110px);
   right: 20px;
   top: 12vh;
   bottom: 12vh;
@@ -2099,37 +2077,6 @@ html.arch-land-page body {
 .arch-item > span {
   display: block;
 }
-.arch-item.sel a {
-  cursor: var(--cursor-pointer);
-}
-.arch-l {
-  display: inline-block;
-  white-space: pre;
-}
-.arch-l.g {
-  animation: arch-glitch 0.34s steps(1, end);
-}
-/* One letter glitching: it jitters and flickers, no colour split */
-@keyframes arch-glitch {
-  0% {
-    transform: translate(-3px, 1px) skewX(-10deg);
-  }
-  25% {
-    transform: translate(3px, -2px);
-    clip-path: inset(0 0 50% 0);
-  }
-  50% {
-    transform: translate(-1px, 2px) skewX(8deg);
-    clip-path: inset(45% 0 0 0);
-  }
-  75% {
-    transform: translate(2px, 0);
-    clip-path: none;
-  }
-  100% {
-    transform: none;
-  }
-}
 .arch-wheel.leaving {
   opacity: 0;
   transform: translateX(-30px);
@@ -2138,15 +2085,8 @@ html.arch-land-page body {
     transform 0.5s var(--ease);
 }
 @media (max-width: 700px) {
-  .arch-logo {
-    top: 18%;
-    left: 50%;
-    margin-left: -56px;
-  }
   .arch-wheel {
     left: 20px;
-    top: 34%;
-    bottom: 8vh;
   }
 }
 .arch-ascii {

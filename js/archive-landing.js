@@ -2,16 +2,12 @@
 //   · One title is selected (large, white) and the others fade away above and below it. The wheel
 //     loops, so scrolling never runs out. Scroll, swipe or use ↑ / ↓ to move; click a title to
 //     bring it up, click the selected one to open it.
-//   · Hover the selected title and the letter under the cursor glitches: it flickers through
-//     random symbols and jitters (no colour split).
+//   · On arrival the wheel spins through the titles and slows down onto the first one.
 //   · An ASCII field drifts in the background and reacts to the cursor (js/archive-ascii.js).
-//   · The eye logo on the left looks at the cursor (the landing page's eye, via js/eye.js).
-import { eyeTracking } from "./eye.js";
 import { navigateTo } from "./menu.js";
 import { mountAscii } from "./archive-ascii.js";
 
 const STEP_PX = 70; // wheel distance for one title
-const GLYPHS = "!<>-_\\/[]{}=+*^?#$%&~01";
 
 export function bindLanding(main) {
   const land = main.querySelector(".arch-land");
@@ -23,23 +19,12 @@ export function bindLanding(main) {
     n = items.length;
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Each title becomes one span per letter, so a single letter can glitch.
-  for (const li of items) {
-    const label = li.firstElementChild;
-    const text = label.textContent;
-    label.setAttribute("aria-label", text);
-    label.textContent = "";
-    for (const ch of text) {
-      const s = document.createElement("span");
-      s.className = "arch-l";
-      s.setAttribute("aria-hidden", "true");
-      s.textContent = ch;
-      label.append(s);
-    }
-  }
-
   // ── the wheel ──
-  let pos = 0, // where the wheel is (in titles, unwrapped)
+  // On arrival the wheel starts two laps back and spins onto the first title, easing out.
+  const INTRO_S = 2.6;
+  let intro = reduce ? 0 : 2 * n,
+    introT = 0,
+    pos = -intro, // where the wheel is (in titles, unwrapped)
     target = 0,
     acc = 0,
     lastStep = 0,
@@ -62,10 +47,17 @@ export function bindLanding(main) {
     raf = 0;
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
-    pos += (target - pos) * (1 - Math.exp(-(reduce ? 30 : 8) * dt));
-    if (Math.abs(target - pos) < 0.001) pos = target;
+    if (intro) {
+      introT += dt;
+      const u = Math.min(1, introT / INTRO_S);
+      pos = -intro * (1 - u) ** 4; // ease out: fast at first, settling onto the title
+      if (u === 1) (intro = 0), (pos = target);
+    } else {
+      pos += (target - pos) * (1 - Math.exp(-(reduce ? 30 : 8) * dt));
+      if (Math.abs(target - pos) < 0.001) pos = target;
+    }
     render();
-    if (pos !== target) raf = requestAnimationFrame(frame);
+    if (intro || pos !== target) raf = requestAnimationFrame(frame);
   };
   const kick = () => {
     if (!raf) (last = performance.now()), (raf = requestAnimationFrame(frame));
@@ -77,8 +69,10 @@ export function bindLanding(main) {
   const ro = new ResizeObserver(measure);
   ro.observe(wheel);
   measure();
+  if (intro) kick();
   // Move by whole titles, at most one every 140 ms so a fast flick does not fly past everything.
   const step = (dir) => {
+    if (intro) return;
     const now = performance.now();
     if (now - lastStep < 140) return;
     lastStep = now;
@@ -108,6 +102,7 @@ export function bindLanding(main) {
 
   // Click: bring a title up, or open the selected one.
   wheel.addEventListener("click", (e) => {
+    if (intro) return;
     const li = e.target.closest(".arch-item");
     if (!li) return;
     e.preventDefault();
@@ -124,33 +119,6 @@ export function bindLanding(main) {
     setTimeout(() => navigateTo(a.getAttribute("href")), reduce ? 0 : 450);
   });
 
-  // ── a letter glitching under the cursor ──
-  const running = new WeakSet();
-  wheel.addEventListener("pointerover", (e) => {
-    const l = e.target.closest?.(".arch-l");
-    if (!l || running.has(l) || !l.closest(".sel") || reduce || !l.textContent.trim()) return;
-    running.add(l);
-    const original = l.textContent;
-    l.style.minWidth = l.getBoundingClientRect().width + "px";
-    l.classList.add("g");
-    let frames = 0;
-    const tick = setInterval(() => {
-      l.textContent = GLYPHS[(Math.random() * GLYPHS.length) | 0];
-      if (++frames >= 6) {
-        clearInterval(tick);
-        l.textContent = original;
-        l.classList.remove("g");
-        l.style.minWidth = "";
-        running.delete(l);
-      }
-    }, 55);
-  });
-
-  // ── the eye ──
-  const video = land.querySelector(".arch-logo video");
-  video.play().catch(() => {});
-  const eyeOff = eyeTracking(video);
-
   const asciiOff = mountAscii(land.querySelector(".arch-ascii"));
 
   return () => {
@@ -159,7 +127,5 @@ export function bindLanding(main) {
     cancelAnimationFrame(raf);
     ro.disconnect();
     removeEventListener("keydown", onKey);
-    eyeOff();
-    video.pause();
   };
 }
