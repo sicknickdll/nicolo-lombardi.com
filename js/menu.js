@@ -18,6 +18,7 @@ export const isMenuOpen = () => open;
 // the new page underneath.
 let navigate = null;
 export const setNavigator = (fn) => (navigate = fn);
+export const navigateTo = (href) => (navigate?.(href) ? true : ((location.href = href), false));
 
 // The label rolls through Menu / Close a few times before it settles on the new word.
 function rollLabel(opening) {

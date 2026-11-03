@@ -1,7 +1,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // ARCHIVE CONTENT: the collections listed on /archive/, each with its own page.
 //
-// Each collection:  id (address: /archive/<id>/), title, blurb, icon (image, or null for a
+// Each collection:  id (address: /archive/<id>/), title, blurb, subtext (shown on its loading
+//                   screen), icon (image, or null for a
 //                   placeholder tile), items.
 // Each item:        id, name, type, country, location (use "Unknown" if you do not know),
 //                   front / back: transparent scans in assets/archive/<collection>/,
@@ -21,6 +22,7 @@ export const collections = [
     id: "la-barra",
     title: "LA BARRA",
     blurb: "An archive of paper napkins and sugar sachets found in bars around the world.",
+    subtext: "A graphic archive of items found in bars and restaurants all over the world, to preserve graphic identity over the years.",
     icon: null, // placeholder tile for now: set to an image path when there is one
     items: [
       {
@@ -66,7 +68,7 @@ export const collections = [
       {
         id: "good-news-kraft",
         name: "Good News, kraft",
-        type: "Sweetener sachet",
+        type: "Sugar Sachet",
         country: "Spain",
         location: "Madrid",
         ratio: 1.5046,
@@ -76,7 +78,7 @@ export const collections = [
       {
         id: "good-news-white",
         name: "Good News, white",
-        type: "Sweetener sachet",
+        type: "Sugar Sachet",
         country: "Spain",
         location: "Madrid",
         ratio: 1.2221,

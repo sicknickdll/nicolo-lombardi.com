@@ -10,6 +10,7 @@
 //     Esc closes. The address keeps the piece
 //     (…/la-barra/#bar-luce) so it can be shared.
 import { collections } from "./archive-data.js";
+import { navigateTo } from "./menu.js";
 
 export function bindCollection(main) {
   const wall = main.querySelector(".arch-wall");
@@ -45,7 +46,6 @@ export function bindCollection(main) {
   const cos = Math.cos(ANGLE),
     sin = Math.sin(ANGLE);
   let entering = true; // the first tiles rise in one after another
-  setTimeout(() => (entering = false), 1600);
   const measure = () => {
     const vw = grid.clientWidth;
     dim.w = Math.max(150, Math.min(290, vw * (vw < 700 ? 0.4 : 0.17)));
@@ -227,6 +227,74 @@ export function bindCollection(main) {
   };
   addEventListener("keydown", onGridKey);
 
+  // ── loading screen ──
+  // The title forms as ink stains: a blur that sharpens through a threshold, so it starts as
+  // blobs and settles into letters. Then the line under it appears, and the screen dissolves
+  // into the grid. The grid waits (paused) behind it, so its entrance plays when the screen goes.
+  const revealGrid = () => {
+    grid.classList.remove("wait");
+    setTimeout(() => (entering = false), 1800);
+  };
+  const runLoader = (loader) =>
+    new Promise((done) => {
+      const blur = loader.querySelector("#arch-blur"),
+        disp = loader.querySelector("#arch-disp"),
+        sub = loader.querySelector(".arch-load-sub"),
+        stains = loader.querySelector(".arch-stains");
+      for (let i = 0; i < 7; i++) {
+        const s = document.createElement("i");
+        s.style.cssText = `left:${10 + Math.random() * 80}%;top:${15 + Math.random() * 70}%;--s:${90 + Math.random() * 190}px;animation-delay:${(Math.random() * 1.6).toFixed(2)}s`;
+        stains.append(s);
+      }
+      const images = Promise.all(items.map((it) => new Promise((r) => Object.assign(new Image(), { src: it.thumb, onload: r, onerror: r }))));
+      const FORM = 2600,
+        HOLD = 4300; // earliest the screen may leave
+      let skip = false,
+        out = 0;
+      loader.addEventListener("pointerdown", () => (skip = true));
+      const start = performance.now();
+      const frame = (now) => {
+        const t = now - start;
+        const u = Math.min(1, t / FORM),
+          ease = 1 - (1 - u) ** 3;
+        let sigma = 16 * (1 - ease) + 0.4,
+          scale = 16 * (1 - ease) + 3;
+        if (t > FORM * 0.75) sub.classList.add("in");
+        if (!out && (skip || t > HOLD) && ready) {
+          out = now;
+          loader.classList.add("out");
+        }
+        if (out) {
+          const k = Math.min(1, (now - out) / 900); // the stain dissolves
+          sigma = 0.4 + 14 * k;
+          scale = 3 + 14 * k;
+          if (k >= 1) return done();
+        }
+        blur.setAttribute("stdDeviation", sigma.toFixed(2));
+        disp.setAttribute("scale", scale.toFixed(1));
+        requestAnimationFrame(frame);
+      };
+      let ready = false;
+      images.then(() => (ready = true));
+      setTimeout(() => (ready = true), 8000); // do not wait forever on a slow connection
+      requestAnimationFrame(frame);
+    });
+  const loader = wall.querySelector("#arch-loader");
+  if (loader && !reduce && !location.hash) {
+    grid.classList.add("wait");
+    runLoader(loader).then(() => {
+      loader.remove();
+      revealGrid();
+    });
+  } else {
+    loader?.remove();
+    revealGrid();
+  }
+  wall.querySelector(".arch-back").addEventListener("click", (e) => {
+    e.preventDefault();
+    navigateTo("/archive/");
+  });
+
   // ── search ──
   const filter = () => {
     const words = q.value.toLowerCase().split(/\s+/).filter(Boolean);
@@ -263,6 +331,7 @@ export function bindCollection(main) {
       name.append(w);
       if (i < all.length - 1) name.append(" ");
     });
+    $("#arch-category").textContent = it.type;
     $("#arch-country").textContent = it.country || "Unknown";
     $("#arch-location").textContent = it.location || "Unknown";
     viewer.classList.remove("shown");
