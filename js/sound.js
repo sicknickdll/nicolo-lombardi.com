@@ -1,5 +1,5 @@
-// Small interface sounds (assets/sounds): "select" on a menu link, "loaded" when an Archive page
-// has finished its first motion, "timepass" each time the clock completes a minute.
+// Small interface sounds (assets/sounds): "loaded" during an Archive collection's loading screen,
+// "timepass" each time the clock completes a minute.
 // Browsers only allow sound after the visitor has interacted with the page, so a play() before
 // that does nothing, silently.
 const files = {};

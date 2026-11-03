@@ -2,8 +2,6 @@
 // label rolls Menu → Close, like React Bits' Staggered Menu) drops a white panel from the
 // top of the screen; the big links rise one by one from behind a mask, stacked vertically
 // (layout after dizmar.xyz). Styles and timings: the "Menu" block in style.css.
-import { play } from "./sound.js";
-
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
 const root = document.documentElement;
 const menu = document.querySelector("#menu");
@@ -114,11 +112,6 @@ document.addEventListener(
 
 // Links to the page you're already on (Work on the landing page) just close the menu and
 // scroll; e-mail links close it too. Every other link navigates as usual.
-// A soft sound when a menu link is hovered (not when the pointer just moves within one).
-menu.addEventListener("pointerover", (e) => {
-  const a = e.target.closest(".menu-items a");
-  if (a && !a.contains(e.relatedTarget) && e.pointerType === "mouse") play("select", 0.5);
-});
 menu.addEventListener("click", (e) => {
   const a = e.target.closest("a");
   if (!a) return;
