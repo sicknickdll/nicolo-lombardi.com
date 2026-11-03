@@ -85,6 +85,16 @@ export const collections = [
         bulge: 0.045,
         ...scan("la-barra", "good-news-white"),
       },
+      {
+        id: "el-internacional",
+        name: "El Internacional",
+        type: "Coaster",
+        country: "Spain",
+        location: "Madrid",
+        ratio: 0.9927,
+        bulge: 0.008,
+        ...scan("la-barra", "el-internacional"),
+      },
     ],
   },
 ];
