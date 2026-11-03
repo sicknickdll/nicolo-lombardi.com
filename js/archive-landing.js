@@ -42,7 +42,7 @@ export function bindLanding(main) {
       let d = (((i - pos) % n) + n) % n;
       if (d > n / 2) d -= n;
       const a = Math.abs(d);
-      const opacity = Math.max(0, 1 - a * 0.64) ** 1.4 * (items[i].classList.contains("soon") ? 0.55 : 1);
+      const opacity = Math.max(0, 1 - a * 0.64) ** 1.4;
       items[i].style.transform = `translate3d(${(34 * (1 - Math.min(1, a))).toFixed(1)}px, ${(d * line - line / 2).toFixed(1)}px, 0)`;
       items[i].style.opacity = opacity.toFixed(3);
       items[i].classList.toggle("sel", i === selected() && a < 0.5);

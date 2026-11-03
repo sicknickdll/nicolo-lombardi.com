@@ -17,6 +17,12 @@ const scan = (dir, id) => ({
   thumb: `/assets/archive/${dir}/${id}-thumb.webp`,
 });
 
+// Projects named on the Archive landing that have no page yet: their links lead to the 404 page.
+export const upcoming = [
+  { title: "KONBINI WARS", href: "/archive/konbini-wars/" },
+  { title: "35 MM", href: "/archive/35-mm/" },
+];
+
 export const collections = [
   {
     id: "la-barra",

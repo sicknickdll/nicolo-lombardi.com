@@ -1,24 +1,21 @@
-// Start-up animation for the Archive wheel's titles, after React Bits' ASCII Text: each title is
-// drawn as characters picked by how bright the letter shapes are underneath, with a wave running
-// through them. It only plays while the page loads.
-//   · The real text stays in the page (transparent while this plays) for layout, clicks and screen
-//     readers; a canvas over it draws the ASCII.
-//   · `setResolve(r)`: 0 is a coarse, noisy, heavily waving field of characters; 1 is the clean
-//     title. The landing drives it with a bezier, so the titles start as ASCII noise and resolve
-//     into letters; then the canvases fade out and the normal type fades in.
-// Reduced motion: nothing is drawn.
+// ASCII titles for the Archive wheel, after React Bits' ASCII Text: each title is drawn as
+// characters picked by how bright the letter shapes are underneath. While the page loads they
+// wave and flicker; then they settle and stay as still ASCII type.
+//   · The real text stays in the page (transparent) for layout, clicks and screen readers; a canvas
+//     over it draws the ASCII.
+//   · `setResolve(r)`: 0 is a coarse, noisy, heavily waving field of characters; 1 is the clean,
+//     still title. The landing drives it with a bezier when the page loads.
+// Reduced motion: the still ASCII right away.
 const RAMP = " .:-=+*#%@";
 const PAD = 14;
 const CH = 7; // cell height, px
 
 export function mountAsciiTitles(items, reduce) {
-  if (reduce) return { setResolve() {}, off() {} };
   const land = items[0].closest(".arch-land");
-  land.classList.add("ascii"); // the real text is transparent until the ASCII is done
+  land.classList.add("ascii"); // the real text is transparent: the canvases draw the titles
   const fonts = "ui-monospace, Menlo, Consolas, monospace";
   const titles = [];
-  let resolve = 0,
-    finished = false;
+  let resolve = reduce ? 1 : 0;
 
   for (const li of items) {
     const label = li.firstElementChild;
@@ -77,7 +74,7 @@ export function mountAsciiTitles(items, reduce) {
     const { ctx, cols, rows, cw } = t;
     ctx.clearRect(0, 0, cols * cw, rows * CH);
     const r = resolve,
-      amp = 1.1 + 12 * (1 - r) ** 2; // how far the wave pushes a cell sideways
+      amp = 12 * (1 - r) ** 2; // how far the wave pushes a cell sideways: none once settled
     for (let y = 0; y < rows; y++) {
       const wave = Math.sin(y * 0.55 + (t.clock + t.phase) * 2.4) * amp + Math.sin(y * 0.19 - t.clock * 1.3) * amp * 0.5;
       for (let x = 0; x < cols; x++) {
@@ -101,23 +98,21 @@ export function mountAsciiTitles(items, reduce) {
     if (document.hidden) return;
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
-    for (const t of titles) if (parseFloat(t.li.style.opacity || 1) > 0.02) draw(t, dt);
+    for (const t of titles) {
+      if (parseFloat(t.li.style.opacity || 1) <= 0.02) continue;
+      if (resolve >= 1) {
+        if (!t.still) (draw(t, 0), (t.still = true)); // settled: draw once and leave it
+      } else (t.still = false), draw(t, dt);
+    }
   };
   raf = requestAnimationFrame(frame);
 
   return {
-    setResolve(r) {
-      resolve = r;
-      if (r >= 1 && !finished) {
-        finished = true;
-        land.classList.add("ascii-done"); // CSS fades the canvases out and the real type in
-        setTimeout(() => this.off(), 700);
-      }
-    },
+    setResolve: (r) => (resolve = r),
     off() {
       cancelAnimationFrame(raf);
       for (const t of titles) t.canvas.remove();
-      land.classList.remove("ascii", "ascii-done");
+      land.classList.remove("ascii");
     },
   };
 }

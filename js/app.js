@@ -297,7 +297,7 @@ function render() {
 const titles = new Map([[location.pathname, document.title]]);
 function go(href) {
   const url = new URL(href, location.href);
-  if (!(url.pathname === "/" || url.pathname === "/about/" || url.pathname === "/archive/" || /^\/archive\/[^/]+\/?$/.test(url.pathname) || /^\/work\/[^/]+\/?$/.test(url.pathname))) return false;
+  if (!(url.pathname === "/" || url.pathname === "/about/" || url.pathname === "/archive/" || archiveCollections.some((c) => url.pathname === `/archive/${c.id}/`) || /^\/work\/[^/]+\/?$/.test(url.pathname))) return false;
   cleanup();
   cleanup = () => {};
   history.pushState(null, "", url);

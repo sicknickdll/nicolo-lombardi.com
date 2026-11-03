@@ -2038,11 +2038,6 @@ html.arch-land-page body {
   white-space: nowrap;
   will-change: transform, opacity;
 }
-.arch-item.soon {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-weight: 600;
-  letter-spacing: -0.03em;
-}
 .arch-item > a,
 .arch-item > span {
   display: block;
@@ -2115,23 +2110,13 @@ html.arch-land-page body {
 .arch-item > a,
 .arch-item > span {
   position: relative;
-  transition: color 0.6s ease;
 }
-/* While the start-up ASCII plays, the real text is transparent (it stays for layout and clicks) */
+/* The ASCII canvases draw the titles; the real text is transparent (it stays for layout and clicks) */
 .arch-land.ascii .arch-item > a,
 .arch-land.ascii .arch-item > span {
   color: transparent;
 }
-.arch-land.ascii-done .arch-item > a,
-.arch-land.ascii-done .arch-item > span {
-  color: #fff;
-}
-.arch-ascii-title {
-  transition: opacity 0.6s ease;
-}
-.arch-land.ascii-done .arch-ascii-title {
-  opacity: 0;
-}
+
 .arch-ascii-title {
   position: absolute;
   pointer-events: none;

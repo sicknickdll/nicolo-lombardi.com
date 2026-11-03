@@ -2,7 +2,7 @@
 // (tools/build.mjs), so the pre-built HTML Google reads is exactly what visitors see.
 // Pure string functions: no DOM access here.
 import { projects, workOrder, hero, heroPoster, clients } from "./data.js";
-import { collections } from "./archive-data.js";
+import { collections, upcoming } from "./archive-data.js";
 import { videoGalleryMarkup, imageGalleryMarkup, tickerMarkup, videoSources } from "./galleries.js";
 
 export const esc = (s) =>
@@ -156,14 +156,13 @@ export function clientsMarkup() {
 // ── Archive ──────────────────────────────────────────────────────────────────
 export const collectionURL = (c) => `/archive/${c.id}/`;
 
-// /archive/: a wheel of titles (js/archive-landing.js). The collections are links; the empty
-// slots say "Coming soon".
-const SOON_SLOTS = 3;
+// /archive/: a wheel of titles (js/archive-landing.js). LA BARRA opens its collection; the projects
+// without a page yet (js/archive-data.js `upcoming`) link to addresses that lead to the 404 page.
 export function archiveMarkup() {
   const rows = [
-    ...collections.map((c) => `<li class="arch-item"><a href="${collectionURL(c)}">${esc(c.title)}</a></li>`),
-    ...Array.from({ length: SOON_SLOTS }, () => `<li class="arch-item soon"><span>Coming soon</span></li>`),
-  ];
+    ...collections.map((c) => [esc(c.title), collectionURL(c)]),
+    ...upcoming.map((u) => [esc(u.title), u.href]),
+  ].map(([title, href]) => `<li class="arch-item"><a href="${href}">${title}</a></li>`);
   return `<section class="arch-land" aria-labelledby="arch-title"><h1 id="arch-title" class="sr-only">Archive</h1><canvas class="arch-trail" aria-hidden="true"></canvas><div class="arch-clock" aria-hidden="true"><canvas></canvas><p class="arch-clock-time">--:--</p></div><ul class="arch-wheel">${rows.join("")}</ul></section>`;
 }
 
