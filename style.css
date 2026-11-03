@@ -2014,6 +2014,7 @@ html.arch-land-page body {
 }
 .arch-wheel {
   z-index: 3;
+  pointer-events: none; /* it spans the page; only the titles take the pointer, so the clock can be touched */
   position: absolute;
   left: clamp(24px, 6vw, 110px);
   right: 20px;
@@ -2027,6 +2028,7 @@ html.arch-land-page body {
   touch-action: none;
 }
 .arch-item {
+  pointer-events: auto;
   position: absolute;
   left: 0;
   top: 50%;
@@ -2037,7 +2039,9 @@ html.arch-land-page body {
   will-change: transform, opacity;
 }
 .arch-item.soon {
-  font-style: italic;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.03em;
 }
 .arch-item > a,
 .arch-item > span {
@@ -2114,4 +2118,20 @@ html.arch-land-page body {
 .arch-land.plain .arch-item {
   position: static;
   margin-bottom: 16px;
+}
+.arch-item > a,
+.arch-item > span {
+  position: relative;
+  color: transparent; /* the ASCII canvas draws the title; the text stays for layout and clicks */
+}
+.arch-ascii-title {
+  position: absolute;
+  pointer-events: none;
+}
+.arch-clock-time {
+  cursor: var(--cursor-pointer);
+}
+.arch-shatter {
+  position: absolute;
+  pointer-events: none;
 }

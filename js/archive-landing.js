@@ -2,12 +2,16 @@
 //   · One title is selected (large, white) and the others fade away above and below it. The wheel
 //     loops, so scrolling never runs out. Scroll, swipe or use ↑ / ↓ to move; click a title to
 //     bring it up, click the selected one to open it.
-//   · On arrival the wheel spins through the titles and slows down onto the first one.
+//   · On arrival the wheel spins through the titles and slows down onto the first one, while the
+//     titles resolve from ASCII noise into clean ASCII text (js/archive-ascii-text.js); hovering a
+//     title slows its wave.
 //   · A pixel trail follows the cursor (js/archive-trail.js). A clock with a droplet for every
 //     second is on the right (js/archive-clock.js).
 import { navigateTo } from "./menu.js";
 import { mountTrail } from "./archive-trail.js";
 import { mountClock } from "./archive-clock.js";
+import { mountAsciiTitles } from "./archive-ascii-text.js";
+import { bezier } from "./ease.js";
 
 const STEP_PX = 70; // wheel distance for one title
 
@@ -53,7 +57,8 @@ export function bindLanding(main) {
       introT += dt;
       const u = Math.min(1, introT / INTRO_S);
       pos = -intro * (1 - u) ** 4; // ease out: fast at first, settling onto the title
-      if (u === 1) (intro = 0), (pos = target);
+      titles.setResolve(resolveEase(u)); // the ASCII noise resolves into the titles
+      if (u === 1) (intro = 0), (pos = target), titles.setResolve(1);
     } else {
       pos += (target - pos) * (1 - Math.exp(-(reduce ? 30 : 8) * dt));
       if (Math.abs(target - pos) < 0.001) pos = target;
@@ -68,6 +73,9 @@ export function bindLanding(main) {
     line = parseFloat(getComputedStyle(items[0]).fontSize) * 1.12;
     render();
   };
+  const titles = mountAsciiTitles(items, reduce);
+  const resolveEase = bezier(0.6, 0, 0.2, 1);
+  if (!intro) titles.setResolve(1);
   const ro = new ResizeObserver(measure);
   ro.observe(wheel);
   measure();
@@ -130,6 +138,7 @@ export function bindLanding(main) {
 
   return () => {
     trail.off();
+    titles.off();
     clockOff();
     root.classList.remove("arch-land-page");
     cancelAnimationFrame(raf);

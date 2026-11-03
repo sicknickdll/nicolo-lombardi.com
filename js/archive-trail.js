@@ -6,8 +6,8 @@
 //   · Heat fades with time (not frames), so it looks the same at any frame rate.
 //   · While the pointer is over a title the trail steps aside (`suppress`).
 // Touch screens and reduced motion get no trail.
-const GRID = 6; // dot spacing, in px
-const RADIUS = 78; // reach of the brush, in px
+const GRID = 4; // dot spacing, in px
+const RADIUS = 72; // reach of the brush, in px
 
 export function mountTrail(canvas) {
   const fine = matchMedia("(hover: hover) and (pointer: fine)").matches && !matchMedia("(prefers-reduced-motion: reduce)").matches;

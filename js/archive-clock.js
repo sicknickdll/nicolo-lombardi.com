@@ -2,27 +2,14 @@
 // droplet leaves the lower dot of the colon and falls onto the bottom of an invisible circle
 // around the clock, and every droplet already there moves one step to the left along that
 // circle. After 60 seconds the ring is closed; at the next minute the droplets dissolve (with a
-// soft sound) and it starts again.
+// soft sound) and it starts again. Touching the digits shatters them (js/archive-shatter.js).
 import { play } from "./sound.js";
+import { bezier } from "./ease.js";
+import { mountShatter } from "./archive-shatter.js";
 
 const FALL_S = 0.72; // a droplet takes this long to fall
 const SHIFT_S = 0.7; // and this long to slide to its next place on the ring
 
-// CSS-style cubic-bezier easing: (x1, y1, x2, y2) → a function of progress 0…1.
-function bezier(x1, y1, x2, y2) {
-  const at = (t, a, b) => 3 * a * t * (1 - t) ** 2 + 3 * b * t * t * (1 - t) + t ** 3;
-  return (x) => {
-    let t = x;
-    for (let i = 0; i < 8; i++) {
-      // Newton's method: find the t whose curve x matches the progress.
-      const err = at(t, x1, x2) - x;
-      const slope = 3 * x1 * (1 - t) ** 2 + 6 * (x2 - x1) * t * (1 - t) + 3 * (1 - x2) * t * t;
-      if (Math.abs(err) < 1e-5 || !slope) break;
-      t -= err / slope;
-    }
-    return at(t, y1, y2);
-  };
-}
 const fallEase = bezier(0.55, 0.05, 0.85, 0.45), // lets go slowly, then drops
   slideEase = bezier(0.65, 0, 0.25, 1); // eases out of one place and into the next
 // A point on a cubic curve through four points (p0 start, p3 end).
@@ -139,7 +126,10 @@ export function mountClock(el) {
   showTime();
   raf = requestAnimationFrame(frame);
 
+  const shatterOff = mountShatter(timeEl, el); // touch the digits and they shatter
+
   return () => {
+    shatterOff();
     cancelAnimationFrame(raf);
     removeEventListener("resize", resize);
   };
