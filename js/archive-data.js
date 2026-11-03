@@ -96,16 +96,6 @@ export const collections = [
         ...scan("la-barra", "el-internacional"),
       },
       {
-        id: "in-dreams-cafe",
-        name: "In Dreams Café",
-        type: "Coaster",
-        country: "Spain",
-        location: "Madrid",
-        ratio: 0.9823,
-        bulge: 0.008,
-        ...scan("la-barra", "in-dreams-cafe"),
-      },
-      {
         id: "harveys",
         name: "Harvey's",
         type: "Coaster",
