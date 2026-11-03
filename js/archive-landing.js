@@ -3,8 +3,7 @@
 //     loops, so scrolling never runs out. Scroll, swipe or use ↑ / ↓ to move; click a title to
 //     bring it up, click the selected one to open it.
 //   · On arrival the wheel spins through the titles and slows down onto the first one, while the
-//     titles resolve from ASCII noise into clean ASCII text (js/archive-ascii-text.js); hovering a
-//     title slows its wave.
+//     titles resolve from ASCII noise into the normal type (js/archive-ascii-text.js).
 //   · A pixel trail follows the cursor (js/archive-trail.js). A clock with a droplet for every
 //     second is on the right (js/archive-clock.js).
 import { navigateTo } from "./menu.js";
@@ -133,7 +132,11 @@ export function bindLanding(main) {
   // Over a title the trail steps aside, so the two never clash.
   wheel.addEventListener("pointerover", (e) => trail.suppress(Boolean(e.target.closest(".arch-item"))));
   wheel.addEventListener("pointerleave", () => trail.suppress(false));
-  const clockOff = mountClock(land.querySelector(".arch-clock"));
+  // No clock on a phone.
+  const clockEl = land.querySelector(".arch-clock");
+  let clockOff = () => {};
+  if (matchMedia("(max-width: 700px)").matches) clockEl.remove();
+  else clockOff = mountClock(clockEl);
   land.classList.add("ready"); // until now the titles and the clock are hidden, so they never show stacked
 
   return () => {

@@ -2094,13 +2094,6 @@ html.arch-land-page body {
   letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums;
 }
-@media (max-width: 700px) {
-  .arch-clock {
-    right: 50%;
-    top: auto;
-    bottom: 24vh;
-  }
-}
 .arch-item a:hover {
   opacity: 1;
 }
@@ -2122,7 +2115,22 @@ html.arch-land-page body {
 .arch-item > a,
 .arch-item > span {
   position: relative;
-  color: transparent; /* the ASCII canvas draws the title; the text stays for layout and clicks */
+  transition: color 0.6s ease;
+}
+/* While the start-up ASCII plays, the real text is transparent (it stays for layout and clicks) */
+.arch-land.ascii .arch-item > a,
+.arch-land.ascii .arch-item > span {
+  color: transparent;
+}
+.arch-land.ascii-done .arch-item > a,
+.arch-land.ascii-done .arch-item > span {
+  color: #fff;
+}
+.arch-ascii-title {
+  transition: opacity 0.6s ease;
+}
+.arch-land.ascii-done .arch-ascii-title {
+  opacity: 0;
 }
 .arch-ascii-title {
   position: absolute;
