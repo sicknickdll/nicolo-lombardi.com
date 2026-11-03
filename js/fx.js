@@ -54,6 +54,7 @@ export function hoverFx() {
   };
   document.addEventListener("pointerover", (e) => {
     if (e.pointerType !== "mouse" || !(e.target instanceof Element)) return;
+    if (location.pathname.startsWith("/archive/")) return; // the archive stays clean
     const el = e.target.closest(GLITCH);
     if (!el || el.closest(SKIP_GLITCH) || el.contains(e.relatedTarget)) return;
     glitch(el);

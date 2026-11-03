@@ -12,7 +12,7 @@ js/app.js           interactions: snap scrolling, carousels, About page
 js/menu.js          the "Menu +" button and the full-screen menu (Work, About, Archive, Playground, Contact)
 js/archive-data.js  ← ARCHIVE CONTENT: collections and their pieces (name, country, location, scans)
 js/archive.js       archive collection page: infinite pannable grid, search bar, 3D viewer
-js/card3d.js        the 3D card (tilt + holographic foil, drag to turn it over)
+js/card3d.js        the 3D card (tilt + glare, drag to turn it over)
 js/head.js          About page: 3D head (follows the cursor, rotates on drag / two-finger scroll, reacts to taps)
 js/vendor/three.js  the parts of three.js the head needs   (npm install && npm run vendor:three)
 js/intro.js         landing intro: words rolling inside a ring of spinning frames

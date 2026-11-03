@@ -1,6 +1,6 @@
 // Archive viewer: one scanned item as a 3D card.
-//   · Move over it and it tilts toward the cursor; a holographic sheen and a glare follow
-//     (the effect of React Bits' Holo Card).
+//   · Move over it and it tilts toward the cursor, with a soft glare under it (after React
+//     Bits' Holo Card, without the rainbow foil).
 //   · Drag (or two-finger scroll) to turn it over and see the back. When you let go it settles
 //     face-on, front or back, with a little momentum. Double-click, or the Flip button, turns it.
 // The scans are transparent cut-outs, drawn on two thin planes (front and back), so the card
@@ -34,29 +34,22 @@ void main() {
   gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
 }`;
 
-// The printed scan, plus a rainbow foil that slides with the tilt and a soft glare under the cursor.
+// The printed scan, plus a soft glare under the cursor.
 const FRAG = `
 precision highp float;
 uniform sampler2D uMap;
 uniform vec2 uPointer;   // cursor in card coordinates (-1…1)
 uniform float uHolo;     // 0 at rest, 1 while hovered
-uniform vec2 uTilt;
 varying vec2 vUv;
 varying vec3 vNormal;
-vec3 hsv(vec3 c){ vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0); vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www); return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y); }
 void main() {
   vec4 tex = texture2D(uMap, vUv);
   if (tex.a < 0.02) discard;
   vec2 c = vUv * 2.0 - 1.0;
-  // Foil: bands of colour that move as the card tilts.
-  float band = fract(c.x * 0.55 + c.y * 0.35 + uTilt.x * 0.9 - uTilt.y * 0.6);
-  vec3 foil = hsv(vec3(band, 0.5, 1.0));
-  float sparkle = pow(max(0.0, sin((c.x + uTilt.x) * 90.0) * sin((c.y - uTilt.y) * 90.0)), 8.0);
-  vec3 col = tex.rgb * mix(vec3(1.0), foil, 0.27 * uHolo);
+  vec3 col = tex.rgb;
   // Glare under the cursor.
   float d = distance(c, uPointer);
   col += vec3(1.0) * exp(-d * d * 3.2) * 0.34 * uHolo;
-  col += foil * sparkle * 0.22 * uHolo;
   // Light from above-left, so the face darkens a little as it turns away.
   float shade = 0.94 + 0.06 * clamp(dot(normalize(vNormal), normalize(vec3(-0.3, 0.5, 0.8))), 0.0, 1.0);
   col *= shade;
@@ -112,7 +105,6 @@ export function mountCard(stage) {
         uBulge: { value: bulge },
         uPointer: { value: new Vector2() },
         uHolo: { value: 0 },
-        uTilt: { value: new Vector2() },
       },
       vertexShader: VERT,
       fragmentShader: FRAG,
@@ -246,7 +238,6 @@ export function mountCard(stage) {
       u.uHolo.value = hover.x * (calm ? 1 : 0.6);
       const flipX = i === 1 ? -1 : 1;
       u.uPointer.value.set(pointer.x * flipX * (showBack === (i === 1) ? 1 : 0), pointer.y);
-      u.uTilt.value.set(tilt.x * flipX, tilt.y);
     }
     renderer.render(scene, camera);
     raf = requestAnimationFrame(step);

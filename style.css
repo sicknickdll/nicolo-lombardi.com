@@ -1713,6 +1713,9 @@ html.arch-open .header {
 
 /* /archive/la-barra/: an infinite, pannable grid on a diagonal (tiles placed by js/archive.js).
    Black, no tile backgrounds: just the cut-out of each piece. */
+html.arch-grid-page .header {
+  display: none; /* the Back link replaces the name and Menu on a collection */
+}
 html.arch-grid-page,
 html.arch-grid-page body {
   overflow: hidden;
@@ -1778,46 +1781,6 @@ html.arch-grid-page body {
     opacity: 0;
     transform: translateY(60px) scale(0.86);
   }
-}
-/* Title over the grid, on a soft fade so it stays readable */
-.arch-head {
-  position: absolute;
-  z-index: 5;
-  top: 0;
-  left: 0;
-  right: 0;
-  padding: 70px 20px 70px;
-  display: grid;
-  gap: 10px;
-  background: linear-gradient(#000 70%, #0000);
-  pointer-events: none;
-}
-.arch-head a {
-  pointer-events: auto;
-}
-.arch-crumb {
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  opacity: 0.55;
-}
-.arch-crumb a::after {
-  content: "  /";
-  opacity: 0.5;
-}
-.arch-wall .arch-title {
-  font-family: var(--caslon);
-  font-size: clamp(44px, 6.4vw, 104px);
-  letter-spacing: -0.01em;
-  line-height: 0.85;
-  overflow: hidden;
-}
-.arch-count {
-  font-family: var(--futura);
-  font-weight: 400;
-  font-size: 13px;
-  opacity: 0.6;
-  max-width: 54ch;
 }
 .arch-empty {
   position: absolute;
@@ -2023,22 +1986,21 @@ html.arch-grid-page body {
 .arch-facts > div:nth-child(2) dd {
   --n: 1;
 }
-/* Close: serif caps framed by two heavy bars */
+/* Close: a serif X that tilts on hover */
 .arch-close {
   position: absolute;
   z-index: 3;
-  top: 14px;
+  top: 8px;
   right: 18px;
-  font-family: var(--caslon);
-  font-size: 20px;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  padding: 5px 12px 3px;
-  border-top: 4px solid #fff;
-  border-bottom: 4px solid #fff;
+  font-size: 40px;
+  line-height: 1;
+  padding: 4px 6px;
+  transition:
+    transform 0.4s var(--ease),
+    opacity 0.25s;
 }
-.arch-close span {
-  display: block;
+.arch-close:hover {
+  transform: rotate(-14deg);
 }
 /* Crosshair marks in the four corners */
 .plus {
@@ -2093,14 +2055,93 @@ html.arch-grid-page body {
     padding-top: 64px;
   }
   .arch-close {
-    top: 12px;
-    right: 14px;
-    font-size: 17px;
+    top: 6px;
+    right: 12px;
+    font-size: 34px;
   }
   .arch-index {
     padding: 110px 16px 50px;
   }
-  .arch-head {
-    padding: 64px 16px 56px;
+}
+
+/* Back: replaces the name and Menu on a collection page */
+.arch-back {
+  position: fixed;
+  z-index: 8;
+  top: 12px;
+  left: 20px;
+  font-size: 28px;
+  line-height: 1;
+  transition:
+    transform 0.4s var(--ease),
+    opacity 0.25s;
+}
+.arch-back:hover {
+  transform: translateX(-4px);
+}
+
+/* Loading screen: the title forms like ink stains, then the line under it appears */
+.arch-loader {
+  position: fixed;
+  z-index: 90;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 28px;
+  padding: 0 20px;
+  text-align: center;
+  background: #000;
+  transition: opacity 0.9s ease 0.15s;
+}
+.arch-loader.out {
+  opacity: 0;
+}
+.arch-load-title {
+  position: relative;
+  font-size: clamp(64px, 15vw, 240px);
+  line-height: 0.9;
+  color: #f3eee3;
+  filter: url(#arch-stain);
+}
+.arch-load-sub {
+  position: relative;
+  max-width: 44ch;
+  font-family: var(--futura);
+  font-weight: 400;
+  font-size: clamp(14px, 1.4vw, 18px);
+  line-height: 1.4;
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 1.1s ease,
+    transform 1.1s var(--ease);
+}
+.arch-load-sub.in {
+  opacity: 0.85;
+  transform: none;
+}
+.arch-stains {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+/* Coffee-ring stains that bloom behind the title */
+.arch-stains i {
+  position: absolute;
+  width: var(--s);
+  height: var(--s);
+  margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
+  border-radius: 50%;
+  background: radial-gradient(circle, #f3eee314 0 52%, #f3eee326 58%, #f3eee30d 66%, transparent 68%);
+  transform: scale(0);
+  animation: arch-stain 2.2s var(--ease) both;
+}
+@keyframes arch-stain {
+  to {
+    transform: scale(1);
   }
+}
+.arch-grid.wait .arch-piece img {
+  animation-play-state: paused;
 }
