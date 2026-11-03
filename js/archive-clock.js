@@ -104,22 +104,21 @@ export function mountClock(el) {
       const u = reduce ? 1 : Math.min(1, (now - d.born) / 1000 / FALL_S);
       const [x, y] = place((d.shown * 2 * Math.PI) / 60, R);
       if (u < 1) {
-        // It starts behind the colon's lower dot (the digits are drawn above this canvas, so it is
-        // hidden), swells out of it on a thin neck like a drip, then lets go and falls along a
-        // gentle S-curve, easing in with a bezier.
+        // It starts smaller than the colon's lower dot and behind it (the digits are drawn above
+        // this canvas), so it is hidden, then slips out and falls along a gentle S-curve, easing
+        // in with a bezier.
         const f = fallEase(u);
         const y = curve(f, dotY, dotY + (R - dotY) * 0.12, dotY + (R - dotY) * 0.72, R);
         const x = curve(f, 0, 0, 7, 0); // swings a little to the right of the line, then back
         ctx.fillStyle = "#fff";
-        if (f < 0.3) ctx.fillRect(-(dotR * 1.5 * (1 - f / 0.3)) / 2, dotY, dotR * 1.5 * (1 - f / 0.3), y - dotY);
         ctx.beginPath();
-        ctx.arc(x, y, dotR + (3 - dotR) * f, 0, 2 * Math.PI);
+        ctx.arc(x, y, dotR * 0.5 + (2.6 - dotR * 0.5) * f, 0, 2 * Math.PI);
         ctx.fill();
       } else {
         d.landed = true;
         ctx.fillStyle = `rgba(255,255,255,${(1 - d.age * 0.009).toFixed(3)})`;
         ctx.beginPath();
-        ctx.arc(x, y, 3, 0, 2 * Math.PI);
+        ctx.arc(x, y, 2.6, 0, 2 * Math.PI);
         ctx.fill();
       }
     }
