@@ -52,7 +52,7 @@ void main() {
     float cs = cos(a), sn = sin(a);
     float y = p.y, z = p.z;
     p.y = y * cs - z * sn;
-    p.z = y * sn + z * cs + 0.02 * uFold * uSide;
+    p.z = y * sn + z * cs + 0.05 * uFold * uSide; // the lift keeps the folded half in front of the half it lands on
     n = vec3(n.x, n.y * cs - n.z * sn, n.y * sn + n.z * cs);
   }
   vNormal = normalize(normalMatrix * n);
@@ -408,8 +408,8 @@ export function mountCard(stage) {
       raf = requestAnimationFrame(step);
     }
   };
-  const io = new IntersectionObserver(([entry_]) => {
-    visible = entry_.isIntersecting;
+  const io = new IntersectionObserver((entries) => {
+    visible = entries.at(-1).isIntersecting; // the latest entry: several can arrive at once
     if (visible) start();
   });
   io.observe(stage);

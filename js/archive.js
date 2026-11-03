@@ -26,7 +26,8 @@ export function bindCollection(main) {
   const $ = (id) => viewer.querySelector(id);
   let card = null,
     index = -1,
-    loading = null;
+    loading = null,
+    hideTimer = 0;
 
   // ── the infinite grid ──
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -343,6 +344,7 @@ export function bindCollection(main) {
   const open = (id) => {
     const i = items.findIndex((it) => it.id === id);
     if (i < 0) return;
+    clearTimeout(hideTimer);
     viewer.hidden = false;
     root.classList.add("arch-open");
     wall.inert = true;
@@ -358,7 +360,12 @@ export function bindCollection(main) {
     wall.inert = false;
     document.querySelector(".header").inert = false;
     history.replaceState(null, "", location.pathname);
-    setTimeout(() => (viewer.hidden = true), 280);
+    // A fresh 3D card each time: one kept inside a hidden viewer came back at the wrong size.
+    hideTimer = setTimeout(() => {
+      viewer.hidden = true;
+      card?.dispose();
+      card = loading = null;
+    }, 750);
   };
 
   viewer.querySelector(".arch-close").addEventListener("click", close);

@@ -1713,6 +1713,15 @@ html.arch-open .header {
 
 /* /archive/la-barra/: an infinite, pannable grid on a diagonal (tiles placed by js/archive.js).
    Black, no tile backgrounds: just the cut-out of each piece. */
+html.arch-grid-page {
+  /* system cursors while exploring a collection */
+  --cursor-default: default;
+  --cursor-pointer: pointer;
+  --cursor-click: pointer;
+  --cursor-grab: grab;
+  --cursor-grabbing: grabbing;
+  --cursor-not-allowed: not-allowed;
+}
 html.arch-grid-page .header {
   display: none; /* the Back link replaces the name and Menu on a collection */
 }
@@ -2008,53 +2017,6 @@ html.arch-grid-page body {
 }
 .arch-close:hover {
   transform: rotate(-14deg);
-}
-/* Crosshair marks in the four corners */
-.plus {
-  position: absolute;
-  z-index: 2;
-  width: 12px;
-  height: 12px;
-  pointer-events: none;
-}
-.plus::before,
-.plus::after {
-  content: "";
-  position: absolute;
-  background: #fff;
-}
-.plus::before {
-  left: 0;
-  right: 0;
-  top: 5px;
-  height: 2px;
-}
-.plus::after {
-  top: 0;
-  bottom: 0;
-  left: 5px;
-  width: 2px;
-}
-.plus.tl,
-.plus.tr {
-  top: 46%;
-}
-.plus.tl {
-  left: 6px;
-}
-.plus.tr {
-  right: 6px;
-}
-.plus.bl,
-.plus.br {
-  bottom: 6px;
-  top: auto;
-}
-.plus.bl {
-  left: 6px;
-}
-.plus.br {
-  right: 6px;
 }
 @media (max-width: 860px) {
   .arch-name {
