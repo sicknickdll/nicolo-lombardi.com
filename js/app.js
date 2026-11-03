@@ -226,6 +226,15 @@ function showProject(id) {
 }
 function showArchive() {
   main.innerHTML = archiveMarkup();
+  let off = () => {},
+    gone = false;
+  import("./archive-landing.js").then((m) => {
+    if (!gone) off = m.bindLanding(main);
+  });
+  cleanup = () => {
+    gone = true;
+    off();
+  };
 }
 function showCollection(id) {
   const c = archiveCollections.find((x) => x.id === id);

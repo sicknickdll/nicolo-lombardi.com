@@ -1631,86 +1631,6 @@ html.arch-open .header {
   visibility: hidden;
 }
 
-/* /archive/ */
-.arch-index {
-  min-height: 100svh;
-  padding: 130px 20px 60px;
-}
-.arch-title {
-  font-size: clamp(54px, 11vw, 190px);
-  font-weight: inherit;
-  letter-spacing: -0.06em;
-  line-height: 0.85;
-}
-.arch-lede {
-  font-family: var(--futura);
-  font-weight: 400;
-  margin-top: 22px;
-  opacity: 0.6;
-}
-.arch-collections {
-  list-style: none;
-  margin: 70px 0 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
-  gap: 24px;
-}
-.arch-tile {
-  display: grid;
-  gap: 14px;
-}
-.arch-icon {
-  position: relative;
-  display: grid;
-  place-items: center;
-  aspect-ratio: 1;
-  background: #161513;
-  border: 1px solid #2a2824;
-  overflow: hidden;
-  transition: border-color 0.3s;
-}
-.arch-tile:hover .arch-icon {
-  border-color: #6b665c;
-}
-.arch-icon img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-/* Placeholder icon: three stacked napkins until there is a real one */
-.arch-icon.placeholder i {
-  position: absolute;
-  width: 46%;
-  height: 54%;
-  background: var(--paper);
-  box-shadow: 0 6px 18px rgb(0 0 0 / 0.5);
-  transition: transform 0.5s var(--ease);
-}
-.arch-icon.placeholder i:nth-child(1) {
-  transform: translate(-16%, 6%) rotate(-9deg);
-  opacity: 0.55;
-}
-.arch-icon.placeholder i:nth-child(2) {
-  transform: translate(14%, -4%) rotate(7deg);
-  opacity: 0.8;
-}
-.arch-icon.placeholder i:nth-child(3) {
-  transform: rotate(-1deg);
-}
-.arch-tile:hover .arch-icon.placeholder i:nth-child(1) {
-  transform: translate(-24%, 8%) rotate(-14deg);
-}
-.arch-tile:hover .arch-icon.placeholder i:nth-child(2) {
-  transform: translate(22%, -6%) rotate(12deg);
-}
-.arch-tile-name {
-  font-family: var(--caslon);
-  font-size: 28px;
-  letter-spacing: 0.01em;
-  font-weight: 400;
-}
-
 /* /archive/la-barra/: an infinite, pannable grid on a diagonal (tiles placed by js/archive.js).
    Black, no tile backgrounds: just the cut-out of each piece. */
 html.arch-grid-page {
@@ -2028,9 +1948,6 @@ html.arch-grid-page body {
     right: 12px;
     font-size: 34px;
   }
-  .arch-index {
-    padding: 110px 16px 50px;
-  }
 }
 
 /* Back: replaces the name and Menu on a collection page */
@@ -2116,5 +2033,119 @@ html.arch-grid-page body {
   }
   to {
     opacity: 0;
+  }
+}
+
+/* /archive/: a wheel of titles; the eye logo on the left follows the cursor */
+html.arch-land-page,
+html.arch-land-page body {
+  overflow: hidden;
+  background: #000;
+}
+.arch-land {
+  position: fixed;
+  inset: 0;
+  background: #000;
+}
+.arch-logo {
+  position: absolute;
+  left: clamp(16px, 2.6vw, 44px);
+  top: 50%;
+  width: 112px;
+  height: 112px;
+  margin-top: -56px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid #fff5;
+}
+/* The eye video, cropped so only the eye shows (the canvas of js/eye.js covers it) */
+.arch-logo video,
+.arch-logo canvas {
+  position: absolute;
+  left: -94px;
+  top: -34px;
+  width: 300px;
+  height: 169px;
+  max-width: none;
+  object-fit: cover;
+}
+.arch-wheel {
+  position: absolute;
+  left: clamp(150px, 15vw, 260px);
+  right: 20px;
+  top: 12vh;
+  bottom: 12vh;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  -webkit-mask-image: linear-gradient(#0000, #000 28%, #000 72%, #0000);
+  mask-image: linear-gradient(#0000, #000 28%, #000 72%, #0000);
+  touch-action: none;
+}
+.arch-item {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  font-family: var(--caslon);
+  font-size: clamp(40px, 5.6vw, 96px);
+  line-height: 1.1;
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+.arch-item.soon {
+  font-style: italic;
+}
+.arch-item > a,
+.arch-item > span {
+  display: block;
+}
+.arch-item.sel a {
+  cursor: var(--cursor-pointer);
+}
+.arch-l {
+  display: inline-block;
+  white-space: pre;
+}
+.arch-l.g {
+  animation: arch-glitch 0.34s steps(1, end);
+}
+/* One letter glitching: it jitters and flickers, no colour split */
+@keyframes arch-glitch {
+  0% {
+    transform: translate(-3px, 1px) skewX(-10deg);
+  }
+  25% {
+    transform: translate(3px, -2px);
+    clip-path: inset(0 0 50% 0);
+  }
+  50% {
+    transform: translate(-1px, 2px) skewX(8deg);
+    clip-path: inset(45% 0 0 0);
+  }
+  75% {
+    transform: translate(2px, 0);
+    clip-path: none;
+  }
+  100% {
+    transform: none;
+  }
+}
+.arch-wheel.leaving {
+  opacity: 0;
+  transform: translateX(-30px);
+  transition:
+    opacity 0.5s,
+    transform 0.5s var(--ease);
+}
+@media (max-width: 700px) {
+  .arch-logo {
+    top: 18%;
+    left: 50%;
+    margin-left: -56px;
+  }
+  .arch-wheel {
+    left: 20px;
+    top: 34%;
+    bottom: 8vh;
   }
 }

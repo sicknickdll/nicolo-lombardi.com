@@ -156,14 +156,15 @@ export function clientsMarkup() {
 // ── Archive ──────────────────────────────────────────────────────────────────
 export const collectionURL = (c) => `/archive/${c.id}/`;
 
-// /archive/: one tile per collection. A collection without an icon gets a placeholder.
+// /archive/: a wheel of titles (js/archive-landing.js). The collections are links; the empty
+// slots say "Coming soon". The eye logo on the left follows the cursor.
+const SOON_SLOTS = 3;
 export function archiveMarkup() {
-  return `<section class="arch-index" aria-labelledby="arch-title"><h1 id="arch-title" class="arch-title">Archive</h1><p class="arch-lede">Collections of found objects.</p><ul class="arch-collections">${collections
-    .map(
-      (c) =>
-        `<li><a class="arch-tile" href="${collectionURL(c)}"><span class="arch-icon${c.icon ? "" : " placeholder"}" aria-hidden="true">${c.icon ? `<img src="${c.icon}" alt="" loading="lazy">` : `<i></i><i></i><i></i>`}</span><span class="arch-tile-name">${esc(c.title)}</span></a></li>`,
-    )
-    .join("")}</ul></section>`;
+  const rows = [
+    ...collections.map((c) => `<li class="arch-item"><a href="${collectionURL(c)}">${esc(c.title)}</a></li>`),
+    ...Array.from({ length: SOON_SLOTS }, () => `<li class="arch-item soon"><span>Coming soon</span></li>`),
+  ];
+  return `<section class="arch-land" aria-labelledby="arch-title"><h1 id="arch-title" class="sr-only">Archive</h1><div class="arch-logo" aria-hidden="true"><video autoplay loop muted playsinline preload="auto">${videoSources(hero)}</video></div><ul class="arch-wheel">${rows.join("")}</ul></section>`;
 }
 
 // /archive/<id>/: an infinite, pannable grid of the pieces (tiles are drawn by js/archive.js),
