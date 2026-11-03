@@ -1,17 +1,16 @@
 // Touch the clock and its digits shatter: after React Bits' Shatter Type (seen in a screen
-// recording, since the component is Pro). The digits are cut into glass shards; under the cursor
-// thin cracks show along the shard edges; a click or touch sends the shards flying outward, spinning,
-// and they come back together a moment later. Each phase is eased with a bezier.
+// recording, since the component is Pro). The digits are cut into glass shards; a click or touch
+// sends the shards flying outward, spinning, and they come back together a moment later. Each phase
+// is eased with a bezier.
 //   · The shards are a jittered grid split into triangles, kept where the digits are.
 //   · During the burst the real text is hidden and a canvas draws the shards from a picture of it.
-// Reduced motion: cracks only, no burst.
+// Reduced motion: no burst.
 import { bezier } from "./ease.js";
 
 const OUT_S = 0.85; // shards fly out
 const BACK_S = 1.1; // and return
 const flyEase = bezier(0.1, 0.7, 0.3, 1); // quick start, long settle
 const backEase = bezier(0.65, 0, 0.25, 1);
-const CRACK_R = 70; // how far from the cursor cracks show, px
 
 export function mountShatter(timeEl, host) {
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -26,10 +25,8 @@ export function mountShatter(timeEl, host) {
     shards = [],
     src = null,
     text = "",
-    mouse = null,
     burst = null,
-    raf = 0,
-    fade = 0;
+    raf = 0;
 
   // The digits as a picture, and the shards cut from it.
   const build = () => {
@@ -120,37 +117,15 @@ export function mountShatter(timeEl, host) {
         timeEl.style.visibility = "";
         ctx.clearRect(-W, -H, W * 2, H * 2);
       }
-    } else if (mouse && fade > 0.01) {
-      // Cracks: the shard edges near the cursor, thin and dark.
-      ctx.lineWidth = 1;
-      for (const s of shards) {
-        const d = Math.hypot(s.cx - mouse.x, s.cy - mouse.y);
-        if (d > CRACK_R) continue;
-        ctx.strokeStyle = `rgba(0,0,0,${((1 - d / CRACK_R) * 0.75 * fade).toFixed(3)})`;
-        path(s.v, 0, 0);
-        ctx.stroke();
-      }
-      again = true;
     }
     ctx.restore();
-    if (!burst) fade += ((mouse ? 1 : 0) - fade) * 0.18;
-    if (again || fade > 0.01) raf = requestAnimationFrame(draw);
+    if (again) raf = requestAnimationFrame(draw);
   };
   const kick = () => raf || (raf = requestAnimationFrame(draw));
 
   const local = (e) => {
     const r = timeEl.getBoundingClientRect();
     return { x: e.clientX - r.left, y: e.clientY - r.top };
-  };
-  const onMove = (e) => {
-    if (reduce || burst) return;
-    if (!shards.length || text !== timeEl.textContent) build();
-    mouse = local(e);
-    kick();
-  };
-  const onLeave = () => {
-    mouse = null;
-    kick();
   };
   const onDown = (e) => {
     if (reduce || burst) return;
@@ -167,20 +142,15 @@ export function mountShatter(timeEl, host) {
       s.spin = (Math.random() - 0.5) * 9;
     }
     burst = { at: performance.now() };
-    mouse = null;
     timeEl.style.visibility = "hidden";
     kick();
   };
-  timeEl.addEventListener("pointermove", onMove);
-  timeEl.addEventListener("pointerleave", onLeave);
   timeEl.addEventListener("pointerdown", onDown);
 
   return () => {
     cancelAnimationFrame(raf);
     timeEl.style.visibility = "";
     canvas.remove();
-    timeEl.removeEventListener("pointermove", onMove);
-    timeEl.removeEventListener("pointerleave", onLeave);
     timeEl.removeEventListener("pointerdown", onDown);
   };
 }
