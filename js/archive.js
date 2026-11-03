@@ -331,6 +331,7 @@ export function bindCollection(main) {
       name.append(w);
       if (i < all.length - 1) name.append(" ");
     });
+    $("#arch-category").textContent = it.type;
     $("#arch-country").textContent = it.country || "Unknown";
     $("#arch-location").textContent = it.location || "Unknown";
     viewer.classList.remove("shown");

@@ -68,7 +68,7 @@ export const collections = [
       {
         id: "good-news-kraft",
         name: "Good News, kraft",
-        type: "Sweetener sachet",
+        type: "Sugar Sachet",
         country: "Spain",
         location: "Madrid",
         ratio: 1.5046,
@@ -78,7 +78,7 @@ export const collections = [
       {
         id: "good-news-white",
         name: "Good News, white",
-        type: "Sweetener sachet",
+        type: "Sugar Sachet",
         country: "Spain",
         location: "Madrid",
         ratio: 1.2221,

@@ -1945,6 +1945,9 @@ html.arch-grid-page body {
 .arch-facts > div:nth-child(2) {
   --n: 1;
 }
+.arch-facts > div:nth-child(3) {
+  --n: 2;
+}
 @keyframes arch-rule {
   to {
     transform: none;
@@ -1985,6 +1988,10 @@ html.arch-grid-page body {
 .arch-facts > div:nth-child(2) dt,
 .arch-facts > div:nth-child(2) dd {
   --n: 1;
+}
+.arch-facts > div:nth-child(3) dt,
+.arch-facts > div:nth-child(3) dd {
+  --n: 2;
 }
 /* Close: a serif X that tilts on hover */
 .arch-close {
@@ -2144,4 +2151,29 @@ html.arch-grid-page body {
 }
 .arch-grid.wait .arch-piece img {
   animation-play-state: paused;
+}
+
+/* The line that follows a swipe across the card (the cut) */
+.arch-slice {
+  position: absolute;
+  height: 2px;
+  background: #fff;
+  box-shadow: 0 0 10px #fff9;
+  transform-origin: 0 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+.arch-slice.on {
+  opacity: 0.9;
+}
+.arch-slice.go {
+  animation: arch-slice 0.5s ease-out both;
+}
+@keyframes arch-slice {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
