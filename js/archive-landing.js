@@ -4,9 +4,11 @@
 //     bring it up, click the selected one to open it.
 //   · Hover the selected title and the letter under the cursor glitches: it flickers through
 //     random symbols and jitters (no colour split).
+//   · An ASCII field drifts in the background and reacts to the cursor (js/archive-ascii.js).
 //   · The eye logo on the left looks at the cursor (the landing page's eye, via js/eye.js).
 import { eyeTracking } from "./eye.js";
 import { navigateTo } from "./menu.js";
+import { mountAscii } from "./archive-ascii.js";
 
 const STEP_PX = 70; // wheel distance for one title
 const GLYPHS = "!<>-_\\/[]{}=+*^?#$%&~01";
@@ -149,7 +151,10 @@ export function bindLanding(main) {
   video.play().catch(() => {});
   const eyeOff = eyeTracking(video);
 
+  const asciiOff = mountAscii(land.querySelector(".arch-ascii"));
+
   return () => {
+    asciiOff();
     root.classList.remove("arch-land-page");
     cancelAnimationFrame(raf);
     ro.disconnect();
