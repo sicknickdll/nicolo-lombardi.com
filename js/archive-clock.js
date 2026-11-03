@@ -3,7 +3,7 @@
 // around the clock, and every droplet already there moves one step to the left along that
 // circle. After 60 seconds the ring is closed; at the next minute the droplets dissolve (with a
 // soft sound) and it starts again.
-import { play, preload } from "./sound.js";
+import { play } from "./sound.js";
 
 const FALL_S = 0.72; // a droplet takes this long to fall
 const SHIFT_S = 0.7; // and this long to slide to its next place on the ring
@@ -137,7 +137,6 @@ export function mountClock(el) {
   };
   resize();
   showTime();
-  preload("timepass");
   raf = requestAnimationFrame(frame);
 
   return () => {
