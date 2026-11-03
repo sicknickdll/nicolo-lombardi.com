@@ -5,8 +5,28 @@
 // soft sound) and it starts again.
 import { play } from "./sound.js";
 
-const FALL_S = 0.5; // a droplet takes this long to fall
-const SHIFT_RATE = 9; // how fast droplets slide to their next place
+const FALL_S = 0.72; // a droplet takes this long to fall
+const SHIFT_S = 0.7; // and this long to slide to its next place on the ring
+
+// CSS-style cubic-bezier easing: (x1, y1, x2, y2) → a function of progress 0…1.
+function bezier(x1, y1, x2, y2) {
+  const at = (t, a, b) => 3 * a * t * (1 - t) ** 2 + 3 * b * t * t * (1 - t) + t ** 3;
+  return (x) => {
+    let t = x;
+    for (let i = 0; i < 8; i++) {
+      // Newton's method: find the t whose curve x matches the progress.
+      const err = at(t, x1, x2) - x;
+      const slope = 3 * x1 * (1 - t) ** 2 + 6 * (x2 - x1) * t * (1 - t) + 3 * (1 - x2) * t * t;
+      if (Math.abs(err) < 1e-5 || !slope) break;
+      t -= err / slope;
+    }
+    return at(t, y1, y2);
+  };
+}
+const fallEase = bezier(0.55, 0.05, 0.85, 0.45), // lets go slowly, then drops
+  slideEase = bezier(0.65, 0, 0.25, 1); // eases out of one place and into the next
+// A point on a cubic curve through four points (p0 start, p3 end).
+const curve = (t, p0, p1, p2, p3) => (1 - t) ** 3 * p0 + 3 * (1 - t) ** 2 * t * p1 + 3 * (1 - t) * t * t * p2 + t ** 3 * p3;
 
 export function mountClock(el) {
   const canvas = el.querySelector("canvas"),
@@ -36,7 +56,7 @@ export function mountClock(el) {
   let drops = [],
     dissolving = [],
     sec = -1;
-  const spawn = (age, born, landed) => ({ age, shown: age, born, landed });
+  const spawn = (age, born, landed) => ({ age, shown: age, from: age, moved: 0, born, landed });
   const place = (a, r) => [-r * Math.sin(a), r * Math.cos(a)]; // from the bottom, turning left
 
   const showTime = () => {
@@ -58,17 +78,14 @@ export function mountClock(el) {
       drops = [];
       play("timepass", 0.7);
     }
-    for (const d of drops) d.age += 1;
+    for (const d of drops) ((d.from = d.shown), (d.moved = now), (d.age += 1));
     drops.push(spawn(0, now, reduce));
   };
 
-  let raf = 0,
-    last = performance.now();
+  let raf = 0;
   const frame = (now) => {
     raf = requestAnimationFrame(frame);
     if (document.hidden) return;
-    const dt = Math.min(0.05, (now - last) / 1000);
-    last = now;
     const nowSec = Math.floor(Date.now() / 1000) % 60;
     const key = Math.floor(Date.now() / 1000);
     if (sec < 0 || key - sec > 2) {
@@ -82,19 +99,21 @@ export function mountClock(el) {
     ctx.clearRect(0, 0, S, S);
     ctx.save();
     ctx.translate(S / 2, S / 2);
-    const k = 1 - Math.exp(-dt * SHIFT_RATE);
     for (const d of drops) {
-      d.shown += (d.age - d.shown) * k;
+      d.shown = reduce ? d.age : d.from + (d.age - d.from) * slideEase(Math.min(1, (now - d.moved) / 1000 / SHIFT_S));
       const u = reduce ? 1 : Math.min(1, (now - d.born) / 1000 / FALL_S);
       const [x, y] = place((d.shown * 2 * Math.PI) / 60, R);
       if (u < 1) {
         // It starts behind the colon's lower dot (the digits are drawn above this canvas, so it is
-        // hidden), swells out of it on a thin neck like a drip, then lets go and speeds up.
-        const y = dotY + (R - dotY) * u ** 2.4;
+        // hidden), swells out of it on a thin neck like a drip, then lets go and falls along a
+        // gentle S-curve, easing in with a bezier.
+        const f = fallEase(u);
+        const y = curve(f, dotY, dotY + (R - dotY) * 0.12, dotY + (R - dotY) * 0.72, R);
+        const x = curve(f, 0, 0, 7, 0); // swings a little to the right of the line, then back
         ctx.fillStyle = "#fff";
-        if (u < 0.35) ctx.fillRect(-(dotR * 1.5 * (1 - u / 0.35)) / 2, dotY, dotR * 1.5 * (1 - u / 0.35), y - dotY);
+        if (f < 0.3) ctx.fillRect(-(dotR * 1.5 * (1 - f / 0.3)) / 2, dotY, dotR * 1.5 * (1 - f / 0.3), y - dotY);
         ctx.beginPath();
-        ctx.arc(0, y, dotR + (3 - dotR) * u, 0, 2 * Math.PI);
+        ctx.arc(x, y, dotR + (3 - dotR) * f, 0, 2 * Math.PI);
         ctx.fill();
       } else {
         d.landed = true;

@@ -2098,7 +2098,8 @@ html.arch-land-page body {
   pointer-events: none;
 }
 .arch-trail {
-  z-index: 1;
+  z-index: 4; /* above the clock, and the blend inverts whatever it crosses (white clock → black) */
+  mix-blend-mode: difference;
 }
 /* Clock on the right: the time, and a droplet for every second (js/archive-clock.js) */
 .arch-clock {
