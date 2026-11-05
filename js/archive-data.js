@@ -131,6 +131,16 @@ export const collections = [
         bulge: 0.012,
         ...scan("la-barra", "las-farolas"),
       },
+      {
+        id: "cafe-saula",
+        name: "Café Saula",
+        type: "Sugar Sachet",
+        country: "Unknown",
+        location: "Unknown",
+        ratio: 2.3891,
+        bulge: 0.045,
+        ...scan("la-barra", "cafe-saula"),
+      },
     ],
   },
 ];
