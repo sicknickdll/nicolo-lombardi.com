@@ -112,16 +112,6 @@ export const collections = [
         ...scan("la-barra", "harveys"),
       },
       {
-        id: "premium-especial",
-        name: "Premium Especial",
-        type: "Coaster",
-        country: "Spain",
-        location: "Madrid",
-        ratio: 0.9686,
-        bulge: 0.008,
-        ...scan("la-barra", "premium-especial"),
-      },
-      {
         id: "san-miguel",
         name: "San Miguel",
         type: "Coaster",
