@@ -121,6 +121,16 @@ export const collections = [
         bulge: 0.008,
         ...scan("la-barra", "san-miguel"),
       },
+      {
+        id: "las-farolas",
+        name: "Las Farolas",
+        type: "Napkin",
+        country: "Spain",
+        location: "Madrid",
+        ratio: 0.7386,
+        bulge: 0.012,
+        ...scan("la-barra", "las-farolas"),
+      },
     ],
   },
 ];
