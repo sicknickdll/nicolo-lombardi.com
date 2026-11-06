@@ -73,7 +73,7 @@ export const collections = [
       },
       {
         id: "good-news-kraft",
-        name: "Good News, kraft",
+        name: "Good News",
         type: "Sugar Sachet",
         country: "Spain",
         location: "Madrid",
@@ -83,7 +83,7 @@ export const collections = [
       },
       {
         id: "good-news-white",
-        name: "Good News, white",
+        name: "Good News",
         type: "Sugar Sachet",
         country: "Spain",
         location: "Madrid",
