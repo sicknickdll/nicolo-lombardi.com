@@ -141,6 +141,16 @@ export const collections = [
         bulge: 0.045,
         ...scan("la-barra", "cafe-saula"),
       },
+      {
+        id: "viena-capellanes",
+        name: "Viena Capellanes",
+        type: "Napkin",
+        country: "Spain",
+        location: "Madrid",
+        ratio: 0.7186,
+        bulge: 0.012,
+        ...scan("la-barra", "viena-capellanes"),
+      },
     ],
   },
 ];
