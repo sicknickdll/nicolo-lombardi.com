@@ -277,19 +277,33 @@ export function bindCollection(main) {
       setTimeout(() => (ready = true), 8000); // do not wait forever on a slow connection
       requestAnimationFrame(frame);
     });
+  // After the intro the wall takes shape out of the ink stain as the pieces rise into place.
+  const formWall = async () => {
+    const mine = ++trans;
+    if (await stainFrom([grid], 1, 0, FORM_V, mine)) unstain(grid);
+  };
   const loader = wall.querySelector("#arch-loader");
   if (loader && !reduce && !location.hash) {
     grid.classList.add("wait");
     runLoader(loader).then(() => {
       loader.remove();
       revealGrid();
+      formWall();
     });
   } else {
     loader?.remove();
     revealGrid();
   }
-  wall.querySelector(".arch-back").addEventListener("click", (e) => {
+  // Back: the wall dissolves into the ink stain (the controls fade) before the Archive opens.
+  wall.querySelector(".arch-back").addEventListener("click", async (e) => {
     e.preventDefault();
+    if (wall.classList.contains("leaving")) return;
+    wall.classList.add("leaving");
+    wall.inert = true;
+    const mine = ++trans;
+    grid.classList.add("out");
+    if (reduce) await sleep(WALL_V / 2);
+    else if (!(await stainFrom([grid], 0, 1, WALL_V, mine))) return;
     navigateTo("/archive/");
   });
 
@@ -319,8 +333,8 @@ export function bindCollection(main) {
   // Open: the wall dissolves into the stain, then the name and the card form, then the rows fade
   // up. Close: the same, backwards: the name and the card dissolve, then the wall forms again.
   // One SVG filter (blur + displacement) is shared: k = 0 is crisp, k = 1 is a full stain.
-  const vblur = $("#arch-vblur"),
-    vdisp = $("#arch-vdisp"),
+  const vblur = wall.querySelector("#arch-vblur"),
+    vdisp = wall.querySelector("#arch-vdisp"),
     nameEl = $("#arch-name"),
     FORM_V = 1500, // the name and the card form
     LEAVE_V = 600, // the name and the card dissolve
