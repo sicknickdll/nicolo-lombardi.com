@@ -193,27 +193,18 @@ export function mountCard(stage) {
     }
     stage.classList.remove("ready");
     let loaded = 0;
-    let finish;
-    const done = new Promise((r) => (finish = r)); // settles when both scans are in (or failed)
     [next.front, next.back].forEach((url, i) => {
-      loader.load(
-        url,
-        (tex) => {
-          if (mine !== token) return tex.dispose(), finish();
-          tex.colorSpace = "srgb";
-          tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-          for (const half of halves) half.meshes[i].material.uniforms.uMap.value = tex;
-          if (++loaded === 2) {
-            stage.classList.add("ready");
-            entry = 1;
-            finish();
-          }
-        },
-        undefined,
-        finish,
-      );
+      loader.load(url, (tex) => {
+        if (mine !== token) return tex.dispose();
+        tex.colorSpace = "srgb";
+        tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        for (const half of halves) half.meshes[i].material.uniforms.uMap.value = tex;
+        if (++loaded === 2) {
+          stage.classList.add("ready");
+          entry = 1;
+        }
+      });
     });
-    return done;
   }
 
   // ── pointer ──

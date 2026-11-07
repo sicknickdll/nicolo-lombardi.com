@@ -316,62 +316,34 @@ export function bindCollection(main) {
     (loading ||= import("./card3d.js").then((m) => {
       card = m.mountCard(stage);
     }));
-  // Opening a piece repeats the intro of the page: the name and the card form like an ink stain
-  // (the same SVG filter, a blur and a displacement that settle), then the rows fade up.
-  const vblur = $("#arch-vblur"),
-    vdisp = $("#arch-vdisp"),
-    nameEl = $("#arch-name"),
-    FORM_V = 1500;
-  let formRun = 0;
-  const setStain = (k) => {
-    vblur.setAttribute("stdDeviation", (16 * k).toFixed(2));
-    vdisp.setAttribute("scale", (16 * k).toFixed(1));
-  };
-  const stainOff = () => {
-    formRun++;
-    nameEl.classList.remove("stained");
-    stage.classList.remove("stained");
-  };
+  // The name and the rows slide up from behind masks, one after another; the rules draw in.
   const reveal = (it) => {
-    nameEl.textContent = it.name;
+    const name = $("#arch-name");
+    name.innerHTML = "";
+    it.name.split(" ").forEach((word, i, all) => {
+      const w = document.createElement("span");
+      w.className = "mask";
+      const inner = document.createElement("span");
+      inner.textContent = word;
+      inner.style.setProperty("--i", i);
+      w.append(inner);
+      name.append(w);
+      if (i < all.length - 1) name.append(" ");
+    });
     $("#arch-category").textContent = it.type;
     $("#arch-country").textContent = it.country || "Unknown";
     $("#arch-location").textContent = it.location || "Unknown";
-    stainOff();
     viewer.classList.remove("shown");
-    viewer.classList.add("forming"); // the name waits until the scans are in
-  };
-  // Everything arrives together: the name and the card form, the ruled rows fade up after.
-  const formIn = () => {
-    const mine = ++formRun;
-    viewer.classList.remove("forming");
-    void viewer.offsetWidth; // restart the animations
+    void viewer.offsetWidth; // restart the animation
     viewer.classList.add("shown");
-    if (reduce) return;
-    setStain(1);
-    nameEl.classList.add("stained");
-    stage.classList.add("stained");
-    const start = performance.now();
-    const frame = (now) => {
-      if (mine !== formRun) return;
-      const u = Math.min(1, (now - start) / FORM_V);
-      setStain((1 - u) ** 3);
-      if (u < 1) requestAnimationFrame(frame);
-      else (nameEl.classList.remove("stained"), stage.classList.remove("stained"));
-    };
-    requestAnimationFrame(frame);
   };
   const show = async (i) => {
     index = (i + items.length) % items.length;
     const it = items[index];
     reveal(it);
     history.replaceState(null, "", `#${it.id}`);
-    // On first open, give the black wipe a moment to start before the stain forms.
-    const pause = new Promise((r) => setTimeout(r, viewer.classList.contains("on") ? 0 : 450));
     await ensureCard().catch(() => stage.classList.add("failed"));
-    const loaded = card && items[index] === it ? card.setItem(it) : null;
-    await Promise.all([pause, loaded]);
-    if (items[index] === it) formIn();
+    if (card && items[index] === it) card.setItem(it);
   };
   const open = (id) => {
     const i = items.findIndex((it) => it.id === id);
