@@ -5,7 +5,9 @@
 // with the content already in the HTML so Google can read it.
 //
 // Run after editing js/data.js or template.html:   node tools/build.mjs
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { build as bundle, transform } from "esbuild";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { projects, goatcounter } from "../js/data.js";
@@ -25,7 +27,34 @@ import {
 const SITE = "https://nicolo-lombardi.com";
 const NAME = "Nicoló Lombardi";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const template = readFileSync(join(root, "template.html"), "utf8").replace(/^<!--.*?-->\n/, "");
+// Fewer, smaller files: js/app.js and everything it imports is bundled and minified into dist/
+// (the pieces loaded later, like the 3D viewer, become a few shared chunks), and style.css is
+// minified. Names carry a hash, so a visitor never gets a new page with an old script. The
+// sources in js/ and style.css are what you edit; dist/ is generated (and committed: the site is
+// served as it is).
+rmSync(join(root, "dist"), { recursive: true, force: true });
+const built = await bundle({
+  entryPoints: { app: join(root, "js/app.js") },
+  bundle: true,
+  splitting: true,
+  format: "esm",
+  target: "es2022",
+  minify: true,
+  legalComments: "none",
+  outdir: join(root, "dist"),
+  entryNames: "[name]-[hash]",
+  chunkNames: "[name]-[hash]",
+  metafile: true,
+  logLevel: "warning",
+});
+const appFile = Object.keys(built.metafile.outputs).find((f) => f.endsWith(".js") && built.metafile.outputs[f].entryPoint);
+const css = (await transform(readFileSync(join(root, "style.css"), "utf8"), { loader: "css", minify: true })).code;
+const cssName = `style-${createHash("sha256").update(css).digest("hex").slice(0, 8).toUpperCase()}.css`;
+writeFileSync(join(root, "dist", cssName), css);
+const template = readFileSync(join(root, "template.html"), "utf8")
+  .replace(/^<!--.*?-->\n/, "")
+  .replace('href="/style.css"', `href="/dist/${cssName}"`)
+  .replace('src="/js/app.js"', `src="/dist/${appFile.split("/").pop()}"`);
 
 const person = {
   "@type": "Person",
