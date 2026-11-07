@@ -1629,6 +1629,10 @@ html.arch-grid-page body {
   user-select: none;
   -webkit-user-select: none;
   cursor: var(--cursor-grab);
+  transition: opacity 0.8s ease;
+}
+.arch-grid.out {
+  opacity: 0;
 }
 .arch-grid.panning {
   cursor: var(--cursor-grabbing);
@@ -1705,7 +1709,15 @@ html.arch-grid-page body {
   backdrop-filter: blur(14px);
   border: 1px solid #333;
   border-radius: 999px;
-  transition: border-color 0.3s;
+  transition:
+    border-color 0.3s,
+    opacity 0.5s ease;
+}
+/* The wall's own controls fade while a piece is open */
+html.arch-open .arch-search,
+html.arch-open .arch-back {
+  opacity: 0;
+  pointer-events: none;
 }
 .arch-search:focus-within {
   border-color: #b9b19f;
@@ -1744,8 +1756,9 @@ html.arch-grid-page body {
 
 /* Viewer: an editorial layout. The name, big and centred; the 3D card in the middle; country
    and location in ruled rows (small caps label left, value right); crosshair marks in the
-   corners and a bar-framed Close, after A24's film pages. The name and the card form like an
-   ink stain, then the rules draw in and the rows fade up. */
+   corners and a bar-framed Close, after A24's film pages. Opening plays the intro's ink stain
+   over the whole interface (the wall dissolves, the name and the card form, the rules draw in and
+   the rows fade up); closing plays it backwards. */
 .arch-viewer {
   position: fixed;
   inset: 0;
@@ -1753,11 +1766,11 @@ html.arch-grid-page body {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   background: #000;
-  clip-path: inset(0 0 100% 0);
-  transition: clip-path 0.7s cubic-bezier(0.76, 0, 0.24, 1);
+  opacity: 0;
+  transition: opacity 0.8s ease;
 }
 .arch-viewer.on {
-  clip-path: inset(0);
+  opacity: 1;
 }
 .arch-name {
   padding: clamp(56px, 9vh, 96px) 20px 0;
@@ -1768,11 +1781,16 @@ html.arch-grid-page body {
   letter-spacing: -0.015em;
 }
 /* The name waits until the scans are in, then forms like the intro's ink stain (js/archive.js). */
-.arch-viewer.forming .arch-name {
+.arch-viewer.forming .arch-name,
+.arch-viewer.forming .arch-stage {
+  opacity: 0;
+}
+.arch-viewer.leaving .arch-facts {
   opacity: 0;
 }
 .arch-name.stained,
-.arch-stage.stained {
+.arch-stage.stained,
+.arch-grid.stained {
   filter: url(#arch-vstain);
 }
 .arch-stage {
@@ -1799,6 +1817,7 @@ html.arch-grid-page body {
 .arch-facts {
   margin: 0;
   padding: 0 6px 22px;
+  transition: opacity 0.4s ease;
 }
 .arch-facts > div {
   position: relative;
@@ -1911,7 +1930,7 @@ html.arch-grid-page body {
   line-height: 1;
   transition:
     transform 0.4s var(--ease),
-    opacity 0.25s;
+    opacity 0.5s ease;
 }
 .arch-back:hover {
   transform: translateX(-4px);

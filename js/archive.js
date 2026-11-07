@@ -27,8 +27,7 @@ export function bindCollection(main) {
   const $ = (id) => viewer.querySelector(id);
   let card = null,
     index = -1,
-    loading = null,
-    hideTimer = 0;
+    loading = null;
 
   // ── the infinite grid ──
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -316,88 +315,114 @@ export function bindCollection(main) {
     (loading ||= import("./card3d.js").then((m) => {
       card = m.mountCard(stage);
     }));
-  // Opening a piece repeats the intro of the page: the name and the card form like an ink stain
-  // (the same SVG filter, a blur and a displacement that settle), then the rows fade up.
+  // Opening and closing a piece play the page intro's ink stain over the whole interface.
+  // Open: the wall dissolves into the stain, then the name and the card form, then the rows fade
+  // up. Close: the same, backwards: the name and the card dissolve, then the wall forms again.
+  // One SVG filter (blur + displacement) is shared: k = 0 is crisp, k = 1 is a full stain.
   const vblur = $("#arch-vblur"),
     vdisp = $("#arch-vdisp"),
     nameEl = $("#arch-name"),
-    FORM_V = 1500;
-  let formRun = 0;
+    FORM_V = 1500, // the name and the card form
+    LEAVE_V = 600, // the name and the card dissolve
+    WALL_V = 800; // the wall dissolves / forms
+  let trans = 0, // each new transition cancels the one running
+    closing = false;
   const setStain = (k) => {
-    vblur.setAttribute("stdDeviation", (16 * k).toFixed(2));
+    vblur.setAttribute("stdDeviation", Math.max(0.05, 16 * k).toFixed(2));
     vdisp.setAttribute("scale", (16 * k).toFixed(1));
   };
-  const stainOff = () => {
-    formRun++;
-    nameEl.classList.remove("stained");
-    stage.classList.remove("stained");
-  };
+  // Animate the stain on some elements from k = from to k = to; resolves false if cancelled.
+  const stainFrom = (els, from, to, ms, mine) =>
+    new Promise((done) => {
+      setStain(from);
+      els.forEach((e) => e.classList.add("stained"));
+      const start = performance.now();
+      const frame = (now) => {
+        if (mine !== trans) return done(false);
+        const u = Math.min(1, (now - start) / ms);
+        setStain(from + (to - from) * (to < from ? 1 - (1 - u) ** 3 : u)); // forming eases out, as in the intro
+        if (u < 1) requestAnimationFrame(frame);
+        else done(true);
+      };
+      requestAnimationFrame(frame);
+    });
+  const unstain = (...els) => els.forEach((e) => e.classList.remove("stained"));
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const reveal = (it) => {
+    trans++;
+    unstain(nameEl, stage);
     nameEl.textContent = it.name;
     $("#arch-category").textContent = it.type;
     $("#arch-country").textContent = it.country || "Unknown";
     $("#arch-location").textContent = it.location || "Unknown";
-    stainOff();
-    viewer.classList.remove("shown");
-    viewer.classList.add("forming"); // the name waits until the scans are in
+    viewer.classList.remove("shown", "leaving");
+    viewer.classList.add("forming"); // the name and the card wait until the scans are in
   };
-  // Everything arrives together: the name and the card form, the ruled rows fade up after.
-  const formIn = () => {
-    const mine = ++formRun;
+  // The wall melts into the stain (and fades) as the viewer fades in over it.
+  const dissolveWall = async (mine) => {
+    grid.classList.add("out");
+    if (reduce) return sleep(WALL_V).then(() => mine === trans);
+    const ok = await stainFrom([grid], 0, 1, WALL_V, mine);
+    if (ok) unstain(grid);
+    return ok;
+  };
+  // The name and the card form together, the ruled rows fade up after.
+  const formIn = async (mine) => {
     viewer.classList.remove("forming");
     void viewer.offsetWidth; // restart the animations
     viewer.classList.add("shown");
     if (reduce) return;
-    setStain(1);
-    nameEl.classList.add("stained");
-    stage.classList.add("stained");
-    const start = performance.now();
-    const frame = (now) => {
-      if (mine !== formRun) return;
-      const u = Math.min(1, (now - start) / FORM_V);
-      setStain((1 - u) ** 3);
-      if (u < 1) requestAnimationFrame(frame);
-      else (nameEl.classList.remove("stained"), stage.classList.remove("stained"));
-    };
-    requestAnimationFrame(frame);
+    if (await stainFrom([nameEl, stage], 1, 0, FORM_V, mine)) unstain(nameEl, stage);
   };
-  const show = async (i) => {
+  const show = async (i, first) => {
     index = (i + items.length) % items.length;
     const it = items[index];
     reveal(it);
+    const mine = trans;
     history.replaceState(null, "", `#${it.id}`);
-    // On first open, give the black wipe a moment to start before the stain forms.
-    const pause = new Promise((r) => setTimeout(r, viewer.classList.contains("on") ? 0 : 450));
+    const lead = first ? dissolveWall(mine) : Promise.resolve(true);
     await ensureCard().catch(() => stage.classList.add("failed"));
     const loaded = card && items[index] === it ? card.setItem(it) : null;
-    await Promise.all([pause, loaded]);
-    if (items[index] === it) formIn();
+    const [ok] = await Promise.all([lead, loaded]);
+    if (ok && mine === trans && items[index] === it) formIn(mine);
   };
   const open = (id) => {
     const i = items.findIndex((it) => it.id === id);
     if (i < 0) return;
-    clearTimeout(hideTimer);
+    closing = false;
     viewer.hidden = false;
     root.classList.add("arch-open");
     wall.inert = true;
     document.querySelector(".header").inert = true;
-    show(i);
+    show(i, true);
     requestAnimationFrame(() => viewer.classList.add("on"));
     viewer.querySelector(".arch-close").focus({ preventScroll: true });
   };
-  const close = () => {
-    if (viewer.hidden) return;
-    viewer.classList.remove("on");
+  const close = async () => {
+    if (viewer.hidden || closing) return;
+    closing = true;
+    const mine = ++trans;
+    viewer.classList.add("leaving"); // the rows fade out
+    if (!reduce && !(await stainFrom([nameEl, stage], 0, 1, LEAVE_V, mine))) return;
+    // The name and the card are gone: the wall forms again as the viewer fades away.
+    viewer.classList.add("forming");
+    unstain(nameEl, stage);
     root.classList.remove("arch-open");
     wall.inert = false;
     document.querySelector(".header").inert = false;
     history.replaceState(null, "", location.pathname);
+    viewer.classList.remove("on");
+    grid.classList.remove("out");
+    if (reduce) await sleep(WALL_V);
+    else if (!(await stainFrom([grid], 1, 0, WALL_V, mine))) return;
+    unstain(grid);
+    if (mine !== trans) return;
     // A fresh 3D card each time: one kept inside a hidden viewer came back at the wrong size.
-    hideTimer = setTimeout(() => {
-      viewer.hidden = true;
-      card?.dispose();
-      card = loading = null;
-    }, 750);
+    viewer.hidden = true;
+    viewer.classList.remove("leaving", "shown");
+    card?.dispose();
+    card = loading = null;
+    closing = false;
   };
 
   viewer.querySelector(".arch-close").addEventListener("click", close);
@@ -437,6 +462,7 @@ export function bindCollection(main) {
     removeEventListener("keydown", onKey, true);
     removeEventListener("keydown", onGridKey);
     cancelAnimationFrame(raf);
+    trans++;
     root.classList.remove("arch-grid-page");
     card?.dispose();
     root.classList.remove("arch-open");
