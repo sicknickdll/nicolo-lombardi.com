@@ -1715,9 +1715,7 @@ html.arch-grid-page body {
 }
 /* The wall's own controls fade while a piece is open */
 html.arch-open .arch-search,
-html.arch-open .arch-back,
-.arch-wall.leaving .arch-search,
-.arch-wall.leaving .arch-back {
+html.arch-open .arch-back {
   opacity: 0;
   pointer-events: none;
 }
