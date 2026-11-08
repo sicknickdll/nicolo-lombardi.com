@@ -151,6 +151,16 @@ export const collections = [
         bulge: 0.012,
         ...scan("la-barra", "viena-capellanes"),
       },
+      {
+        id: "krispy-kreme",
+        name: "Krispy Kreme",
+        type: "Napkin",
+        country: "Spain",
+        location: "Madrid",
+        ratio: 1.5625,
+        bulge: 0.012,
+        ...scan("la-barra", "krispy-kreme"),
+      },
     ],
   },
 ];
