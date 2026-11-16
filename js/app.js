@@ -76,13 +76,13 @@ function showArchive() {
   main.innerHTML = archiveMarkup();
   let off = () => {},
     gone = false;
-  import("./archive-landing.js")
+  import("./archive-desktop.js")
     .then((m) => {
-      if (!gone) off = m.bindLanding(main);
+      if (!gone) off = m.bindDesktop(main);
     })
     // If the script cannot load (an old cached copy, say), show the titles as a plain list
     // instead of leaving the page empty.
-    .catch(() => main.querySelector(".arch-land")?.classList.add("ready", "plain"));
+    .catch(() => main.querySelector(".desk")?.classList.add("plain"));
   cleanup = () => {
     gone = true;
     off();

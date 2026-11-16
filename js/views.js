@@ -178,14 +178,35 @@ export function clientsMarkup() {
 // ── Archive ──────────────────────────────────────────────────────────────────
 export const collectionURL = (c) => `/archive/${c.id}/`;
 
-// /archive/: a wheel of titles (js/archive-landing.js). LA BARRA opens its collection; the projects
-// without a page yet (js/archive-data.js `upcoming`) link to addresses that lead to the 404 page.
+// /archive/: a desktop (js/archive-desktop.js). Each collection is a folder icon; double-click
+// opens it in a window (its pieces as files), a piece opens in its own window, and "Open
+// collection" goes to the full page. Projects without a page yet (`upcoming`) are empty folders.
+// The icons are real links, so the page still works (and is readable by search engines) without JS.
+const folderSVG = `<svg class="desk-folder" viewBox="0 0 64 52" aria-hidden="true"><path class="back" d="M2 8a4 4 0 0 1 4-4h17l5 6h30a4 4 0 0 1 4 4v32a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4z"/><path class="front" d="M2 18a4 4 0 0 1 4-4h52a4 4 0 0 1 4 4v28a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4z"/></svg>`;
+const fileSVG = (ext) => `<svg class="desk-file" viewBox="0 0 48 60" aria-hidden="true"><path d="M4 2h28l14 14v40a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path class="fold" d="M32 2v14h14"/><text x="24" y="46" text-anchor="middle">${ext}</text></svg>`;
 export function archiveMarkup() {
-  const rows = [
-    ...collections.map((c) => [esc(c.title), collectionURL(c)]),
-    ...upcoming.map((u) => [esc(u.title), u.href]),
-  ].map(([title, href]) => `<li class="arch-item"><a href="${href}">${title}</a></li>`);
-  return `<section class="arch-land" aria-labelledby="arch-title"><h1 id="arch-title" class="sr-only">Archive</h1><canvas class="arch-trail" aria-hidden="true"></canvas><ul class="arch-wheel">${rows.join("")}</ul></section>`;
+  const folders = [
+    ...collections.map((c) => ({ id: c.id, title: c.title, href: collectionURL(c), count: c.items.length, thumbs: c.items.slice(0, 3).map((i) => i.thumb) })),
+    ...upcoming.map((u) => ({ id: u.href.split("/").filter(Boolean).pop(), title: u.title, href: u.href, count: 0, thumbs: [] })),
+  ];
+  const icon = (f) =>
+    `<li><a class="desk-icon" href="${f.href}" data-open="folder:${f.id}" draggable="false"><span class="desk-glyph">${folderSVG}${f.thumbs.map((t, k) => `<img src="${t}" alt="" loading="lazy" style="--k:${k}">`).join("")}</span><span class="desk-label">${esc(f.title.toLowerCase())}</span></a></li>`;
+  const icons = [
+    `<li><a class="desk-icon" href="#readme" data-open="readme" draggable="false"><span class="desk-glyph">${fileSVG("TXT")}</span><span class="desk-label">readme.txt</span></a></li>`,
+    ...folders.map(icon),
+    `<li><a class="desk-icon" href="mailto:hello.nicolombardi@gmail.com?subject=Archive" data-open="mail" draggable="false"><span class="desk-glyph">${fileSVG("@")}</span><span class="desk-label">contact.mail</span></a></li>`,
+  ];
+  return `<section class="desk" aria-labelledby="arch-title"><h1 id="arch-title" class="sr-only">Archive</h1>
+<nav class="desk-bar" aria-label="Archive menu bar"><a class="desk-brand" href="/">Nicoló Lombardi</a><ul class="desk-menus">
+<li><button type="button" aria-haspopup="true" aria-expanded="false">File</button><ul class="desk-drop" hidden><li><button type="button" data-cmd="open-readme">Open readme.txt</button></li><li><button type="button" data-cmd="close-all">Close all windows</button></li><li><button type="button" data-cmd="restore">Restore windows</button></li></ul></li>
+<li><button type="button" aria-haspopup="true" aria-expanded="false">View</button><ul class="desk-drop" hidden><li><button type="button" data-cmd="arrange">Clean up icons</button></li><li><button type="button" data-cmd="theme">Dark / light</button></li></ul></li>
+<li><button type="button" aria-haspopup="true" aria-expanded="false">Go</button><ul class="desk-drop" hidden><li><a href="/#work">Work</a></li><li><a href="/about/">About</a></li><li><a href="mailto:hello.nicolombardi@gmail.com?subject=Project%20enquiry">Contact</a></li></ul></li>
+</ul><span class="desk-date" aria-hidden="true"></span></nav>
+<p class="desk-wall caslon" aria-hidden="true">Archive</p>
+<ul class="desk-icons" aria-label="Collections">${icons.join("")}</ul>
+<div class="desk-windows"></div>
+<footer class="desk-task"><button type="button" class="desk-start" aria-haspopup="true" aria-expanded="false">archive</button><ul class="desk-tabs" aria-label="Open windows"></ul><div class="desk-startmenu" hidden><p class="desk-sm-title caslon">Archive</p><ul>${folders.map((f) => `<li><a href="${f.href}" data-open="folder:${f.id}">${esc(f.title)}<span>${f.count ? `${f.count} pieces` : "soon"}</span></a></li>`).join("")}</ul></div></footer>
+</section>`.replace(/\n/g, "");
 }
 
 // /archive/<id>/: an infinite, pannable grid of the pieces (tiles are drawn by js/archive.js),

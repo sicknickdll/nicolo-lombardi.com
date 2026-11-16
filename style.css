@@ -2054,107 +2054,6 @@ html.arch-grid-page body {
   }
 }
 
-/* /archive/: a wheel of titles over an ASCII field */
-html.arch-land-page,
-html.arch-land-page body {
-  overflow: hidden;
-  background: #000;
-}
-.arch-land {
-  position: fixed;
-  inset: 0;
-  background: #000;
-}
-.arch-wheel {
-  z-index: 3;
-  pointer-events: none; /* it spans the page; only the titles take the pointer */
-  position: absolute;
-  left: clamp(24px, 6vw, 110px);
-  right: 20px;
-  top: 12vh;
-  bottom: 12vh;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  -webkit-mask-image: linear-gradient(#0000, #000 28%, #000 72%, #0000);
-  mask-image: linear-gradient(#0000, #000 28%, #000 72%, #0000);
-  touch-action: none;
-}
-.arch-item {
-  pointer-events: auto;
-  position: absolute;
-  left: 0;
-  top: 50%;
-  font-family: var(--caslon);
-  font-size: clamp(40px, 5.6vw, 96px);
-  line-height: 1.1;
-  white-space: nowrap;
-  will-change: transform, opacity;
-}
-.arch-item > a,
-.arch-item > span {
-  display: block;
-}
-.arch-wheel.leaving {
-  opacity: 0;
-  transform: translateX(-30px);
-  transition:
-    opacity 0.5s,
-    transform 0.5s var(--ease);
-}
-@media (max-width: 700px) {
-  .arch-wheel {
-    left: 20px;
-  }
-}
-.arch-trail {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-.arch-trail {
-  z-index: 4; /* the blend inverts whatever the trail crosses */
-  mix-blend-mode: difference;
-}
-.arch-item a:hover {
-  opacity: 1;
-}
-/* Nothing shows until js/archive-landing.js has placed it, so the titles never appear stacked */
-.arch-land:not(.ready) .arch-wheel {
-  visibility: hidden;
-}
-.arch-land.plain .arch-wheel {
-  position: static;
-  padding: 120px 24px;
-  -webkit-mask-image: none;
-  mask-image: none;
-}
-.arch-land.plain .arch-item {
-  position: static;
-  margin-bottom: 16px;
-}
-.arch-item > a,
-.arch-item > span {
-  position: relative;
-}
-/* The ASCII canvases draw the titles; the real text is transparent (it stays for layout and clicks) */
-.arch-land.ascii .arch-item > a,
-.arch-land.ascii .arch-item > span {
-  color: transparent;
-}
-
-.arch-ascii-title {
-  position: absolute;
-  pointer-events: none;
-}
-/* Fallback list (its script failed): readable titles */
-.arch-land.plain .arch-item > a,
-.arch-land.plain .arch-item > span {
-  color: inherit;
-}
-
 /* ── Headers ────────────────────────────────────────────────────────────────
    Helvetica Bold in capitals for the header bar (name + Menu), every heading and the project titles.
    Body text stays in --sans. The Archive keeps its own type (Caslon). */
@@ -2169,4 +2068,654 @@ h3,
   font-family: var(--head);
   font-weight: 700;
   text-transform: uppercase;
+}
+
+/* ── /archive/: a desktop (js/archive-desktop.js) ───────────────────────────
+   Light grey, dotted like graph paper; menu bar on top, icons in a column on the right,
+   draggable windows, a taskbar at the bottom. View → Dark / light flips it. */
+html.desk-page,
+html.desk-page body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #e9e8e4;
+}
+html.desk-page .header {
+  display: none; /* the desktop's menu bar replaces the name and Menu */
+}
+.desk {
+  --d-bg: #e9e8e4;
+  --d-dot: rgba(0, 0, 0, 0.13);
+  --d-ink: #111;
+  --d-mute: rgba(0, 0, 0, 0.5);
+  --d-line: rgba(0, 0, 0, 0.1);
+  --d-win: #fbfbf9;
+  --d-bar: rgba(251, 251, 249, 0.82);
+  --d-sel: #1f3cff;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  color: var(--d-ink);
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.4;
+  background: var(--d-bg) radial-gradient(var(--d-dot) 1px, transparent 1.2px) 0 0 / 18px 18px;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background-color 0.3s, color 0.3s;
+}
+.desk.dark {
+  --d-bg: #0d0d0d;
+  --d-dot: rgba(255, 255, 255, 0.12);
+  --d-ink: #f2f2ee;
+  --d-mute: rgba(255, 255, 255, 0.5);
+  --d-line: rgba(255, 255, 255, 0.12);
+  --d-win: #1a1a1a;
+  --d-bar: rgba(26, 26, 26, 0.82);
+}
+.desk button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+.desk a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* menu bar */
+.desk-bar {
+  position: absolute;
+  z-index: 10000;
+  inset: 0 0 auto;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 12px;
+  background: var(--d-bar);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--d-line);
+}
+.desk-brand {
+  font-family: var(--head);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  margin-right: 10px;
+}
+.desk-menus {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.desk-menus > li {
+  position: relative;
+}
+.desk-menus > li > button {
+  padding: 4px 9px;
+  border-radius: 5px;
+}
+.desk-menus > li > button[aria-expanded="true"],
+.desk-menus > li > button:hover {
+  background: var(--d-line);
+}
+.desk-drop {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 190px;
+  list-style: none;
+  margin: 0;
+  padding: 5px;
+  background: var(--d-win);
+  border: 1px solid var(--d-line);
+  border-radius: 8px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+}
+.desk-drop button,
+.desk-drop a {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 5px 9px;
+  border-radius: 5px;
+}
+.desk-drop button:hover,
+.desk-drop a:hover {
+  background: var(--d-sel);
+  color: #fff;
+}
+.desk-date {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--d-mute);
+}
+
+/* the word on the wallpaper */
+.desk-wall {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  font-size: clamp(90px, 19vw, 300px);
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--d-mute);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* icons */
+.desk-icons {
+  position: absolute;
+  z-index: 1;
+  top: 46px;
+  right: 14px;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap-reverse;
+  align-content: flex-start;
+  gap: 10px;
+  max-height: calc(100% - 100px);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.desk-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 92px;
+  padding: 6px 2px;
+  border-radius: 6px;
+  touch-action: none;
+}
+.desk-icon.dragging {
+  position: relative;
+  z-index: 2;
+  opacity: 0.8;
+  cursor: var(--cursor-grabbing);
+}
+.desk-glyph {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 56px;
+  border-radius: 6px;
+}
+.desk-folder {
+  width: 62px;
+  height: 50px;
+}
+.desk-folder .back {
+  fill: #9aa0ad;
+}
+.desk-folder .front {
+  fill: #c4c9d3;
+}
+.desk.dark .desk-folder .back {
+  fill: #4b4f58;
+}
+.desk.dark .desk-folder .front {
+  fill: #6c717c;
+}
+/* a few pieces peek out of a collection's folder: back of the folder, the pieces, then a front
+   panel (::after) drawn over them */
+.desk-glyph img {
+  position: absolute;
+  z-index: 1;
+  width: 26px;
+  height: 30px;
+  object-fit: contain;
+  left: calc(14px + var(--k) * 11px);
+  top: calc(-2px + var(--k) * 2px);
+  rotate: calc(-10deg + var(--k) * 10deg);
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+  transition: translate 0.25s var(--ease);
+}
+.desk-glyph:has(img)::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  left: 2px;
+  right: 2px;
+  bottom: 3px;
+  height: 36px;
+  border-radius: 4px;
+  background: #c4c9d3;
+}
+.desk.dark .desk-glyph:has(img)::after {
+  background: #6c717c;
+}
+.desk-icon:hover .desk-glyph img {
+  translate: 0 -5px;
+}
+.desk-file {
+  width: 42px;
+  height: 52px;
+}
+.desk-file path {
+  fill: var(--d-win);
+  stroke: var(--d-mute);
+  stroke-width: 1.2;
+}
+.desk-file .fold {
+  fill: none;
+}
+.desk-file text {
+  font-family: var(--mono);
+  font-size: 10px;
+  fill: var(--d-mute);
+}
+.desk-label {
+  max-width: 100%;
+  padding: 1px 5px;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.desk-icon.sel .desk-glyph {
+  background: var(--d-line);
+}
+.desk-icon.sel .desk-label {
+  background: var(--d-sel);
+  color: #fff;
+}
+.desk-icon:focus-visible {
+  outline: 2px solid var(--d-sel);
+  outline-offset: 1px;
+}
+
+/* windows */
+.desk-windows {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.dw {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100% - 96px);
+  background: var(--d-win);
+  border: 1px solid var(--d-line);
+  border-radius: 10px;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 18px 50px rgba(0, 0, 0, 0.14);
+  overflow: hidden;
+  pointer-events: auto;
+}
+.dw:not(.focused) {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+.dw:not(.focused) .dw-bar {
+  color: var(--d-mute);
+}
+.dw.pop {
+  animation: dw-pop 0.26s var(--ease);
+}
+.dw.closing {
+  animation: dw-pop 0.16s ease-in reverse forwards;
+}
+@keyframes dw-pop {
+  from {
+    opacity: 0;
+    scale: 0.94;
+  }
+}
+.dw-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 8px 0 14px;
+  border-bottom: 1px solid var(--d-line);
+  cursor: var(--cursor-grab);
+  touch-action: none;
+}
+.dw.dragging .dw-bar {
+  cursor: var(--cursor-grabbing);
+}
+.dw-title {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.desk .dw-min,
+.desk .dw-close {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--d-mute);
+}
+.desk .dw-min:hover {
+  background: var(--d-line);
+}
+.desk .dw-close::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--d-line);
+  transition: background 0.15s;
+}
+.desk .dw-close:hover::before {
+  background: #ff4a2e;
+}
+.dw-body {
+  flex: 1;
+  overflow: auto;
+  overscroll-behavior: contain;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.dw-status {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 36px;
+  padding: 6px 8px 6px 14px;
+  border-top: 1px solid var(--d-line);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--d-mute);
+}
+.desk .dw-btn {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--d-ink);
+  color: var(--d-win);
+  font-family: var(--sans);
+  font-size: 12px;
+}
+.desk .dw-btn:hover {
+  background: var(--d-sel);
+  color: #fff;
+}
+
+/* text windows */
+.dw-doc {
+  padding: 16px 18px 18px;
+}
+.dw-doc p {
+  margin: 0 0 10px;
+}
+.dw-doc h2 {
+  margin: 4px 0 10px;
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.05;
+}
+.dw-kicker,
+.dw-hint,
+.dw-k {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--d-mute);
+}
+.dw-k {
+  display: inline-block;
+  width: 64px;
+}
+.dw-hint {
+  margin-bottom: 0 !important;
+}
+
+/* folder windows: the pieces as files */
+.dw-blurb {
+  margin: 0;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--d-line);
+  color: var(--d-mute);
+}
+.dw-files {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 12px;
+}
+.dw-files button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 4px;
+  border-radius: 6px;
+}
+.dw-files button:hover,
+.dw-files button:focus-visible {
+  background: var(--d-line);
+  outline: none;
+}
+.dw-files img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+  transition: transform 0.25s var(--ease);
+}
+.dw-files button:hover img {
+  transform: scale(1.06) rotate(-2deg);
+}
+.dw-files span {
+  font-size: 11px;
+  line-height: 1.25;
+  text-align: center;
+}
+.dw-empty {
+  display: grid;
+  place-items: center;
+  min-height: 200px;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--d-mute);
+}
+
+/* a piece: click the scan to turn it over */
+.desk .dw-scan {
+  display: grid;
+  width: 100%;
+  padding: 18px;
+  grid-template-columns: minmax(0, 1fr);
+  perspective: 900px;
+  overflow: hidden;
+  background: radial-gradient(var(--d-dot) 1px, transparent 1.2px) 0 0 / 12px 12px;
+  border-bottom: 1px solid var(--d-line);
+}
+.dw-scan img {
+  grid-area: 1 / 1;
+  width: 100%;
+  height: min(42vh, 300px);
+  object-fit: contain;
+  backface-visibility: hidden;
+  transition: transform 0.6s var(--ease);
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.2));
+}
+.dw-scan .back {
+  transform: rotateY(180deg);
+}
+.dw-scan.flipped .front {
+  transform: rotateY(-180deg);
+}
+.dw-scan.flipped .back {
+  transform: rotateY(0);
+}
+.dw-facts {
+  margin: 0;
+  padding: 10px 14px;
+}
+.dw-facts div {
+  display: flex;
+  gap: 10px;
+  padding: 3px 0;
+}
+.dw-facts dt {
+  width: 52px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--d-mute);
+}
+.dw-facts dd {
+  margin: 0;
+}
+
+/* taskbar */
+.desk-task {
+  position: absolute;
+  z-index: 10000;
+  inset: auto 0 0;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+  background: var(--d-bar);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid var(--d-line);
+}
+.desk .desk-start {
+  flex: none;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 4px;
+  background: var(--d-ink);
+  color: var(--d-bg);
+  font-family: var(--caslon);
+  font-size: 15px;
+}
+.desk .desk-start[aria-expanded="true"],
+.desk .desk-start:hover {
+  background: var(--d-sel);
+  color: #fff;
+}
+.desk-tabs {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.desk-tabs button {
+  max-width: 170px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 4px;
+  border: 1px solid var(--d-line);
+  font-family: var(--mono);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--d-mute);
+}
+.desk-tabs li.on button {
+  background: var(--d-win);
+  color: var(--d-ink);
+}
+.desk-startmenu {
+  position: absolute;
+  left: 6px;
+  bottom: calc(100% + 6px);
+  width: 260px;
+  padding: 14px 6px 6px;
+  background: var(--d-win);
+  border: 1px solid var(--d-line);
+  border-radius: 10px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+}
+.desk-sm-title {
+  margin: 0 10px 8px;
+  font-size: 28px;
+  line-height: 1;
+}
+.desk-startmenu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.desk-startmenu a {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border-radius: 6px;
+}
+.desk-startmenu a span {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--d-mute);
+}
+.desk-startmenu a:hover {
+  background: var(--d-sel);
+  color: #fff;
+}
+.desk-startmenu a:hover span {
+  color: inherit;
+}
+
+/* phones: icons in a grid at the top, windows full width */
+@media (max-width: 720px) {
+  .desk-brand {
+    display: none;
+  }
+  .desk-icons {
+    left: 8px;
+    right: 8px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  .desk-icon {
+    width: 84px;
+  }
+  .desk-label {
+    padding: 1px 3px;
+    font-size: 11.5px;
+  }
+  .dw {
+    width: calc(100vw - 16px) !important;
+    left: 8px;
+  }
+  .desk-wall {
+    align-items: end;
+    padding-bottom: 60px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dw.pop,
+  .dw.closing {
+    animation: none;
+  }
 }
