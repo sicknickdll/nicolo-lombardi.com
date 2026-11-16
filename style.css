@@ -1125,8 +1125,8 @@ html.intro .home-tagline {
 /* ── Reveal (js/reveal.js) ──────────────────────────────────────────────────
    Landing page, one block per project after the intro, like ilcapoproduction.com but white: a
    pinned white screen with a small window; scrolling grows the window until the loop fills it.
-   --e (0 → 1) is set by js/reveal.js. Hover: the loop darkens, "Client / Project" appears and a
-   View label follows the cursor. */
+   --e (0 → 1) is set by js/reveal.js. Hover: the loop darkens, "Client / Project" appears and the
+   picture splits into red / blue ghosts that follow the mouse (chromatic aberration, js/reveal.js). */
 .reveal-list {
   background: #fff;
   color: #000;
@@ -1167,6 +1167,16 @@ html.intro .home-tagline {
   height: 100dvh;
   transform: translate(-50%, -50%);
   object-fit: cover;
+}
+.reveal-stage.is-ca .reveal-media video,
+.reveal-stage.is-ca .reveal-media img {
+  filter: url(#ca);
+}
+.ca-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
 }
 .reveal-slide {
   opacity: 0;
@@ -1259,31 +1269,6 @@ html.intro .home-tagline {
   bottom: 20px;
   right: 100px; /* leaves room for the menu button */
 }
-/* The cursor label. */
-.view-cursor {
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 70;
-  padding: 7px 16px;
-  border-radius: 3px;
-  background: #fdf48b;
-  color: #000;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  pointer-events: none;
-  opacity: 0;
-  scale: 0.6;
-  transition:
-    opacity 0.2s,
-    scale 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.view-cursor.is-on {
-  opacity: 1;
-  scale: 1;
-}
 /* The header sits over white and over video: it inverts itself (white on dark, black on white). */
 html:has(.reveal-list) .header {
   mix-blend-mode: difference;
@@ -1318,94 +1303,68 @@ html:has(.reveal-list) .header {
 }
 
 /* ── Menu (js/menu.js) ──────────────────────────────────────────────────────
-   After auge-xp.com: a small black button (two yellow lines) fixed at the bottom right. Opening
-   it grows a black panel out of the button (clip-path), the links slide in from the right one
-   after another, and a yellow pill follows the hovered link (its text turns black). */
+   After auge-xp.com, in black and white: "Menu" in the header (top right; the label rolls to "Close")
+   opens a black panel that grows out of the corner under it. The links slide in from the right one
+   after another, and a white pill follows the hovered link (its text turns black). */
+.menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+.menu-toggle:hover {
+  opacity: 1;
+}
+.menu-toggle-text {
+  display: inline-block;
+  height: 1.25em;
+  overflow: hidden;
+  text-align: right;
+}
+.menu-toggle-roll {
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.78s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+.menu-toggle-roll > span {
+  display: block;
+  height: 1.25em;
+}
+.menu-toggle:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 4px;
+}
 .menu {
-  --accent: #fdf48b;
   position: fixed;
-  z-index: 85;
+  z-index: 75;
+  top: 52px;
   right: max(20px, env(safe-area-inset-right));
-  bottom: max(20px, env(safe-area-inset-bottom));
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   color: #fff;
+  pointer-events: none;
+}
+.menu[data-open="true"] {
+  pointer-events: auto;
 }
 html.arch-open .menu {
   visibility: hidden;
 }
-/* The panel always has its full size; clip-path shrinks it to the size of the button. */
+/* The panel always has its full size; clip-path shrinks it into the top-right corner. */
 .menu-panel {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 14px;
-  padding: 20px 20px 30px;
+  padding: 20px;
   background: #000;
   border-radius: 3px;
-  clip-path: inset(calc(100% - 40px) 0 0 calc(100% - 60px) round 3px);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
+  clip-path: inset(0 0 100% 100% round 3px);
   transition: clip-path 0.55s cubic-bezier(0.645, 0.045, 0.355, 1) 0.12s;
 }
 .menu[data-open="true"] .menu-panel {
   clip-path: inset(0 round 3px);
   transition-delay: 0s;
 }
-.menu-toggle {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 60px;
-  height: 40px;
-  border-radius: 3px;
-  background: #000;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition:
-    background 0.3s 0.15s,
-    box-shadow 0.3s 0.15s;
-}
-.menu-toggle > span {
-  display: block;
-  width: 30px;
-  height: 2px;
-  background: var(--accent);
-  transition:
-    width 0.4s cubic-bezier(0.645, 0.045, 0.355, 1),
-    height 0.4s cubic-bezier(0.645, 0.045, 0.355, 1),
-    margin 0.4s cubic-bezier(0.645, 0.045, 0.355, 1),
-    border-radius 0.4s;
-}
-.menu-toggle:hover > span:first-child {
-  width: 22px;
-}
-.menu-toggle:hover > span:last-child {
-  width: 30px;
-}
-/* Open: the two lines collapse into a small yellow dot in the corner; click it (or outside, or Esc) to close. */
-.menu[data-open="true"] .menu-toggle {
-  background: transparent;
-  box-shadow: none;
-}
-.menu[data-open="true"] .menu-toggle > span {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-.menu[data-open="true"] .menu-toggle > span:first-child {
-  margin-bottom: -14px;
-}
-.menu[data-open="true"] .menu-toggle > span:last-child {
-  display: none;
-}
-.menu-toggle:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
 .menu ::selection {
-  background: var(--accent);
+  background: #fff;
   color: #000;
 }
 .menu-nav {
@@ -1418,7 +1377,7 @@ html.arch-open .menu {
   width: 0;
   height: 0;
   border-radius: 3px;
-  background: var(--accent);
+  background: #fff;
   pointer-events: none;
   clip-path: inset(0 100% 0 0);
   transition:
@@ -1472,30 +1431,13 @@ html.arch-open .menu {
 .menu-items a:focus-visible {
   outline: none;
 }
-.menu-small {
-  margin: 0;
-  padding-right: 24px;
-  max-width: 300px;
-  text-align: right;
-  font-size: 12px;
-  line-height: 1.5;
-  letter-spacing: -0.01em;
-  color: rgb(255 255 255 / 0.6);
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.menu[data-open="true"] .menu-small {
-  opacity: 1;
-  transition: opacity 0.5s ease 0.5s;
-}
-.menu-small a {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.menu-small a:hover {
-  color: var(--accent);
-}
 @media (max-width: 520px) {
+  .menu-toggle {
+    font-size: 12px;
+  }
+  .menu {
+    top: 46px;
+  }
   .menu-items {
     font-size: 32px;
   }

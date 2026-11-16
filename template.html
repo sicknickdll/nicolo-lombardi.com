@@ -45,13 +45,17 @@
     <a class="skip" href="#main">Skip to content</a>
     <header class="header">
       <a class="brand" href="/">Nicoló Lombardi</a>
+      <!-- Opens the menu panel below (js/menu.js); the label rolls Menu / Close -->
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu-panel" aria-label="Open menu">
+        <span class="menu-toggle-text" aria-hidden="true"><span class="menu-toggle-roll"><span>Menu</span></span></span>
+      </button>
     </header>
 
     <!-- Pre-built by tools/build.mjs; js/app.js re-renders it with interactions -->
     <main id="main">{{MAIN}}</main>
 
-    <!-- Menu (js/menu.js): a small black button at the bottom right that opens into a panel of links,
-         like auge-xp.com. The yellow pill follows the hovered link. -->
+    <!-- Menu panel (js/menu.js): drops from the top right under the "Menu" label in the header.
+         The white pill follows the hovered link. -->
     <div class="menu" id="menu" data-open="false">
       <div class="menu-panel" id="menu-panel">
         <nav class="menu-nav" aria-label="Main navigation" inert>
@@ -64,16 +68,7 @@
             <li><a href="mailto:hello.nicolombardi@gmail.com?subject=Project%20enquiry" style="--i: 4"><span>Contact</span></a></li>
           </ol>
         </nav>
-        <p class="menu-small" inert>
-          Madrid, Spain ·
-          <a href="https://www.instagram.com/nickprods/" target="_blank" rel="noopener noreferrer">Instagram</a> ·
-          <a href="https://www.linkedin.com/in/nicolo-lombardi/" target="_blank" rel="noopener noreferrer">LinkedIn</a> ·
-          <a href="/privacy/">Privacy</a>
-        </p>
       </div>
-      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu-panel" aria-label="Open menu">
-        <span aria-hidden="true"></span><span aria-hidden="true"></span>
-      </button>
     </div>
     <div id="announcer" class="sr-only" aria-live="polite"></div>
     <script type="module" src="/js/app.js"></script>

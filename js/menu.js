@@ -1,13 +1,12 @@
-// Menu, after auge-xp.com: a small black button at the bottom right opens into a black panel
-// (the panel is clipped to the button's size and grows out of it); the links slide in one after
-// another, and a yellow pill follows the one you hover, with a short tick sound. Styles and
-// timings: the "Menu" block in style.css.
+// Menu, after auge-xp.com: the "Menu" label in the header (top right) opens a black panel that grows
+// out of the corner; the links slide in one after another, and a white pill follows the one you
+// hover, with a short tick sound. Black and white only. Styles and timings: the "Menu" block in style.css.
 import { play } from "./sound.js";
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
 const menu = document.querySelector("#menu");
-const toggle = menu.querySelector(".menu-toggle");
+const toggle = document.querySelector(".menu-toggle");
+const roll = toggle.querySelector(".menu-toggle-roll");
 const nav = menu.querySelector(".menu-nav");
-const small = menu.querySelector(".menu-small");
 const pill = menu.querySelector(".menu-pill");
 const links = [...menu.querySelectorAll(".menu-items a")];
 let open = false;
@@ -30,14 +29,29 @@ function markCurrent() {
   });
 }
 
+// The label rolls through Menu / Close a few times before it settles on the new word.
+function rollLabel(opening) {
+  const from = opening ? "Menu" : "Close",
+    to = opening ? "Close" : "Menu";
+  const words = reduce.matches ? [to] : [from, to, from, to];
+  roll.replaceChildren(...words.map((w) => Object.assign(document.createElement("span"), { textContent: w })));
+  if (reduce.matches) return;
+  roll.style.transition = "none";
+  roll.style.transform = "translateY(0)";
+  roll.getBoundingClientRect();
+  roll.style.transition = "";
+  roll.style.transform = `translateY(${(-100 * (words.length - 1)) / words.length}%)`;
+}
+
 function setOpen(value, { focus = true } = {}) {
   if (open === value) return;
   open = value;
   if (open) markCurrent();
-  nav.inert = small.inert = !open;
+  nav.inert = !open;
   menu.dataset.open = String(open);
   toggle.setAttribute("aria-expanded", String(open));
   toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  rollLabel(open);
   if (!open) hidePill();
   if (focus && !open) toggle.focus({ preventScroll: true });
 }
@@ -95,7 +109,7 @@ document.addEventListener(
   true,
 );
 // A click anywhere outside the menu closes it.
-document.addEventListener("pointerdown", (e) => open && !menu.contains(e.target) && closeMenu({ focus: false }));
+document.addEventListener("pointerdown", (e) => open && !menu.contains(e.target) && !toggle.contains(e.target) && closeMenu({ focus: false }));
 
 // Links to the page you're already on (Work on the landing page) just close the menu and
 // scroll; e-mail links close it too. Every other link navigates as usual.
