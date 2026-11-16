@@ -185,7 +185,7 @@ export function archiveMarkup() {
     ...collections.map((c) => [esc(c.title), collectionURL(c)]),
     ...upcoming.map((u) => [esc(u.title), u.href]),
   ].map(([title, href]) => `<li class="arch-item"><a href="${href}">${title}</a></li>`);
-  return `<section class="arch-land" aria-labelledby="arch-title"><h1 id="arch-title" class="sr-only">Archive</h1><canvas class="arch-trail" aria-hidden="true"></canvas><div class="arch-clock" aria-hidden="true"><canvas></canvas><p class="arch-clock-time">--:--</p></div><ul class="arch-wheel">${rows.join("")}</ul></section>`;
+  return `<section class="arch-land" aria-labelledby="arch-title"><h1 id="arch-title" class="sr-only">Archive</h1><canvas class="arch-trail" aria-hidden="true"></canvas><ul class="arch-wheel">${rows.join("")}</ul></section>`;
 }
 
 // /archive/<id>/: an infinite, pannable grid of the pieces (tiles are drawn by js/archive.js),

@@ -33,6 +33,7 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 :root {
+  --head: "Helvetica Neue", Helvetica, Arial, sans-serif; /* headers: Helvetica Bold, in capitals */
   --sans: "Hanken Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
   color-scheme: dark;
@@ -2066,7 +2067,7 @@ html.arch-land-page body {
 }
 .arch-wheel {
   z-index: 3;
-  pointer-events: none; /* it spans the page; only the titles take the pointer, so the clock can be touched */
+  pointer-events: none; /* it spans the page; only the titles take the pointer */
   position: absolute;
   left: clamp(24px, 6vw, 110px);
   right: 20px;
@@ -2114,39 +2115,14 @@ html.arch-land-page body {
   pointer-events: none;
 }
 .arch-trail {
-  z-index: 4; /* above the clock, and the blend inverts whatever it crosses (white clock → black) */
+  z-index: 4; /* the blend inverts whatever the trail crosses */
   mix-blend-mode: difference;
-}
-/* Clock on the right: the time, and a droplet for every second (js/archive-clock.js) */
-.arch-clock {
-  position: absolute;
-  z-index: 2;
-  right: clamp(150px, 24vw, 430px);
-  top: 50%;
-  width: 0;
-  height: 0;
-}
-.arch-clock canvas {
-  position: absolute;
-  pointer-events: none;
-}
-.arch-clock-time {
-  position: absolute;
-  left: 0;
-  top: 0;
-  white-space: nowrap;
-  transform: translate(-50%, -50%);
-  font-size: clamp(38px, 4.2vw, 68px);
-  font-weight: 600;
-  letter-spacing: -0.04em;
-  font-variant-numeric: tabular-nums;
 }
 .arch-item a:hover {
   opacity: 1;
 }
 /* Nothing shows until js/archive-landing.js has placed it, so the titles never appear stacked */
-.arch-land:not(.ready) .arch-wheel,
-.arch-land:not(.ready) .arch-clock {
+.arch-land:not(.ready) .arch-wheel {
   visibility: hidden;
 }
 .arch-land.plain .arch-wheel {
@@ -2173,18 +2149,24 @@ html.arch-land-page body {
   position: absolute;
   pointer-events: none;
 }
-.arch-clock-time {
-  cursor: var(--cursor-pointer);
-}
-.arch-shatter {
-  position: absolute;
-  pointer-events: none;
-}
-/* Fallback list (its script failed): readable titles, no half-built clock */
+/* Fallback list (its script failed): readable titles */
 .arch-land.plain .arch-item > a,
 .arch-land.plain .arch-item > span {
   color: inherit;
 }
-.arch-land.plain .arch-clock {
-  display: none;
+
+/* ── Headers ────────────────────────────────────────────────────────────────
+   Helvetica Bold in capitals for the header bar (name + Menu), every heading and the project titles.
+   Body text stays in --sans. The Archive keeps its own type (Caslon). */
+.header .brand,
+.menu-toggle,
+h1:not(.sr-only):not(.caslon),
+h2:not(.caslon),
+h3,
+.reveal-title b,
+.reveal-title i,
+.next-project strong {
+  font-family: var(--head);
+  font-weight: 700;
+  text-transform: uppercase;
 }

@@ -1,5 +1,5 @@
 // Small interface sounds (assets/sounds): "hover" on the menu links, "loaded" during an Archive
-// collection's loading screen, "timepass" each time the clock completes a minute.
+// collection's loading screen.
 // Played through the Web Audio API so quick repeats never cut a sound off with a click: every play
 // fades in and out over a few milliseconds, a sound that is still ringing fades out before the next one
 // starts, repeats closer than a minimum gap are skipped, and a limiter keeps overlaps from distorting.

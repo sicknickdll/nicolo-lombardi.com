@@ -4,11 +4,9 @@
 //     bring it up, click the selected one to open it.
 //   · On arrival the wheel spins through the titles and slows down onto the first one, while the
 //     titles resolve from ASCII noise into the normal type (js/archive-ascii-text.js).
-//   · A pixel trail follows the cursor (js/archive-trail.js). A clock with a droplet for every
-//     second is on the right (js/archive-clock.js).
+//   · A pixel trail follows the cursor (js/archive-trail.js).
 import { navigateTo } from "./menu.js";
 import { mountTrail } from "./archive-trail.js";
-import { mountClock } from "./archive-clock.js";
 import { mountAsciiTitles } from "./archive-ascii-text.js";
 import { bezier } from "./ease.js";
 
@@ -132,17 +130,11 @@ export function bindLanding(main) {
   // Over a title the trail steps aside, so the two never clash.
   wheel.addEventListener("pointerover", (e) => trail.suppress(Boolean(e.target.closest(".arch-item"))));
   wheel.addEventListener("pointerleave", () => trail.suppress(false));
-  // No clock on a phone.
-  const clockEl = land.querySelector(".arch-clock");
-  let clockOff = () => {};
-  if (matchMedia("(max-width: 700px)").matches) clockEl.remove();
-  else clockOff = mountClock(clockEl);
-  land.classList.add("ready"); // until now the titles and the clock are hidden, so they never show stacked
+  land.classList.add("ready"); // until now the titles are hidden, so they never show stacked
 
   return () => {
     trail.off();
     titles.off();
-    clockOff();
     root.classList.remove("arch-land-page");
     cancelAnimationFrame(raf);
     ro.disconnect();
