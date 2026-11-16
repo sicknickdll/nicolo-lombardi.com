@@ -1,7 +1,7 @@
 // Menu, after auge-xp.com: the "Menu" label in the header (top right) opens a black panel that grows
 // out of the corner; the links slide in one after another, and a white pill follows the one you
 // hover, with a short tick sound. Black and white only. Styles and timings: the "Menu" block in style.css.
-import { play } from "./sound.js";
+import { play, preload } from "./sound.js";
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
 const menu = document.querySelector("#menu");
 const toggle = document.querySelector(".menu-toggle");
@@ -46,7 +46,10 @@ function rollLabel(opening) {
 function setOpen(value, { focus = true } = {}) {
   if (open === value) return;
   open = value;
-  if (open) markCurrent();
+  if (open) {
+    markCurrent();
+    preload("hover"); // decoded now, from this click, so the first hover is instant and clean
+  }
   nav.inert = !open;
   menu.dataset.open = String(open);
   toggle.setAttribute("aria-expanded", String(open));
@@ -88,7 +91,7 @@ links.forEach((a) => {
   a.addEventListener("pointerenter", (e) => {
     if (e.pointerType === "touch") return;
     showPill(a);
-    play("hover", 0.5);
+    play("hover", 0.4);
   });
   a.addEventListener("focus", () => a.matches(":focus-visible") && showPill(a));
 });

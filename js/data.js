@@ -327,7 +327,6 @@ const allProjects = [
     gallery: "ticker",
     // No video: the landing card cycles through these as a slideshow
     heroSlides: [
-      "/assets/soapandglory-header.webp",
       "/assets/soapandglory-01.webp",
       "/assets/soapandglory-02.webp",
       "/assets/soapandglory-03.webp",
