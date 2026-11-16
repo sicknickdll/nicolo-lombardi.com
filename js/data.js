@@ -165,6 +165,8 @@ const allProjects = [
       "/assets/D7gRk6cgnwsXzD7ZpcUlbGip1QY.webp",
     ],
     stills: [1, 2, 3, 4, 5, 6, 7, 8].map((n) => img(`/assets/elaguila-still-0${n}.webp`, 1920, 1080)),
+    // Landing-page loop
+    heroVideo: { src: "/assets/elaguila-cover.webm", poster: "/assets/elaguila-cover-poster.webp", ratio: 16 / 9 },
     videos: ["/assets/elaguila-hero.webm"],
     youtube: null,
     videoPosters: ["/assets/elaguila-hero-poster.webp"],
@@ -295,6 +297,8 @@ const allProjects = [
         img("/assets/wppproduction-bts-06.webp", 3840, 2160),
       ],
     },
+    // Landing-page loop
+    heroVideo: { src: "/assets/wppproduction-cover.webm", poster: "/assets/wppproduction-cover-poster.webp", ratio: 2.3358 },
     videos: ["/assets/Ldb4lUOdpBMLqQgyUIvXayYlE.webm"],
     youtube: null,
     videoPosters: [
