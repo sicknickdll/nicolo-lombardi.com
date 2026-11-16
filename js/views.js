@@ -56,7 +56,7 @@ export function listMarkup(list, label, heading) {
       return `<section class="reveal" id="p-${p.id}" data-project="${p.id}" aria-label="${esc(fullName(p))}"><div class="reveal-stage"><span class="reveal-client">${esc(p.brand)}</span><span class="reveal-num" aria-hidden="true">${num}</span><span class="reveal-type">${esc(p.type)}</span><a class="reveal-open" href="${projectURL(p)}" aria-label="Open ${esc(fullName(p))} project"></a><div class="reveal-media">${media}<span class="reveal-shade"></span><span class="reveal-title" aria-hidden="true"><b>${esc(p.brand)}</b><i>${esc(second)}</i></span></div></div></section>`;
     })
     .join("");
-  return `${heading ? `<h1 class="sr-only">${esc(heading)}</h1>` : ""}<div class="reveal-list" id="work" aria-label="${label}">${sections}</div><svg class="ca-defs" width="0" height="0" aria-hidden="true" focusable="false"><filter id="ca" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB"><feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="r"/><feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="g"/><feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="b"/><feOffset id="ca-r" in="r" dx="0" dy="0" result="ro"/><feOffset id="ca-b" in="b" dx="0" dy="0" result="bo"/><feBlend in="ro" in2="g" mode="screen" result="rg"/><feBlend in="rg" in2="bo" mode="screen"/></filter></svg>`;
+  return `${heading ? `<h1 class="sr-only">${esc(heading)}</h1>` : ""}<div class="reveal-list" id="work" aria-label="${label}">${sections}</div>`;
 }
 
 // "Case" layout (projects with `stills`): film on top, text, a two-column grid of stills,

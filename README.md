@@ -29,6 +29,7 @@ tools/prepare-video.sh   converts a new video into the needed formats
 tools/make-intro-clips.sh  short, light loop clips for the landing intro (assets/intro/)
 index.html, about/, work/<id>/   GENERATED pages, don't edit by hand
 film/, visuals/     GENERATED redirects: old addresses forward to the Work list on the landing page
+assets/fonts/        Hanken Grotesk + Geist Mono (free look-alikes of A24's PP Neue Montreal / Mono; swap in the real ones via --sans / --mono in style.css), Caslon + Jost for the Archive
 assets/             images (.webp), videos (.webm + .mp4 fallback), icons, previews, about/head.glb
 CNAME, .nojekyll    GitHub Pages settings · _headers for Netlify / Cloudflare
 404.html, robots.txt, sitemap.xml
