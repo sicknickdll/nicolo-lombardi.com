@@ -212,6 +212,8 @@ const allProjects = [
       "Created the VFX for a Wichita Production music video using a hybrid workflow that combined live-action footage, image inpainting, and video-to-video techniques. Animated and integrated digital assets while maintaining visual consistency and supporting the director’s creative vision.",
     cover: "/assets/wichita-header.webp",
     images: ["/assets/ktb-still.webp", "/assets/ktb-head.webp", "/assets/ktb-head2.webp"],
+    // Landing-card loop (a short existing clip for now)
+    heroVideo: { src: "/assets/ktb-vfx-01.webm", poster: "/assets/ktb-vfx-01-poster.webp", ratio: 16 / 9 },
     videos: [
       "/assets/ktb-film.webm",
       "/assets/ktb-vfx-01.webm",

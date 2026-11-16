@@ -1,6 +1,6 @@
 // Portfolio behaviour. Every page (/, /about/, /work/<id>/) is a real, pre-built
 // HTML file (see tools/build.mjs) so search engines can read it; this script
-// re-renders the same markup and adds the interactions: snap scrolling, carousels,
+// re-renders the same markup and adds the interactions: the scroll-driven project blocks, carousels,
 // the menu (js/menu.js) and the 3D head on the About page (js/head.js).
 import { projects } from "./data.js";
 import { bindGalleries } from "./galleries.js";
@@ -9,6 +9,7 @@ import { bindPlayers } from "./player.js";
 import { eyeTracking } from "./eye.js";
 import { isMenuOpen, setNavigator } from "./menu.js";
 import { smoothScroll } from "./smooth.js";
+import { bindReveal } from "./reveal.js";
 import { work, homeMarkup, projectMarkup, projectURL, aboutMarkup, archiveMarkup, collectionMarkup, archiveCollections } from "./views.js";
 const main = document.querySelector("#main");
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
@@ -28,164 +29,12 @@ function showHome() {
     import("./intro.js")
       .then((m) => m.playIntro())
       .catch(() => root.classList.remove("intro"));
-  const scrollCleanup = bindProjectScroll(work),
+  const scrollCleanup = bindReveal(main),
     eyeCleanup = eyeTracking(v);
   cleanup = () => {
     v.pause();
     scrollCleanup();
     eyeCleanup();
-  };
-}
-function bindProjectScroll(list) {
-  const link = main.querySelector(".view-project");
-  const pages = [...main.querySelectorAll(".home,.project-section")];
-  let frame = 0,
-    currentIndex = -1;
-  const projectFor = (page) => list.find((p) => p.id === page?.dataset.project);
-  const nearest = () =>
-    pages.reduce((best, page, i) => {
-      const distance = (element) => {
-        const r = element.getBoundingClientRect();
-        return Math.abs(r.top + r.height / 2 - innerHeight / 2);
-      };
-      return distance(page) < distance(pages[best]) ? i : best;
-    }, 0);
-  const update = () => {
-    frame = 0;
-    const index = nearest();
-    if (index !== currentIndex) {
-      currentIndex = index;
-      const project = projectFor(pages[index]);
-      link.hidden = !project;
-      if (project) {
-        link.href = projectURL(project);
-        link.setAttribute("aria-label", "View " + project.brand + " — " + project.title);
-        announce(project.brand + " — " + project.title);
-      }
-    }
-  };
-  const move = (direction) => {
-    const destination = pages[nearest() + direction];
-    if (!destination) return;
-    window.scrollTo({
-      top: window.scrollY + destination.getBoundingClientRect().top,
-      behavior: reduce.matches ? "auto" : "smooth",
-    });
-  };
-  const key = (e) => {
-    if (isMenuOpen() || e.target.closest?.("a,button,input,textarea,select")) return;
-    if (["ArrowDown", "ArrowRight", "PageDown"].includes(e.key)) {
-      e.preventDefault();
-      move(1);
-    } else if (["ArrowUp", "ArrowLeft", "PageUp"].includes(e.key)) {
-      e.preventDefault();
-      move(-1);
-    }
-  };
-  // Require a fresh, deliberate gesture after the final section has settled.
-  // Tracking all wheel events prevents arrival momentum from counting as intent.
-  let atEnd = false,
-    endSince = 0,
-    lastWheel = -Infinity,
-    wheelScore = 0,
-    gestureStart = 0,
-    gestureArmed = false,
-    returning = false,
-    touchStart = null;
-  const checkEnd = () => {
-    const rect = pages.at(-1).getBoundingClientRect();
-    const end = rect.bottom <= innerHeight + 2 && rect.top <= 2;
-    if (end !== atEnd) {
-      atEnd = end;
-      endSince = performance.now();
-      wheelScore = 0;
-      gestureArmed = false;
-    }
-    return end;
-  };
-  const returnToLanding = () => {
-    returning = true;
-    announce("Back to Nicoló Lombardi");
-    window.scrollTo({ top: 0, behavior: reduce.matches ? "auto" : "smooth" });
-  };
-  const wheel = (e) => {
-    const now = performance.now(),
-      gap = now - lastWheel;
-    lastWheel = now;
-    const end = checkEnd();
-    if (
-      !end ||
-      returning ||
-      isMenuOpen() ||
-      e.ctrlKey ||
-      e.deltaY <= 0 ||
-      Math.abs(e.deltaX) > Math.abs(e.deltaY)
-    ) {
-      wheelScore = 0;
-      gestureArmed = false;
-      return;
-    }
-    if (gap > 240) {
-      wheelScore = 0;
-      gestureStart = now;
-      gestureArmed = now - endSince >= 240;
-    }
-    if (!gestureArmed) return;
-    if (now - gestureStart > 450) {
-      wheelScore = 0;
-      gestureStart = now;
-    }
-    const scale = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1;
-    wheelScore += e.deltaY * scale;
-    if (wheelScore >= Math.max(320, innerHeight * 0.45)) {
-      e.preventDefault();
-      returnToLanding();
-    }
-  };
-  const touchBegin = (e) => {
-    touchStart = null;
-    if (
-      e.touches.length !== 1 ||
-      isMenuOpen() ||
-      returning ||
-      !checkEnd() ||
-      performance.now() - endSince < 240
-    )
-      return;
-    touchStart = { y: e.touches[0].clientY, time: performance.now() };
-  };
-  const touchEnd = (e) => {
-    const start = touchStart;
-    touchStart = null;
-    if (!start || !checkEnd() || isMenuOpen() || e.changedTouches.length !== 1) return;
-    const distance = start.y - e.changedTouches[0].clientY,
-      elapsed = performance.now() - start.time;
-    if (distance >= Math.max(110, innerHeight * 0.16) && elapsed <= 650) returnToLanding();
-  };
-  const touchCancel = () => {
-    touchStart = null;
-  };
-  const scroll = () => {
-    if (!checkEnd()) returning = false;
-    if (!frame) frame = requestAnimationFrame(update);
-  };
-  window.addEventListener("scroll", scroll, { passive: true });
-  window.addEventListener("resize", scroll);
-  window.addEventListener("keydown", key);
-  window.addEventListener("wheel", wheel, { passive: false });
-  window.addEventListener("touchstart", touchBegin, { passive: true });
-  window.addEventListener("touchend", touchEnd, { passive: true });
-  window.addEventListener("touchcancel", touchCancel, { passive: true });
-  update();
-  return () => {
-    cancelAnimationFrame(frame);
-    window.removeEventListener("scroll", scroll);
-    window.removeEventListener("resize", scroll);
-    window.removeEventListener("keydown", key);
-    window.removeEventListener("wheel", wheel);
-    window.removeEventListener("touchstart", touchBegin);
-    window.removeEventListener("touchend", touchEnd);
-    window.removeEventListener("touchcancel", touchCancel);
   };
 }
 function showProject(id) {
@@ -279,7 +128,6 @@ function redirectLegacyHash() {
 function render() {
   const path = location.pathname.replace(/index\.html$/, "");
   const project = path.match(/^\/work\/([^/]+)\/?$/);
-  document.documentElement.classList.toggle("snap-pages", path === "/");
   document.documentElement.classList.toggle("light", path === "/about/");
   if (path === "/privacy/") return;
   const collection = path.match(/^\/archive\/([^/]+)\/?$/);

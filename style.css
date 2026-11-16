@@ -214,64 +214,7 @@ video {
     bottom: 35px;
   }
 }
-.project-scroll {
-  background: black;
-}
-.project-section {
-  height: 100dvh;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  background: #000;
-}
-.project-section img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-}
-.view-project {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 20;
-  display: inline-block;
-  font-size: 18px;
-  line-height: 1.25;
-  padding: 14px 18px;
-  text-align: center;
-  white-space: nowrap;
-  text-shadow: 0 1px 16px rgba(0, 0, 0, 0.7);
-}
-/* Landing page: one wheel notch = one project cover (the browser snaps; js/smooth.js stays out). */
-.snap-pages {
-  scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
-  scrollbar-width: none;
-}
-.snap-pages::-webkit-scrollbar {
-  display: none;
-}
 .home,
-.project-section {
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-}
-.project-open {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  cursor: var(--cursor-pointer);
-}
-.project-open:hover {
-  opacity: 1;
-}
-.project-open:focus-visible {
-  outline-offset: -8px;
-}
 .detail {
   position: relative;
   min-height: 100dvh;
@@ -605,29 +548,6 @@ video {
   }
   .home h1 {
     font-size: clamp(27px, 7.7vw, 38px);
-  }
-  .view-project {
-    font-size: 16px;
-  }
-  .project-section {
-    height: 100dvh;
-  }
-}
-/* Portrait phones: covers have the client logo baked in at the centre, so show
-   the whole frame instead of cropping it, over a blurred copy of itself. */
-@media (max-width: 820px) and (orientation: portrait) {
-  .project-section::before {
-    content: "";
-    position: absolute;
-    inset: -30px;
-    background: var(--cover) center / cover no-repeat;
-    filter: blur(24px) brightness(0.55);
-  }
-  .project-section img {
-    position: relative;
-    height: auto;
-    max-height: 100%;
-    object-fit: contain;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1200,6 +1120,201 @@ html.intro .home-tagline {
   right: 20px;
   font-size: 14px;
   z-index: 2;
+}
+
+/* ── Reveal (js/reveal.js) ──────────────────────────────────────────────────
+   Landing page, one block per project after the intro, like ilcapoproduction.com but white: a
+   pinned white screen with a small window; scrolling grows the window until the loop fills it.
+   --e (0 → 1) is set by js/reveal.js. Hover: the loop darkens, "Client / Project" appears and a
+   View label follows the cursor. */
+.reveal-list {
+  background: #fff;
+  color: #000;
+}
+.reveal {
+  --ix: 28vw;
+  --iy: 30dvh;
+  --e: 0;
+  position: relative;
+  height: 250dvh;
+}
+.reveal-stage {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  overflow: hidden;
+  background: #fff;
+}
+.reveal-media,
+.reveal-open {
+  position: absolute;
+  inset: calc(var(--iy) * (1 - var(--e))) calc(var(--ix) * (1 - var(--e)));
+}
+.reveal-media {
+  z-index: 1;
+  overflow: hidden;
+  background: #111;
+  border-radius: calc(3px * (1 - var(--e)));
+  pointer-events: none;
+}
+.reveal-media video,
+.reveal-media img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* The loop keeps full-screen size; only the window around it grows, so it is not rescaled. */
+  width: 100vw;
+  height: 100dvh;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+}
+.reveal-slide {
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+.reveal-slide.is-on {
+  opacity: 1;
+}
+.reveal-open {
+  z-index: 3;
+  cursor: var(--cursor-pointer);
+}
+.reveal-open:hover,
+.reveal-open:focus-visible {
+  opacity: 1;
+}
+.reveal-open:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 4px;
+}
+.reveal-shade {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 0.5);
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+.reveal-title {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25em;
+  padding: 0 4vw;
+  text-align: center;
+  color: #fff;
+  /* The type grows with the window: small while it is a card, large when it fills the screen. */
+  font-size: calc(2.6vw + 4.4vw * var(--e));
+  line-height: 1;
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.35s,
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-title b {
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+}
+.reveal-title i {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 0.34em;
+  letter-spacing: -0.01em;
+}
+.reveal-open:hover + .reveal-media .reveal-shade,
+.reveal-open:focus-visible + .reveal-media .reveal-shade,
+.reveal-open:hover + .reveal-media .reveal-title,
+.reveal-open:focus-visible + .reveal-media .reveal-title {
+  opacity: 1;
+  transform: none;
+}
+/* Small text around the window, on the white screen; it fades out as the window grows. */
+.reveal-client,
+.reveal-num,
+.reveal-type {
+  position: absolute;
+  z-index: 2;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  opacity: calc(1 - var(--e) * 4);
+  pointer-events: none;
+}
+.reveal-client {
+  left: 0;
+  right: 0;
+  text-align: center;
+  top: calc(var(--iy) - 34px);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.reveal-num {
+  left: 20px;
+  bottom: 20px;
+}
+.reveal-type {
+  bottom: 20px;
+  right: 100px; /* leaves room for the menu button */
+}
+/* The cursor label. */
+.view-cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 70;
+  padding: 7px 16px;
+  border-radius: 3px;
+  background: #fdf48b;
+  color: #000;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  pointer-events: none;
+  opacity: 0;
+  scale: 0.6;
+  transition:
+    opacity 0.2s,
+    scale 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.view-cursor.is-on {
+  opacity: 1;
+  scale: 1;
+}
+/* The header sits over white and over video: it inverts itself (white on dark, black on white). */
+html:has(.reveal-list) .header {
+  mix-blend-mode: difference;
+  text-shadow: none;
+}
+@media (max-width: 820px) {
+  .reveal {
+    --ix: 12vw;
+    --iy: 33dvh;
+  }
+  .reveal-title {
+    font-size: calc(7vw + 5vw * var(--e));
+  }
+  .reveal-type {
+    display: none;
+  }
+}
+/* Touch screens have no hover: show the title once the window fills the screen. */
+@media (hover: none) {
+  .reveal.is-full .reveal-shade {
+    opacity: 1;
+  }
+  .reveal.is-full .reveal-title {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    height: 100dvh;
+  }
 }
 
 /* ── Menu (js/menu.js) ──────────────────────────────────────────────────────
