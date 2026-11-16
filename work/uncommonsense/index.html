@@ -94,7 +94,7 @@
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico?v=anime-eye" />
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/anime-eye-touch-180.png" />
-    <link rel="stylesheet" href="/dist/style-7DFA1EEE.css" />
+    <link rel="stylesheet" href="/dist/style-338E3FCA.css" />
     <script>
       // Landing intro (js/intro.js): on entering the site or reloading the landing page,
       // not when coming back to it from another page of the site.
@@ -127,11 +127,6 @@
     <a class="skip" href="#main">Skip to content</a>
     <header class="header">
       <a class="brand" href="/">Nicoló Lombardi</a>
-      <!-- Opens the full-screen menu below (js/menu.js) -->
-      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
-        <span class="menu-toggle-text" aria-hidden="true"><span class="menu-toggle-roll"><span>Menu</span></span></span>
-        <span class="menu-toggle-icon" aria-hidden="true"><span></span><span></span></span>
-      </button>
     </header>
 
     <!-- Pre-built by tools/build.mjs; js/app.js re-renders it with interactions -->
@@ -140,12 +135,14 @@
   <div class="video-navigation"><button class="gallery-prev" aria-label="Previous video">←</button><div class="video-thumbnails" aria-label="Select a video"><button class="video-thumbnail" data-video="0" aria-label="Select film 1" aria-pressed="true"><img src="/assets/pgvXtdMshKqmetkpEhgM2k1TI-thumb.webp" alt="" loading="lazy"></button><button class="video-thumbnail" data-video="1" aria-label="Select film 2" aria-pressed="false"><img src="/assets/Ste489lG9zmVBFJeCYP9xDo-thumb.webp" alt="" loading="lazy"></button><button class="video-thumbnail" data-video="2" aria-label="Select film 3" aria-pressed="false"><img src="/assets/Vfrnp4LUs7aaOAevNvmhbI8FJrw-thumb.webp" alt="" loading="lazy"></button><button class="video-thumbnail" data-video="3" aria-label="Select film 4" aria-pressed="false"><img src="/assets/3z5frFOL28vZ40IlJCXbcUgW0pc-thumb.webp" alt="" loading="lazy"></button><button class="video-thumbnail" data-video="4" aria-label="Select film 5" aria-pressed="false"><img src="/assets/FD1kZsJlQdpOLlGLrAbnlQFTPA-thumb.webp" alt="" loading="lazy"></button><button class="video-thumbnail" data-video="5" aria-label="Select film 6" aria-pressed="false"><img src="/assets/GWH2DGkArjGgTWVAw8hsv6C5rxM-thumb.webp" alt="" loading="lazy"></button><button class="video-thumbnail" data-video="6" aria-label="Select film 7" aria-pressed="false"><img src="/assets/i7MWkcoSeItRmxvFvuUf3tTLM-thumb.webp" alt="" loading="lazy"></button></div><button class="gallery-next" aria-label="Next video">→</button></div>
  </section><header class="detail-heading"><h1>UNCOMMONSENSE</h1><p>Social Media Content &amp; Fashion</p></header><div class="detail-text"><div><h2>About the project</h2><dl class="facts"><div><dt>Client</dt><dd>UNCOMMONSENSE</dd></div><div><dt>Discipline</dt><dd>Social Media Content &amp; Fashion</dd></div></dl></div><p>UNCOMMONSENSE is an accessories brand founded by @Ohh.Ginger. For the brand, I create end-to-end AI-native campaigns, developing everything from the initial concept and creative direction to image generation, video production, sound design, and final editing. 
 
-The work blends fashion, surrealism, and contemporary visual culture to build distinctive visual narratives, while maintaining strict consistency across characters, products, materials, and textures to faithfully represent the physical product in highly stylized environments.</p></div><a class="next-project" href="/work/anaya/"><span>Next project</span><strong>Anaya</strong></a></article></main>
+The work blends fashion, surrealism, and contemporary visual culture to build distinctive visual narratives, while maintaining strict consistency across characters, products, materials, and textures to faithfully represent the physical product in highly stylized environments.</p></div><a class="next-project" href="/work/malik-cross/"><span>Next project</span><strong>Malik Cross</strong></a></article></main>
 
-    <div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="Menu" data-open="false" inert>
-      <div class="menu-layer" aria-hidden="true"></div>
-      <div class="menu-panel">
-        <nav aria-label="Main navigation">
+    <!-- Menu (js/menu.js): a small black button at the bottom right that opens into a panel of links,
+         like auge-xp.com. The yellow pill follows the hovered link. -->
+    <div class="menu" id="menu" data-open="false">
+      <div class="menu-panel" id="menu-panel">
+        <nav class="menu-nav" aria-label="Main navigation" inert>
+          <span class="menu-pill" aria-hidden="true"></span>
           <ol class="menu-items">
             <li><a href="/#work" style="--i: 0"><span>Work</span></a></li>
             <li><a href="/about/" style="--i: 1"><span>About</span></a></li>
@@ -154,15 +151,18 @@ The work blends fashion, surrealism, and contemporary visual culture to build di
             <li><a href="mailto:hello.nicolombardi@gmail.com?subject=Project%20enquiry" style="--i: 4"><span>Contact</span></a></li>
           </ol>
         </nav>
-        <p class="menu-small">
+        <p class="menu-small" inert>
           Madrid, Spain ·
           <a href="https://www.instagram.com/nickprods/" target="_blank" rel="noopener noreferrer">Instagram</a> ·
           <a href="https://www.linkedin.com/in/nicolo-lombardi/" target="_blank" rel="noopener noreferrer">LinkedIn</a> ·
           <a href="/privacy/">Privacy</a>
         </p>
       </div>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu-panel" aria-label="Open menu">
+        <span aria-hidden="true"></span><span aria-hidden="true"></span>
+      </button>
     </div>
     <div id="announcer" class="sr-only" aria-live="polite"></div>
-    <script type="module" src="/dist/app-KLLXYZ4F.js"></script>
+    <script type="module" src="/dist/app-VIWUMNKX.js"></script>
   </body>
 </html>

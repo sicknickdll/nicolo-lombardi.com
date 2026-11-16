@@ -1,38 +1,23 @@
-// Full-screen menu. The "Menu +" button in the header (the plus turns into a cross and the
-// label rolls Menu → Close, like React Bits' Staggered Menu) drops a white panel from the
-// top of the screen; the big links rise one by one from behind a mask, stacked vertically
-// (layout after dizmar.xyz). Styles and timings: the "Menu" block in style.css.
+// Menu, after auge-xp.com: a small black button at the bottom right opens into a black panel
+// (the panel is clipped to the button's size and grows out of it); the links slide in one after
+// another, and a yellow pill follows the one you hover, with a short tick sound. Styles and
+// timings: the "Menu" block in style.css.
+import { play } from "./sound.js";
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
-const root = document.documentElement;
 const menu = document.querySelector("#menu");
-const toggle = document.querySelector(".menu-toggle");
-const roll = toggle.querySelector(".menu-toggle-roll");
-const main = document.querySelector("#main");
-const CLOSE_MS = 800;
-let open = false,
-  closeTimer = 0;
+const toggle = menu.querySelector(".menu-toggle");
+const nav = menu.querySelector(".menu-nav");
+const small = menu.querySelector(".menu-small");
+const pill = menu.querySelector(".menu-pill");
+const links = [...menu.querySelectorAll(".menu-items a")];
+let open = false;
 
 export const isMenuOpen = () => open;
 // js/app.js registers a function that swaps the page without reloading: it returns true when it
-// handled the address. The menu then lifts (the opening curtain played backwards) and reveals
-// the new page underneath.
+// handled the address.
 let navigate = null;
 export const setNavigator = (fn) => (navigate = fn);
 export const navigateTo = (href) => (navigate?.(href) ? true : ((location.href = href), false));
-
-// The label rolls through Menu / Close a few times before it settles on the new word.
-function rollLabel(opening) {
-  const from = opening ? "Menu" : "Close",
-    to = opening ? "Close" : "Menu";
-  const words = reduce.matches ? [to] : [from, to, from, to];
-  roll.replaceChildren(...words.map((w) => Object.assign(document.createElement("span"), { textContent: w })));
-  if (reduce.matches) return;
-  roll.style.transition = "none";
-  roll.style.transform = "translateY(0)";
-  roll.getBoundingClientRect();
-  roll.style.transition = "";
-  roll.style.transform = `translateY(${(-100 * (words.length - 1)) / words.length}%)`;
-}
 
 // The page you're on is marked in the menu (Work covers the landing and every project).
 function markCurrent() {
@@ -45,70 +30,72 @@ function markCurrent() {
   });
 }
 
-export function openMenu() {
-  if (open) return;
-  open = true;
-  clearTimeout(closeTimer);
-  markCurrent();
-  menu.inert = false;
-  main.inert = true;
-  root.classList.add("menu-open");
-  toggle.setAttribute("aria-expanded", "true");
-  toggle.setAttribute("aria-label", "Close menu");
-  rollLabel(true);
-  // One frame later, so the transitions start from the closed state.
-  requestAnimationFrame(() =>
-    requestAnimationFrame(() => {
-      menu.dataset.open = "true";
-    }),
-  );
-  setTimeout(() => menu.querySelector(".menu-items a")?.focus({ preventScroll: true }), reduce.matches ? 0 : 350);
+function setOpen(value, { focus = true } = {}) {
+  if (open === value) return;
+  open = value;
+  if (open) markCurrent();
+  nav.inert = small.inert = !open;
+  menu.dataset.open = String(open);
+  toggle.setAttribute("aria-expanded", String(open));
+  toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  if (!open) hidePill();
+  if (focus && !open) toggle.focus({ preventScroll: true });
 }
+export const openMenu = () => setOpen(true);
+export const closeMenu = (opts) => setOpen(false, opts);
 
-export function closeMenu({ focus = true } = {}) {
-  if (!open) return;
-  open = false;
-  menu.dataset.open = "false";
-  toggle.setAttribute("aria-expanded", "false");
-  toggle.setAttribute("aria-label", "Open menu");
-  rollLabel(false);
-  main.inert = false;
-  closeTimer = setTimeout(
-    () => {
-      menu.inert = true;
-      root.classList.remove("menu-open");
-    },
-    reduce.matches ? 0 : CLOSE_MS,
-  );
-  if (focus) toggle.focus({ preventScroll: true });
+// The yellow pill: it appears behind the hovered (or focused) link and slides to the next one.
+let pillShown = false;
+function showPill(a) {
+  const x = a.offsetLeft, y = a.offsetTop; // relative to .menu-nav (position: relative)
+  if (!pillShown) {
+    // First link of this visit: put the pill there without sliding, then reveal it.
+    pill.style.transition = "none";
+    pill.style.transform = `translate(${x}px, ${y}px)`;
+    pill.style.width = a.offsetWidth + "px";
+    pill.style.height = a.offsetHeight + "px";
+    pill.getBoundingClientRect();
+    pill.style.transition = "";
+    pillShown = true;
+  } else {
+    pill.style.transform = `translate(${x}px, ${y}px)`;
+    pill.style.width = a.offsetWidth + "px";
+    pill.style.height = a.offsetHeight + "px";
+  }
+  pill.classList.add("is-on");
+  links.forEach((l) => l.classList.toggle("is-active", l === a));
 }
+function hidePill() {
+  pill.classList.remove("is-on");
+  links.forEach((l) => l.classList.remove("is-active"));
+  pillShown = false;
+}
+links.forEach((a) => {
+  a.addEventListener("pointerenter", (e) => {
+    if (e.pointerType === "touch") return;
+    showPill(a);
+    play("hover", 0.5);
+  });
+  a.addEventListener("focus", () => a.matches(":focus-visible") && showPill(a));
+});
+nav.addEventListener("pointerleave", hidePill);
+nav.addEventListener("focusout", (e) => !nav.contains(e.relatedTarget) && hidePill());
 
 toggle.addEventListener("click", () => (open ? closeMenu() : openMenu()));
 
 document.addEventListener(
   "keydown",
   (e) => {
-    if (!open) return;
-    if (e.key === "Escape") {
+    if (open && e.key === "Escape") {
       e.preventDefault();
       e.stopPropagation();
       closeMenu();
-    } else if (e.key === "Tab") {
-      // Keep the focus inside the menu (the header button counts as part of it).
-      const items = [document.querySelector(".header .brand"), toggle, ...menu.querySelectorAll("a")];
-      const first = items[0],
-        last = items.at(-1);
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
     }
   },
   true,
 );
+// A click anywhere outside the menu closes it.
+document.addEventListener("pointerdown", (e) => open && !menu.contains(e.target) && closeMenu({ focus: false }));
 
 // Links to the page you're already on (Work on the landing page) just close the menu and
 // scroll; e-mail links close it too. Every other link navigates as usual.
@@ -118,12 +105,8 @@ menu.addEventListener("click", (e) => {
   if (a.protocol === "mailto:") return closeMenu({ focus: false });
   if (a.origin === location.origin && a.pathname !== location.pathname) {
     e.preventDefault();
-    if (navigate?.(a.href)) closeMenu({ focus: false });
-    else {
-      // A page that can't be swapped in place (Privacy, 404): lift the curtain, then go there.
-      closeMenu({ focus: false });
-      setTimeout(() => (location.href = a.href), reduce.matches ? 0 : CLOSE_MS - 100);
-    }
+    closeMenu({ focus: false });
+    if (!navigate?.(a.href)) setTimeout(() => (location.href = a.href), reduce.matches ? 0 : 300);
     return;
   }
   if (a.origin === location.origin && a.pathname === location.pathname) {
@@ -135,9 +118,4 @@ menu.addEventListener("click", (e) => {
 });
 
 // Coming back with "back" can restore the page with the menu open: close it at once.
-addEventListener("pageshow", (e) => {
-  if (!e.persisted || !open) return;
-  menu.style.transition = "none";
-  closeMenu({ focus: false });
-  requestAnimationFrame(() => (menu.style.transition = ""));
-});
+addEventListener("pageshow", (e) => e.persisted && open && closeMenu({ focus: false }));

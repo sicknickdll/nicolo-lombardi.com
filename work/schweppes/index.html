@@ -100,7 +100,7 @@
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico?v=anime-eye" />
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/anime-eye-touch-180.png" />
-    <link rel="stylesheet" href="/dist/style-7DFA1EEE.css" />
+    <link rel="stylesheet" href="/dist/style-338E3FCA.css" />
     <script>
       // Landing intro (js/intro.js): on entering the site or reloading the landing page,
       // not when coming back to it from another page of the site.
@@ -133,11 +133,6 @@
     <a class="skip" href="#main">Skip to content</a>
     <header class="header">
       <a class="brand" href="/">Nicoló Lombardi</a>
-      <!-- Opens the full-screen menu below (js/menu.js) -->
-      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
-        <span class="menu-toggle-text" aria-hidden="true"><span class="menu-toggle-roll"><span>Menu</span></span></span>
-        <span class="menu-toggle-icon" aria-hidden="true"><span></span><span></span></span>
-      </button>
     </header>
 
     <!-- Pre-built by tools/build.mjs; js/app.js re-renders it with interactions -->
@@ -147,10 +142,12 @@ I contributed to the storyboarding and frame generation, and made the final VO a
 
 Property of WPP Production / WPP Holding. Featured here to showcase my contribution as part of the production and creative team.</p></div><section class="case-stills" aria-label="Schweppes stills"><figure><img src="/assets/schweppes-still-01.webp" alt="Schweppes — still 1" width="1920" height="1080" loading="lazy" decoding="async"></figure><figure><img src="/assets/schweppes-still-02.webp" alt="Schweppes — still 2" width="1920" height="1080" loading="lazy" decoding="async"></figure><figure><img src="/assets/schweppes-still-03.webp" alt="Schweppes — still 3" width="1920" height="1080" loading="lazy" decoding="async"></figure><figure><img src="/assets/schweppes-still-04.webp" alt="Schweppes — still 4" width="1920" height="1080" loading="lazy" decoding="async"></figure><figure><img src="/assets/schweppes-still-05.webp" alt="Schweppes — still 5" width="1920" height="1080" loading="lazy" decoding="async"></figure><figure><img src="/assets/schweppes-still-06.webp" alt="Schweppes — still 6" width="1920" height="1080" loading="lazy" decoding="async"></figure></section><a class="next-project" href="/work/lexus/"><span>Next project</span><strong>Lexus</strong></a></article></main>
 
-    <div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="Menu" data-open="false" inert>
-      <div class="menu-layer" aria-hidden="true"></div>
-      <div class="menu-panel">
-        <nav aria-label="Main navigation">
+    <!-- Menu (js/menu.js): a small black button at the bottom right that opens into a panel of links,
+         like auge-xp.com. The yellow pill follows the hovered link. -->
+    <div class="menu" id="menu" data-open="false">
+      <div class="menu-panel" id="menu-panel">
+        <nav class="menu-nav" aria-label="Main navigation" inert>
+          <span class="menu-pill" aria-hidden="true"></span>
           <ol class="menu-items">
             <li><a href="/#work" style="--i: 0"><span>Work</span></a></li>
             <li><a href="/about/" style="--i: 1"><span>About</span></a></li>
@@ -159,15 +156,18 @@ Property of WPP Production / WPP Holding. Featured here to showcase my contribut
             <li><a href="mailto:hello.nicolombardi@gmail.com?subject=Project%20enquiry" style="--i: 4"><span>Contact</span></a></li>
           </ol>
         </nav>
-        <p class="menu-small">
+        <p class="menu-small" inert>
           Madrid, Spain ·
           <a href="https://www.instagram.com/nickprods/" target="_blank" rel="noopener noreferrer">Instagram</a> ·
           <a href="https://www.linkedin.com/in/nicolo-lombardi/" target="_blank" rel="noopener noreferrer">LinkedIn</a> ·
           <a href="/privacy/">Privacy</a>
         </p>
       </div>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu-panel" aria-label="Open menu">
+        <span aria-hidden="true"></span><span aria-hidden="true"></span>
+      </button>
     </div>
     <div id="announcer" class="sr-only" aria-live="polite"></div>
-    <script type="module" src="/dist/app-KLLXYZ4F.js"></script>
+    <script type="module" src="/dist/app-VIWUMNKX.js"></script>
   </body>
 </html>

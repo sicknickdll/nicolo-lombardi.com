@@ -32,9 +32,31 @@ export function homeMarkup() {
   return `<section class="home" aria-label="Portfolio introduction"><img class="poster" src="${heroPoster}" alt=""><video id="entrance-video" poster="${heroPoster}" autoplay loop muted playsinline preload="auto" aria-hidden="true">${videoSources(hero)}</video><a class="home-entry" href="#work" aria-label="See the work of Nicoló Lombardi"><h1 class="animated-name" aria-label="Nicoló Lombardi">${letters}</h1><p class="home-tagline">AI Production Specialist</p><span class="down" aria-hidden="true"></span></a></section>${listMarkup(work, "Selected work")}`;
 }
 
-// Full-screen scrolling covers. `heading` adds a screen-reader/search heading.
+// The loop (or slideshow) a project shows on the landing page: its own `heroVideo`, else the first film.
+export function heroOf(p) {
+  if (p.heroSlides?.length) return { slides: p.heroSlides };
+  if (p.heroVideo) return { video: p.heroVideo.src, poster: p.heroVideo.poster };
+  if (p.videos?.[0]) return { video: p.videos[0], poster: p.videoPosters?.[0] || p.cover };
+  return { poster: p.cover };
+}
+
+// Landing page: one white block per project with a small window; scrolling grows the window until the
+// loop fills the screen (js/reveal.js). Hovering darkens it, shows "Client / Project" and a VIEW label.
 export function listMarkup(list, label, heading) {
-  return `${heading ? `<h1 class="sr-only">${esc(heading)}</h1>` : ""}<div class="project-scroll" id="work" aria-label="${label}">${list.map((p, i) => `<section class="project-section" id="p-${p.id}" data-project="${p.id}" style="--cover:url(${p.cover})" aria-label="${esc(fullName(p))}"><a class="project-open" href="${projectURL(p)}" aria-label="Open ${esc(fullName(p))} project"></a><img src="${p.cover}" alt="${esc(`${fullName(p)} — ${p.type} by Nicoló Lombardi`)}" loading="${i === 0 ? "eager" : "lazy"}" decoding="async"></section>`).join("")}</div><a class="view-project" href="${projectURL(list[0])}" aria-label="View ${esc(list[0].brand)} project" hidden>view project</a>`;
+  const sections = list
+    .map((p, i) => {
+      const m = heroOf(p);
+      const media = m.slides
+        ? m.slides.map((s, k) => `<img class="reveal-slide${k === 0 ? " is-on" : ""}" src="${s}" alt="" loading="${i < 2 ? "eager" : "lazy"}" decoding="async">`).join("")
+        : m.video
+          ? `<video muted loop playsinline preload="none" poster="${m.poster}" aria-hidden="true">${videoSources(m.video)}</video>`
+          : `<img src="${m.poster}" alt="" loading="lazy" decoding="async">`;
+      const second = p.title === p.brand ? p.type : p.title;
+      const num = String(i + 1).padStart(2, "0");
+      return `<section class="reveal" id="p-${p.id}" data-project="${p.id}" aria-label="${esc(fullName(p))}"><div class="reveal-stage"><span class="reveal-client">${esc(p.brand)}</span><span class="reveal-num" aria-hidden="true">${num}</span><span class="reveal-type">${esc(p.type)}</span><a class="reveal-open" href="${projectURL(p)}" aria-label="Open ${esc(fullName(p))} project"></a><div class="reveal-media">${media}<span class="reveal-shade"></span><span class="reveal-title" aria-hidden="true"><b>${esc(p.brand)}</b><i>${esc(second)}</i></span></div></div></section>`;
+    })
+    .join("");
+  return `${heading ? `<h1 class="sr-only">${esc(heading)}</h1>` : ""}<div class="reveal-list" id="work" aria-label="${label}">${sections}</div><span class="view-cursor" aria-hidden="true">View</span>`;
 }
 
 // "Case" layout (projects with `stills`): film on top, text, a two-column grid of stills,

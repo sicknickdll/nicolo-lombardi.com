@@ -30,7 +30,7 @@
 // `workOrder` decides which projects the landing page lists, in order.
 // ─────────────────────────────────────────────────────────────────────────────
 const img = (src, w, h) => ({ src, w, h });
-export const projects = [
+const allProjects = [
   {
     id: "uncommonsense",
     brand: "UNCOMMONSENSE",
@@ -108,9 +108,13 @@ export const projects = [
       'For Toyota France\'s "Ma Toyota est Fantastique" campaign, I created a photorealistic de-aged portrait of the lead actor alongside the featured vehicle. The asset was printed and used directly on set, with a focus on identity consistency, visual authenticity, and accurate vehicle detailing to seamlessly integrate with the live-action production.\n\nProperty of WPP Production / WPP Holding. Featured here to showcase my contribution as part of the production and creative team.',
     cover: "/assets/toyota-header.webp",
     images: ["/assets/DTlMGv30IEOltcth8y1RmJJoVug.webp"],
-    videos: [],
-    youtube:
-      "https://www.youtube-nocookie.com/embed/Zykwz9wTaG4?v=Zykwz9wTaG4&iv_load_policy=3&rel=0&modestbranding=1&playsinline=1&autoplay=0&color=white",
+    // Loop used by the card on the landing page (cropped so the legal line at the bottom is out of frame)
+    heroVideo: { src: "/assets/toyota-hero.webm", poster: "/assets/toyota-hero-poster.webp", ratio: 16 / 9 },
+    videos: ["/assets/toyota-film.webm"],
+    youtube: null,
+    videoPosters: ["/assets/toyota-film-poster.webp"],
+    videoThumbnails: ["/assets/toyota-film-thumb.webp"],
+    videoRatios: [16 / 9],
   },
   {
     id: "lexus",
@@ -208,6 +212,8 @@ export const projects = [
       "Created the VFX for a Wichita Production music video using a hybrid workflow that combined live-action footage, image inpainting, and video-to-video techniques. Animated and integrated digital assets while maintaining visual consistency and supporting the director’s creative vision.",
     cover: "/assets/wichita-header.webp",
     images: ["/assets/ktb-still.webp", "/assets/ktb-head.webp", "/assets/ktb-head2.webp"],
+    // Landing-card loop (a short existing clip for now)
+    heroVideo: { src: "/assets/ktb-vfx-01.webm", poster: "/assets/ktb-vfx-01-poster.webp", ratio: 16 / 9 },
     videos: [
       "/assets/ktb-film.webm",
       "/assets/ktb-vfx-01.webm",
@@ -243,6 +249,7 @@ export const projects = [
   },
   {
     id: "anaya",
+    hidden: true, // page switched off (remove this line to bring it back)
     year: "2026",
     externalVideo: "https://vimeo.com/1199356201?share=copy&fl=sv&fe=ci",
     brand: "Anaya",
@@ -314,6 +321,14 @@ export const projects = [
       "A series of AI-crafted beauty visuals for Soap & Glory, blending playful, fragrance-inspired worlds with precise product reproduction. Working alongside expert photoretouchers, I developed campaign-ready imagery that preserves packaging accuracy, material realism, and texture detail while pushing the creative possibilities beyond traditional product photography.\n\nProperty of WPP Production / WPP Holding. Featured here to showcase my contribution as part of the production and creative team.",
     cover: "/assets/soapandglory-header.webp",
     gallery: "ticker",
+    // No video: the landing card cycles through these as a slideshow
+    heroSlides: [
+      "/assets/soapandglory-header.webp",
+      "/assets/soapandglory-01.webp",
+      "/assets/soapandglory-02.webp",
+      "/assets/soapandglory-03.webp",
+      "/assets/soapandglory-04.webp",
+    ],
     images: [
       "/assets/fQqLobjVjQLcjn0oYAmyuUyPAs.webp",
       "/assets/SKCYB8BMwkneaPvdQDQqhbuyVKE.webp",
@@ -339,11 +354,16 @@ export const projects = [
       'Edit and VFX for "666" by Pratzo ft. Sato, a music video produced by Wichita Production.\n\nEdited the music video and in charge of the VFX, shaping the visuals and final look of the film in close collaboration with the Wichita team.',
     cover: "/assets/wichita-666-header.webp",
     images: [],
-    videos: [],
-    youtube:
-      "https://www.youtube-nocookie.com/embed/Bg-ywjQUpUk?iv_load_policy=3&rel=0&modestbranding=1&playsinline=1&color=white",
+    heroVideo: { src: "/assets/wichita-666-hero.webm", poster: "/assets/wichita-666-hero-poster.webp", ratio: 4 / 3 },
+    videos: ["/assets/wichita-666-film.webm"],
+    youtube: null,
+    videoPosters: ["/assets/wichita-666-film-poster.webp"],
+    videoThumbnails: ["/assets/wichita-666-film-thumb.webp"],
+    videoRatios: [4 / 3],
   },
 ];
+// Projects marked `hidden: true` have no page and are left out everywhere.
+export const projects = allProjects.filter((p) => !p.hidden);
 
 // Sections shown in the top navigation, as lists of project ids.
 // The landing page shows the hero video followed by the film list.
@@ -354,7 +374,6 @@ export const workOrder = [
   "lexus",
   "toyota",
   "uncommonsense",
-  "anaya",
   "malik-cross",
   "wichita",
   "wichita-666",

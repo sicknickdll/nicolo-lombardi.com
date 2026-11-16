@@ -1,7 +1,6 @@
 // Smooth scrolling ("inertia scrolling" / "momentum scroll", the effect libraries like Lenis
 // popularised). The mouse wheel and trackpad no longer jump the page: each notch moves a
 // target and the page glides toward it, easing out the same way every time.
-// The landing page does not use it: each scroll there moves to one project cover.
 // Touch screens, the keyboard and reduced-motion keep the browser's own scrolling.
 const EASE = 14; // higher = arrives sooner (the reference page uses 9; this is a bit snappier)
 
@@ -63,8 +62,7 @@ export function smoothScroll() {
   const onWheel = (e) => {
     if (e.defaultPrevented || e.ctrlKey || !e.cancelable) return;
     if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-    // The landing page keeps the browser's one-cover-per-scroll snapping.
-    if (root.classList.contains("snap-pages") || locked() || maxY() <= 0) return;
+    if (locked() || maxY() <= 0) return;
     const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1);
     if (e.target instanceof Element && ownScroller(e.target, dy)) return;
     e.preventDefault();

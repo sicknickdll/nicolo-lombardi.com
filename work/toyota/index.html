@@ -40,8 +40,7 @@
             "about": {
               "@type": "Brand",
               "name": "Toyota"
-            },
-            "sameAs": "https://www.youtube-nocookie.com/embed/Zykwz9wTaG4?v=Zykwz9wTaG4&iv_load_policy=3&rel=0&modestbranding=1&playsinline=1&autoplay=0&color=white"
+            }
           },
           {
             "@type": "BreadcrumbList",
@@ -96,7 +95,7 @@
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico?v=anime-eye" />
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/anime-eye-touch-180.png" />
-    <link rel="stylesheet" href="/dist/style-7DFA1EEE.css" />
+    <link rel="stylesheet" href="/dist/style-338E3FCA.css" />
     <script>
       // Landing intro (js/intro.js): on entering the site or reloading the landing page,
       // not when coming back to it from another page of the site.
@@ -129,22 +128,19 @@
     <a class="skip" href="#main">Skip to content</a>
     <header class="header">
       <a class="brand" href="/">Nicoló Lombardi</a>
-      <!-- Opens the full-screen menu below (js/menu.js) -->
-      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
-        <span class="menu-toggle-text" aria-hidden="true"><span class="menu-toggle-roll"><span>Menu</span></span></span>
-        <span class="menu-toggle-icon" aria-hidden="true"><span></span><span></span></span>
-      </button>
     </header>
 
     <!-- Pre-built by tools/build.mjs; js/app.js re-renders it with interactions -->
-    <main id="main"><article class="detail"><a class="back" href="/#p-toyota">back</a><section class="single-film"><iframe src="https://www.youtube-nocookie.com/embed/Zykwz9wTaG4?v=Zykwz9wTaG4&amp;iv_load_policy=3&amp;rel=0&amp;modestbranding=1&amp;playsinline=1&amp;autoplay=0&amp;color=white" title="Toyota — Ma Toyota est Fantastique" allow="fullscreen; picture-in-picture; encrypted-media" allowfullscreen loading="lazy"></iframe></section><section class="single-film single-image"><img src="/assets/DTlMGv30IEOltcth8y1RmJJoVug.webp" alt="Toyota — Ma Toyota est Fantastique (Digital Asset)" loading="lazy" decoding="async"></section><header class="detail-heading"><h1>Toyota<br>Ma Toyota est Fantastique</h1><p>Digital Asset</p></header><div class="detail-text"><div><h2>About the project</h2><dl class="facts"><div><dt>Year</dt><dd>2025</dd></div><div><dt>Client</dt><dd>Toyota</dd></div><div><dt>Discipline</dt><dd>Digital Asset</dd></div></dl></div><p>For Toyota France&#39;s &quot;Ma Toyota est Fantastique&quot; campaign, I created a photorealistic de-aged portrait of the lead actor alongside the featured vehicle. The asset was printed and used directly on set, with a focus on identity consistency, visual authenticity, and accurate vehicle detailing to seamlessly integrate with the live-action production.
+    <main id="main"><article class="detail"><a class="back" href="/#p-toyota">back</a><section class="single-film" aria-label="Toyota film"><div class="player" data-brand="Toyota" data-title="Ma Toyota est Fantastique" data-type="Digital Asset"><video controls playsinline preload="metadata" poster="/assets/toyota-film-poster.webp" aria-label="Toyota — Ma Toyota est Fantastique"><source src="/assets/toyota-film.webm" type="video/webm"><source src="/assets/toyota-film.mp4" type="video/mp4"></video></div></section><section class="single-film single-image"><img src="/assets/DTlMGv30IEOltcth8y1RmJJoVug.webp" alt="Toyota — Ma Toyota est Fantastique (Digital Asset)" loading="lazy" decoding="async"></section><header class="detail-heading"><h1>Toyota<br>Ma Toyota est Fantastique</h1><p>Digital Asset</p></header><div class="detail-text"><div><h2>About the project</h2><dl class="facts"><div><dt>Year</dt><dd>2025</dd></div><div><dt>Client</dt><dd>Toyota</dd></div><div><dt>Discipline</dt><dd>Digital Asset</dd></div></dl></div><p>For Toyota France&#39;s &quot;Ma Toyota est Fantastique&quot; campaign, I created a photorealistic de-aged portrait of the lead actor alongside the featured vehicle. The asset was printed and used directly on set, with a focus on identity consistency, visual authenticity, and accurate vehicle detailing to seamlessly integrate with the live-action production.
 
 Property of WPP Production / WPP Holding. Featured here to showcase my contribution as part of the production and creative team.</p></div><a class="next-project" href="/work/uncommonsense/"><span>Next project</span><strong>UNCOMMONSENSE</strong></a></article></main>
 
-    <div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="Menu" data-open="false" inert>
-      <div class="menu-layer" aria-hidden="true"></div>
-      <div class="menu-panel">
-        <nav aria-label="Main navigation">
+    <!-- Menu (js/menu.js): a small black button at the bottom right that opens into a panel of links,
+         like auge-xp.com. The yellow pill follows the hovered link. -->
+    <div class="menu" id="menu" data-open="false">
+      <div class="menu-panel" id="menu-panel">
+        <nav class="menu-nav" aria-label="Main navigation" inert>
+          <span class="menu-pill" aria-hidden="true"></span>
           <ol class="menu-items">
             <li><a href="/#work" style="--i: 0"><span>Work</span></a></li>
             <li><a href="/about/" style="--i: 1"><span>About</span></a></li>
@@ -153,15 +149,18 @@ Property of WPP Production / WPP Holding. Featured here to showcase my contribut
             <li><a href="mailto:hello.nicolombardi@gmail.com?subject=Project%20enquiry" style="--i: 4"><span>Contact</span></a></li>
           </ol>
         </nav>
-        <p class="menu-small">
+        <p class="menu-small" inert>
           Madrid, Spain ·
           <a href="https://www.instagram.com/nickprods/" target="_blank" rel="noopener noreferrer">Instagram</a> ·
           <a href="https://www.linkedin.com/in/nicolo-lombardi/" target="_blank" rel="noopener noreferrer">LinkedIn</a> ·
           <a href="/privacy/">Privacy</a>
         </p>
       </div>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu-panel" aria-label="Open menu">
+        <span aria-hidden="true"></span><span aria-hidden="true"></span>
+      </button>
     </div>
     <div id="announcer" class="sr-only" aria-live="polite"></div>
-    <script type="module" src="/dist/app-KLLXYZ4F.js"></script>
+    <script type="module" src="/dist/app-VIWUMNKX.js"></script>
   </body>
 </html>

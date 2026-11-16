@@ -214,64 +214,7 @@ video {
     bottom: 35px;
   }
 }
-.project-scroll {
-  background: black;
-}
-.project-section {
-  height: 100dvh;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  background: #000;
-}
-.project-section img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-}
-.view-project {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 20;
-  display: inline-block;
-  font-size: 18px;
-  line-height: 1.25;
-  padding: 14px 18px;
-  text-align: center;
-  white-space: nowrap;
-  text-shadow: 0 1px 16px rgba(0, 0, 0, 0.7);
-}
-/* Landing page: one wheel notch = one project cover (the browser snaps; js/smooth.js stays out). */
-.snap-pages {
-  scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
-  scrollbar-width: none;
-}
-.snap-pages::-webkit-scrollbar {
-  display: none;
-}
 .home,
-.project-section {
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-}
-.project-open {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  cursor: var(--cursor-pointer);
-}
-.project-open:hover {
-  opacity: 1;
-}
-.project-open:focus-visible {
-  outline-offset: -8px;
-}
 .detail {
   position: relative;
   min-height: 100dvh;
@@ -605,29 +548,6 @@ video {
   }
   .home h1 {
     font-size: clamp(27px, 7.7vw, 38px);
-  }
-  .view-project {
-    font-size: 16px;
-  }
-  .project-section {
-    height: 100dvh;
-  }
-}
-/* Portrait phones: covers have the client logo baked in at the centre, so show
-   the whole frame instead of cropping it, over a blurred copy of itself. */
-@media (max-width: 820px) and (orientation: portrait) {
-  .project-section::before {
-    content: "";
-    position: absolute;
-    inset: -30px;
-    background: var(--cover) center / cover no-repeat;
-    filter: blur(24px) brightness(0.55);
-  }
-  .project-section img {
-    position: relative;
-    height: auto;
-    max-height: 100%;
-    object-fit: contain;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1202,221 +1122,389 @@ html.intro .home-tagline {
   z-index: 2;
 }
 
-/* ── Menu (js/menu.js) ──────────────────────────────────────────────────────
-   "Menu +" in the header: the label rolls to "Close" and the plus turns into a cross
-   (after React Bits' Staggered Menu). The panel drops from the top, a grey layer first,
-   then the white one, and the big links rise one by one from behind a mask, stacked
-   vertically (layout after dizmar.xyz). Closing plays it backwards. */
-.header .brand,
-.menu-toggle {
-  transition:
-    color 0.3s 0.15s,
-    text-shadow 0.3s 0.15s,
-    opacity 0.25s;
-}
-html.menu-open .header {
-  color: #000;
-  text-shadow: none;
-}
-html.menu-open {
-  overflow: hidden;
-}
-.menu-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 14px;
-  line-height: 1.25;
-  letter-spacing: -0.02em;
-}
-.menu-toggle:hover {
-  opacity: 1;
-}
-.menu-toggle-text {
-  display: inline-block;
-  height: 1.25em;
-  overflow: hidden;
-  min-width: 2.6em;
-  text-align: right;
-}
-.menu-toggle-roll {
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.78s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-.menu-toggle-roll > span {
-  display: block;
-  height: 1.25em;
-}
-.menu-toggle-icon {
-  position: relative;
-  width: 12px;
-  height: 12px;
-  flex: 0 0 12px;
-  transition: transform 0.35s cubic-bezier(0.645, 0.045, 0.355, 1);
-}
-html:not(.menu-open) .menu-toggle:hover .menu-toggle-icon {
-  transform: rotate(90deg);
-}
-html.menu-open .menu-toggle-icon {
-  transform: rotate(225deg);
-  transition-duration: 0.8s;
-  transition-timing-function: cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-.menu-toggle-icon > span {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 100%;
-  height: 2px;
-  margin-top: -1px;
-  background: currentColor;
-  box-shadow: 0 1px 10px rgb(0 0 0 / 0.35);
-}
-html.menu-open .menu-toggle-icon > span {
-  box-shadow: none;
-}
-.menu-toggle-icon > span + span {
-  transform: rotate(90deg);
-}
-
-.menu {
-  position: fixed;
-  inset: 0;
-  z-index: 75;
-  visibility: hidden;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  transition: visibility 0s linear 0.8s;
-}
-.menu[data-open="true"] {
-  visibility: visible;
-  transition: none;
-}
-.menu-layer,
-.menu-panel {
-  position: absolute;
-  inset: 0;
-  clip-path: inset(0 0 100% 0);
-}
-.menu-layer {
-  background: #e6e6e6;
-  transition: clip-path 0.5s cubic-bezier(0.645, 0.045, 0.355, 1) 0.3s;
-}
-.menu-panel {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 32px;
-  padding: 90px 20px max(22px, env(safe-area-inset-bottom));
+/* ── Reveal (js/reveal.js) ──────────────────────────────────────────────────
+   Landing page, one block per project after the intro, like ilcapoproduction.com but white: a
+   pinned white screen with a small window; scrolling grows the window until the loop fills it.
+   --e (0 → 1) is set by js/reveal.js. Hover: the loop darkens, "Client / Project" appears and a
+   View label follows the cursor. */
+.reveal-list {
   background: #fff;
   color: #000;
-  overflow-y: auto;
-  transition: clip-path 0.5s cubic-bezier(0.645, 0.045, 0.355, 1) 0.22s;
 }
-.menu[data-open="true"] .menu-layer {
-  clip-path: inset(0);
-  transition: clip-path 0.6s cubic-bezier(0.645, 0.045, 0.355, 1);
+.reveal {
+  --ix: 28vw;
+  --iy: 30dvh;
+  --e: 0;
+  position: relative;
+  height: 250dvh;
+}
+.reveal-stage {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  overflow: hidden;
+  background: #fff;
+}
+.reveal-media,
+.reveal-open {
+  position: absolute;
+  inset: calc(var(--iy) * (1 - var(--e))) calc(var(--ix) * (1 - var(--e)));
+}
+.reveal-media {
+  z-index: 1;
+  overflow: hidden;
+  background: #111;
+  border-radius: calc(3px * (1 - var(--e)));
+  pointer-events: none;
+}
+.reveal-media video,
+.reveal-media img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* The loop keeps full-screen size; only the window around it grows, so it is not rescaled. */
+  width: 100vw;
+  height: 100dvh;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+}
+.reveal-slide {
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+.reveal-slide.is-on {
+  opacity: 1;
+}
+.reveal-open {
+  z-index: 3;
+  cursor: var(--cursor-pointer);
+}
+.reveal-open:hover,
+.reveal-open:focus-visible {
+  opacity: 1;
+}
+.reveal-open:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 4px;
+}
+.reveal-shade {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 0.5);
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+.reveal-title {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25em;
+  padding: 0 4vw;
+  text-align: center;
+  color: #fff;
+  /* The type grows with the window: small while it is a card, large when it fills the screen. */
+  font-size: calc(2.6vw + 4.4vw * var(--e));
+  line-height: 1;
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.35s,
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-title b {
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+}
+.reveal-title i {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 0.34em;
+  letter-spacing: -0.01em;
+}
+.reveal-open:hover + .reveal-media .reveal-shade,
+.reveal-open:focus-visible + .reveal-media .reveal-shade,
+.reveal-open:hover + .reveal-media .reveal-title,
+.reveal-open:focus-visible + .reveal-media .reveal-title {
+  opacity: 1;
+  transform: none;
+}
+/* Small text around the window, on the white screen; it fades out as the window grows. */
+.reveal-client,
+.reveal-num,
+.reveal-type {
+  position: absolute;
+  z-index: 2;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  opacity: calc(1 - var(--e) * 4);
+  pointer-events: none;
+}
+.reveal-client {
+  left: 0;
+  right: 0;
+  text-align: center;
+  top: calc(var(--iy) - 34px);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.reveal-num {
+  left: 20px;
+  bottom: 20px;
+}
+.reveal-type {
+  bottom: 20px;
+  right: 100px; /* leaves room for the menu button */
+}
+/* The cursor label. */
+.view-cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 70;
+  padding: 7px 16px;
+  border-radius: 3px;
+  background: #fdf48b;
+  color: #000;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  pointer-events: none;
+  opacity: 0;
+  scale: 0.6;
+  transition:
+    opacity 0.2s,
+    scale 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.view-cursor.is-on {
+  opacity: 1;
+  scale: 1;
+}
+/* The header sits over white and over video: it inverts itself (white on dark, black on white). */
+html:has(.reveal-list) .header {
+  mix-blend-mode: difference;
+  text-shadow: none;
+}
+@media (max-width: 820px) {
+  .reveal {
+    --ix: 12vw;
+    --iy: 33dvh;
+  }
+  .reveal-title {
+    font-size: calc(7vw + 5vw * var(--e));
+  }
+  .reveal-type {
+    display: none;
+  }
+}
+/* Touch screens have no hover: show the title once the window fills the screen. */
+@media (hover: none) {
+  .reveal.is-full .reveal-shade {
+    opacity: 1;
+  }
+  .reveal.is-full .reveal-title {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    height: 100dvh;
+  }
+}
+
+/* ── Menu (js/menu.js) ──────────────────────────────────────────────────────
+   After auge-xp.com: a small black button (two yellow lines) fixed at the bottom right. Opening
+   it grows a black panel out of the button (clip-path), the links slide in from the right one
+   after another, and a yellow pill follows the hovered link (its text turns black). */
+.menu {
+  --accent: #fdf48b;
+  position: fixed;
+  z-index: 85;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #fff;
+}
+html.arch-open .menu {
+  visibility: hidden;
+}
+/* The panel always has its full size; clip-path shrinks it to the size of the button. */
+.menu-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 14px;
+  padding: 20px 20px 30px;
+  background: #000;
+  border-radius: 3px;
+  clip-path: inset(calc(100% - 40px) 0 0 calc(100% - 60px) round 3px);
+  transition: clip-path 0.55s cubic-bezier(0.645, 0.045, 0.355, 1) 0.12s;
 }
 .menu[data-open="true"] .menu-panel {
-  clip-path: inset(0);
-  transition: clip-path 0.6s cubic-bezier(0.645, 0.045, 0.355, 1) 0.08s;
+  clip-path: inset(0 round 3px);
+  transition-delay: 0s;
+}
+.menu-toggle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 60px;
+  height: 40px;
+  border-radius: 3px;
+  background: #000;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition:
+    background 0.3s 0.15s,
+    box-shadow 0.3s 0.15s;
+}
+.menu-toggle > span {
+  display: block;
+  width: 30px;
+  height: 2px;
+  background: var(--accent);
+  transition:
+    width 0.4s cubic-bezier(0.645, 0.045, 0.355, 1),
+    height 0.4s cubic-bezier(0.645, 0.045, 0.355, 1),
+    margin 0.4s cubic-bezier(0.645, 0.045, 0.355, 1),
+    border-radius 0.4s;
+}
+.menu-toggle:hover > span:first-child {
+  width: 22px;
+}
+.menu-toggle:hover > span:last-child {
+  width: 30px;
+}
+/* Open: the two lines collapse into a small yellow dot in the corner; click it (or outside, or Esc) to close. */
+.menu[data-open="true"] .menu-toggle {
+  background: transparent;
+  box-shadow: none;
+}
+.menu[data-open="true"] .menu-toggle > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.menu[data-open="true"] .menu-toggle > span:first-child {
+  margin-bottom: -14px;
+}
+.menu[data-open="true"] .menu-toggle > span:last-child {
+  display: none;
+}
+.menu-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 .menu ::selection {
-  background: #000;
-  color: #fff;
+  background: var(--accent);
+  color: #000;
+}
+.menu-nav {
+  position: relative;
+}
+.menu-pill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-radius: 3px;
+  background: var(--accent);
+  pointer-events: none;
+  clip-path: inset(0 100% 0 0);
+  transition:
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    clip-path 0.4s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+.menu-pill.is-on {
+  clip-path: inset(0);
 }
 .menu-items {
   list-style: none;
   margin: 0;
   padding: 0;
-  counter-reset: menu-item;
-  font-size: min(14vh, 12.5vw);
-  font-weight: 700;
-  line-height: 0.9;
-  letter-spacing: -0.055em;
-}
-.menu-items li {
-  counter-increment: menu-item;
-  overflow: hidden;
-  padding: 0.04em 0 0.08em;
-  margin-bottom: -0.06em;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 38px;
+  line-height: 1;
+  letter-spacing: -0.03em;
 }
 .menu-items a {
-  display: inline-flex;
-  align-items: flex-start;
-  gap: 0.12em;
-  transition: opacity 0.3s;
-}
-.menu-items a:hover {
-  opacity: 1;
-}
-.menu-items a > span {
+  position: relative;
   display: block;
-  transform-origin: 0 100%;
-  transform: translateY(118%) rotate(8deg);
-  transition: transform 0.35s cubic-bezier(0.645, 0.045, 0.355, 1) calc((4 - var(--i)) * 35ms);
-}
-.menu[data-open="true"] .menu-items a > span {
-  transform: none;
-  transition: transform 1s cubic-bezier(0.165, 0.84, 0.44, 1) calc(0.32s + var(--i) * 0.08s);
-}
-/* Small number next to each link: 01, 02… */
-.menu-items a::after {
-  content: counter(menu-item, decimal-leading-zero);
-  font-size: max(12px, 0.14em);
-  font-weight: 400;
-  letter-spacing: 0;
-  line-height: 1;
-  margin-top: 0.35em;
+  padding: 8px 24px;
+  white-space: nowrap;
   opacity: 0;
-  transition: opacity 0.2s;
+  transform: translateX(40px);
+  transition:
+    opacity 0.25s,
+    transform 0.3s cubic-bezier(0.645, 0.045, 0.355, 1) calc((4 - var(--i)) * 30ms),
+    color 0.2s;
 }
-.menu[data-open="true"] .menu-items a::after {
-  opacity: 0.55;
-  transition: opacity 0.6s ease calc(0.5s + var(--i) * 0.08s);
+.menu[data-open="true"] .menu-items a {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.4s ease calc(0.2s + var(--i) * 0.06s),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) calc(0.2s + var(--i) * 0.06s),
+    color 0.2s;
+}
+.menu-items a.is-active {
+  color: #000;
 }
 .menu-items a[aria-current="page"] > span {
   text-decoration: underline;
   text-decoration-thickness: 0.05em;
-  text-underline-offset: 0.08em;
+  text-underline-offset: 0.1em;
 }
 .menu-items a:focus-visible {
   outline: none;
 }
-.menu-items a:focus-visible > span {
-  text-decoration: underline;
-  text-decoration-thickness: 0.05em;
-  text-underline-offset: 0.08em;
-}
-@media (hover: hover) {
-  .menu-items:hover a:not(:hover) {
-    opacity: 0.25;
-  }
-}
 .menu-small {
-  font-size: 14px;
-  line-height: 1.4;
-  letter-spacing: -0.02em;
+  margin: 0;
+  padding-right: 24px;
+  max-width: 300px;
+  text-align: right;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  color: rgb(255 255 255 / 0.6);
   opacity: 0;
   transition: opacity 0.2s;
 }
 .menu[data-open="true"] .menu-small {
   opacity: 1;
-  transition: opacity 0.5s ease 0.7s;
+  transition: opacity 0.5s ease 0.5s;
 }
 .menu-small a {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+.menu-small a:hover {
+  color: var(--accent);
+}
 @media (max-width: 520px) {
-  .menu-toggle {
-    font-size: 12px;
-  }
   .menu-items {
-    font-size: min(13vh, 15vw);
+    font-size: 32px;
   }
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu *,
   .menu-panel {
-    padding: 80px 16px max(20px, env(safe-area-inset-bottom));
+    transition-duration: 0.01s !important;
+    transition-delay: 0s !important;
   }
 }
 
@@ -1536,9 +1624,6 @@ html.light body {
 html.light .header {
   color: #000;
   text-shadow: none;
-}
-html.light .menu-toggle-icon > span {
-  box-shadow: none;
 }
 html.light .client-logos img {
   filter: invert(1);
