@@ -1203,220 +1203,193 @@ html.intro .home-tagline {
 }
 
 /* ── Menu (js/menu.js) ──────────────────────────────────────────────────────
-   "Menu +" in the header: the label rolls to "Close" and the plus turns into a cross
-   (after React Bits' Staggered Menu). The panel drops from the top, a grey layer first,
-   then the white one, and the big links rise one by one from behind a mask, stacked
-   vertically (layout after dizmar.xyz). Closing plays it backwards. */
-.header .brand,
-.menu-toggle {
-  transition:
-    color 0.3s 0.15s,
-    text-shadow 0.3s 0.15s,
-    opacity 0.25s;
-}
-html.menu-open .header {
-  color: #000;
-  text-shadow: none;
-}
-html.menu-open {
-  overflow: hidden;
-}
-.menu-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 14px;
-  line-height: 1.25;
-  letter-spacing: -0.02em;
-}
-.menu-toggle:hover {
-  opacity: 1;
-}
-.menu-toggle-text {
-  display: inline-block;
-  height: 1.25em;
-  overflow: hidden;
-  min-width: 2.6em;
-  text-align: right;
-}
-.menu-toggle-roll {
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.78s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-.menu-toggle-roll > span {
-  display: block;
-  height: 1.25em;
-}
-.menu-toggle-icon {
-  position: relative;
-  width: 12px;
-  height: 12px;
-  flex: 0 0 12px;
-  transition: transform 0.35s cubic-bezier(0.645, 0.045, 0.355, 1);
-}
-html:not(.menu-open) .menu-toggle:hover .menu-toggle-icon {
-  transform: rotate(90deg);
-}
-html.menu-open .menu-toggle-icon {
-  transform: rotate(225deg);
-  transition-duration: 0.8s;
-  transition-timing-function: cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-.menu-toggle-icon > span {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 100%;
-  height: 2px;
-  margin-top: -1px;
-  background: currentColor;
-  box-shadow: 0 1px 10px rgb(0 0 0 / 0.35);
-}
-html.menu-open .menu-toggle-icon > span {
-  box-shadow: none;
-}
-.menu-toggle-icon > span + span {
-  transform: rotate(90deg);
-}
-
+   After auge-xp.com: a small black button (two yellow lines) fixed at the bottom right. Opening
+   it grows a black panel out of the button (clip-path), the links slide in from the right one
+   after another, and a yellow pill follows the hovered link (its text turns black). */
 .menu {
+  --accent: #fdf48b;
   position: fixed;
-  inset: 0;
-  z-index: 75;
-  visibility: hidden;
+  z-index: 85;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  transition: visibility 0s linear 0.8s;
+  color: #fff;
 }
-.menu[data-open="true"] {
-  visibility: visible;
-  transition: none;
+html.arch-open .menu {
+  visibility: hidden;
 }
-.menu-layer,
-.menu-panel {
-  position: absolute;
-  inset: 0;
-  clip-path: inset(0 0 100% 0);
-}
-.menu-layer {
-  background: #e6e6e6;
-  transition: clip-path 0.5s cubic-bezier(0.645, 0.045, 0.355, 1) 0.3s;
-}
+/* The panel always has its full size; clip-path shrinks it to the size of the button. */
 .menu-panel {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  gap: 32px;
-  padding: 90px 20px max(22px, env(safe-area-inset-bottom));
-  background: #fff;
-  color: #000;
-  overflow-y: auto;
-  transition: clip-path 0.5s cubic-bezier(0.645, 0.045, 0.355, 1) 0.22s;
-}
-.menu[data-open="true"] .menu-layer {
-  clip-path: inset(0);
-  transition: clip-path 0.6s cubic-bezier(0.645, 0.045, 0.355, 1);
+  align-items: flex-end;
+  gap: 14px;
+  padding: 20px 20px 30px;
+  background: #000;
+  border-radius: 3px;
+  clip-path: inset(calc(100% - 40px) 0 0 calc(100% - 60px) round 3px);
+  transition: clip-path 0.55s cubic-bezier(0.645, 0.045, 0.355, 1) 0.12s;
 }
 .menu[data-open="true"] .menu-panel {
-  clip-path: inset(0);
-  transition: clip-path 0.6s cubic-bezier(0.645, 0.045, 0.355, 1) 0.08s;
+  clip-path: inset(0 round 3px);
+  transition-delay: 0s;
+}
+.menu-toggle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 60px;
+  height: 40px;
+  border-radius: 3px;
+  background: #000;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition:
+    background 0.3s 0.15s,
+    box-shadow 0.3s 0.15s;
+}
+.menu-toggle > span {
+  display: block;
+  width: 30px;
+  height: 2px;
+  background: var(--accent);
+  transition:
+    width 0.4s cubic-bezier(0.645, 0.045, 0.355, 1),
+    height 0.4s cubic-bezier(0.645, 0.045, 0.355, 1),
+    margin 0.4s cubic-bezier(0.645, 0.045, 0.355, 1),
+    border-radius 0.4s;
+}
+.menu-toggle:hover > span:first-child {
+  width: 22px;
+}
+.menu-toggle:hover > span:last-child {
+  width: 30px;
+}
+/* Open: the two lines collapse into a small yellow dot in the corner; click it (or outside, or Esc) to close. */
+.menu[data-open="true"] .menu-toggle {
+  background: transparent;
+  box-shadow: none;
+}
+.menu[data-open="true"] .menu-toggle > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.menu[data-open="true"] .menu-toggle > span:first-child {
+  margin-bottom: -14px;
+}
+.menu[data-open="true"] .menu-toggle > span:last-child {
+  display: none;
+}
+.menu-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 .menu ::selection {
-  background: #000;
-  color: #fff;
+  background: var(--accent);
+  color: #000;
+}
+.menu-nav {
+  position: relative;
+}
+.menu-pill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-radius: 3px;
+  background: var(--accent);
+  pointer-events: none;
+  clip-path: inset(0 100% 0 0);
+  transition:
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    clip-path 0.4s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+.menu-pill.is-on {
+  clip-path: inset(0);
 }
 .menu-items {
   list-style: none;
   margin: 0;
   padding: 0;
-  counter-reset: menu-item;
-  font-size: min(14vh, 12.5vw);
-  font-weight: 700;
-  line-height: 0.9;
-  letter-spacing: -0.055em;
-}
-.menu-items li {
-  counter-increment: menu-item;
-  overflow: hidden;
-  padding: 0.04em 0 0.08em;
-  margin-bottom: -0.06em;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 38px;
+  line-height: 1;
+  letter-spacing: -0.03em;
 }
 .menu-items a {
-  display: inline-flex;
-  align-items: flex-start;
-  gap: 0.12em;
-  transition: opacity 0.3s;
-}
-.menu-items a:hover {
-  opacity: 1;
-}
-.menu-items a > span {
+  position: relative;
   display: block;
-  transform-origin: 0 100%;
-  transform: translateY(118%) rotate(8deg);
-  transition: transform 0.35s cubic-bezier(0.645, 0.045, 0.355, 1) calc((4 - var(--i)) * 35ms);
-}
-.menu[data-open="true"] .menu-items a > span {
-  transform: none;
-  transition: transform 1s cubic-bezier(0.165, 0.84, 0.44, 1) calc(0.32s + var(--i) * 0.08s);
-}
-/* Small number next to each link: 01, 02… */
-.menu-items a::after {
-  content: counter(menu-item, decimal-leading-zero);
-  font-size: max(12px, 0.14em);
-  font-weight: 400;
-  letter-spacing: 0;
-  line-height: 1;
-  margin-top: 0.35em;
+  padding: 8px 24px;
+  white-space: nowrap;
   opacity: 0;
-  transition: opacity 0.2s;
+  transform: translateX(40px);
+  transition:
+    opacity 0.25s,
+    transform 0.3s cubic-bezier(0.645, 0.045, 0.355, 1) calc((4 - var(--i)) * 30ms),
+    color 0.2s;
 }
-.menu[data-open="true"] .menu-items a::after {
-  opacity: 0.55;
-  transition: opacity 0.6s ease calc(0.5s + var(--i) * 0.08s);
+.menu[data-open="true"] .menu-items a {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.4s ease calc(0.2s + var(--i) * 0.06s),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) calc(0.2s + var(--i) * 0.06s),
+    color 0.2s;
+}
+.menu-items a.is-active {
+  color: #000;
 }
 .menu-items a[aria-current="page"] > span {
   text-decoration: underline;
   text-decoration-thickness: 0.05em;
-  text-underline-offset: 0.08em;
+  text-underline-offset: 0.1em;
 }
 .menu-items a:focus-visible {
   outline: none;
 }
-.menu-items a:focus-visible > span {
-  text-decoration: underline;
-  text-decoration-thickness: 0.05em;
-  text-underline-offset: 0.08em;
-}
-@media (hover: hover) {
-  .menu-items:hover a:not(:hover) {
-    opacity: 0.25;
-  }
-}
 .menu-small {
-  font-size: 14px;
-  line-height: 1.4;
-  letter-spacing: -0.02em;
+  margin: 0;
+  padding-right: 24px;
+  max-width: 300px;
+  text-align: right;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  color: rgb(255 255 255 / 0.6);
   opacity: 0;
   transition: opacity 0.2s;
 }
 .menu[data-open="true"] .menu-small {
   opacity: 1;
-  transition: opacity 0.5s ease 0.7s;
+  transition: opacity 0.5s ease 0.5s;
 }
 .menu-small a {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+.menu-small a:hover {
+  color: var(--accent);
+}
 @media (max-width: 520px) {
-  .menu-toggle {
-    font-size: 12px;
-  }
   .menu-items {
-    font-size: min(13vh, 15vw);
+    font-size: 32px;
   }
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu *,
   .menu-panel {
-    padding: 80px 16px max(20px, env(safe-area-inset-bottom));
+    transition-duration: 0.01s !important;
+    transition-delay: 0s !important;
   }
 }
 
@@ -1536,9 +1509,6 @@ html.light body {
 html.light .header {
   color: #000;
   text-shadow: none;
-}
-html.light .menu-toggle-icon > span {
-  box-shadow: none;
 }
 html.light .client-logos img {
   filter: invert(1);
