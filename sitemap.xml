@@ -10,7 +10,6 @@
     <image:image><image:loc>https://nicolo-lombardi.com/assets/lexus-header.webp</image:loc></image:image>
     <image:image><image:loc>https://nicolo-lombardi.com/assets/toyota-header.webp</image:loc></image:image>
     <image:image><image:loc>https://nicolo-lombardi.com/assets/uncommonsense-header.webp</image:loc></image:image>
-    <image:image><image:loc>https://nicolo-lombardi.com/assets/anaya-header.webp</image:loc></image:image>
     <image:image><image:loc>https://nicolo-lombardi.com/assets/bionic-awards-banner.webp</image:loc></image:image>
     <image:image><image:loc>https://nicolo-lombardi.com/assets/wichita-header.webp</image:loc></image:image>
     <image:image><image:loc>https://nicolo-lombardi.com/assets/wichita-666-header.webp</image:loc></image:image>
@@ -121,11 +120,6 @@
     <image:image><image:loc>https://nicolo-lombardi.com/assets/ktb-still.webp</image:loc></image:image>
     <image:image><image:loc>https://nicolo-lombardi.com/assets/ktb-head.webp</image:loc></image:image>
     <image:image><image:loc>https://nicolo-lombardi.com/assets/ktb-head2.webp</image:loc></image:image>
-  </url>
-  <url>
-    <loc>https://nicolo-lombardi.com/work/anaya/</loc>
-    <lastmod>2026-11-16</lastmod>
-    <image:image><image:loc>https://nicolo-lombardi.com/assets/anaya-header.webp</image:loc></image:image>
   </url>
   <url>
     <loc>https://nicolo-lombardi.com/work/wppproduction/</loc>
