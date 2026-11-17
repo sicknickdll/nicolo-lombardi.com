@@ -3665,3 +3665,74 @@ html.tarot-page .header {
   opacity: 0;
   transition: opacity 0.6s;
 }
+
+/* Loading: only her eyes, centred in the dark. When it's ready they close and the session begins. */
+.tr-loading {
+  transition:
+    opacity 0.6s,
+    visibility 0.6s;
+}
+.tr-loading p:empty {
+  display: none;
+}
+.tr-leyes {
+  display: flex;
+  gap: 26px;
+  filter: drop-shadow(0 0 10px rgba(255, 150, 60, 0.55)) drop-shadow(0 0 30px rgba(200, 60, 20, 0.35));
+  animation: tr-leyes-in 1.6s ease-out both;
+}
+.tr-leyes i {
+  position: relative;
+  width: 46px;
+  height: 15px;
+  border-radius: 50% / 100% 100% 70% 70%;
+  background: radial-gradient(ellipse at 50% 50%, #fff3cf 0%, #f2b25c 45%, #b8501c 80%, #5a1408 100%);
+  transform-origin: 50% 50%;
+  animation: tr-leyes-blink 5.2s 1.8s infinite;
+}
+.tr-leyes i:first-child {
+  transform: rotate(-5deg);
+}
+.tr-leyes i:last-child {
+  transform: rotate(5deg);
+}
+.tr-leyes i::after {
+  /* slit pupil */
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 8%;
+  width: 4px;
+  height: 84%;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: #120403;
+}
+@keyframes tr-leyes-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes tr-leyes-blink {
+  0%,
+  94%,
+  100% {
+    scale: 1 1;
+  }
+  97% {
+    scale: 1 0.06;
+  }
+}
+.tr-loading.closing .tr-leyes i {
+  animation: none;
+  scale: 1 0.04;
+  opacity: 0;
+  transition:
+    scale 0.35s ease-in,
+    opacity 0.4s 0.3s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tr-leyes i {
+    animation: none;
+  }
+}
