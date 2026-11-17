@@ -1,5 +1,5 @@
 // /archive/: a desktop. Markup in js/views.js (archiveMarkup).
-//   · Wallpaper: "ARCHIVE" drawn in dots (js/particle-text.js). Every 5 s it glitches: the letters
+//   · Wallpaper: "ARCHIVE" drawn in dots (js/particle-text.js). Every 15 s it glitches: the letters
 //     scramble through random characters and settle on another phrase (PHRASES below).
 //   · Icons in the top-left corner: readme.txt, one folder per collection, contact.mail.
 //     A collection's folder opens on hover and its pieces float out; a click goes to its page.
@@ -13,6 +13,7 @@
 import { navigateTo } from "./menu.js";
 import { esc } from "./views.js";
 import { mountParticleText } from "./particle-text.js";
+import { play as playSound } from "./sound.js";
 
 const KEY = "nl-desk";
 const PHRASES = [
@@ -27,7 +28,7 @@ const PHRASES = [
   "HELLO WORLD!",
   'print("Hello, World!")',
 ];
-const GLITCH_EVERY = 5000; // ms between glitches
+const GLITCH_EVERY = 15000; // ms between glitches
 const GLITCH_FOR = 650; // ms the scramble lasts
 const GLITCH_STEP = 55; // ms between scrambled frames
 const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&*+=/\\<>?!$@";
@@ -39,12 +40,12 @@ export function bindDesktop(main) {
   if (!desk) return () => {};
   const root = document.documentElement;
   root.classList.add("desk-page");
+  playSound("archive-loading", 0.55); // heard when arriving from another page (after a click)
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const layer = desk.querySelector(".desk-windows"),
     tabs = desk.querySelector(".desk-tabs"),
     iconList = desk.querySelector(".desk-icons"),
-    task = desk.querySelector(".desk-task"),
-    startBtn = desk.querySelector(".desk-start");
+    task = desk.querySelector(".desk-task");
   const offs = [];
   const on = (el, type, fn, opt) => (el.addEventListener(type, fn, opt), offs.push(() => el.removeEventListener(type, fn, opt)));
 
@@ -218,7 +219,9 @@ export function bindDesktop(main) {
   });
 
   // ── icons ──
-  const icons = [...iconList.querySelectorAll(".desk-icon")];
+  const icons = [...desk.querySelectorAll(".desk-icon")];
+  // a soft sound on every file and folder (assets/sounds/archive-hover.mp3)
+  icons.forEach((icon) => icon.addEventListener("pointerenter", (e) => e.pointerType === "mouse" && playSound("archive-hover", 0.45)));
   const iconKey = (icon) => icon.dataset.open || icon.dataset.id;
   const select = (icon) => icons.forEach((i) => i.classList.toggle("sel", i === icon));
   const iconPos = (icon) => {
@@ -273,7 +276,6 @@ export function bindDesktop(main) {
   on(desk, "pointerdown", (e) => {
     if (!e.target.closest(".desk-icon")) select(null);
     if (!e.target.closest(".desk-menus")) closeMenus();
-    if (!e.target.closest(".desk-start, .desk-startmenu")) toggleStart(false);
   });
 
   // ── menu bar ──
@@ -334,22 +336,8 @@ export function bindDesktop(main) {
   tickClock();
   const clock = setInterval(tickClock, 10000);
 
-  // ── taskbar ──
-  const toggleStart = (show = !task.classList.contains("open")) => {
-    task.classList.toggle("open", show);
-    startBtn.setAttribute("aria-expanded", String(show));
-  };
-  startBtn.addEventListener("click", () => toggleStart());
-  on(desk.querySelector(".desk-startmenu"), "click", (e) => {
-    const a = e.target.closest("a");
-    if (!a) return;
-    if (a.dataset.open) (e.preventDefault(), open(a.dataset.open));
-    else if (a.getAttribute("href").startsWith("/")) (e.preventDefault(), leave(a.getAttribute("href")));
-    toggleStart(false);
-  });
   const onKey = (e) => {
     if (e.key !== "Escape") return;
-    if (task.classList.contains("open")) return toggleStart(false);
     if (menuItems.some(isOpen)) return closeMenus();
     const top = [...wins.values()].find((w) => w.el.classList.contains("focused") && !w.min);
     if (top) close(top);

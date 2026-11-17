@@ -179,7 +179,8 @@ export function clientsMarkup() {
 export const collectionURL = (c) => `/archive/${c.id}/`;
 
 // /archive/: a desktop (js/archive-desktop.js). Icons in the top-left corner: readme.txt, one
-// folder per collection, contact.mail. A collection's folder opens on hover and its pieces float
+// object per collection (a napkin, a card back: they turn on hover) and, bottom right, one folder per
+// portfolio project. A project's folder opens on hover and its pictures float
 // out (after React Bits' "Folder Float"); a click goes straight to the collection's page. The
 // collections without a page yet (`upcoming` in js/archive-data.js) are not shown.
 // Behind everything, js/particle-text.js draws "ARCHIVE" in dots, glitching into other phrases.
@@ -198,18 +199,36 @@ const floatFolder = (thumbs) => {
 };
 const sunSVG = `<svg viewBox="0 0 24 24" aria-hidden="true" class="i-sun"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>`;
 const moonSVG = `<svg viewBox="0 0 24 24" aria-hidden="true" class="i-moon"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>`;
+// LA BARRA and the Tarot Reader are shown as objects (a napkin, a card back) instead of folders;
+// on hover they turn slowly, like a 3D model. Both faces are real: the napkin's back is its scan.
+const objIcon = (front, back, ratio) =>
+  `<span class="dobj" style="--r:${ratio}" aria-hidden="true"><span class="dobj-spin"><img class="dobj-f" src="${front}" alt="" draggable="false"><img class="dobj-b" src="${back}" alt="" draggable="false"></span></span>`;
+const archiveObject = {
+  "la-barra": () => {
+    const it = collections.find((c) => c.id === "la-barra").items.find((i) => i.id === "bar-luce");
+    return objIcon(it.front, it.back, it.ratio);
+  },
+  tarot: () => objIcon("/assets/archive/tarot/back-thumb.webp", "/assets/archive/tarot/back-thumb.webp", 0.5625),
+};
+// One folder per project of the portfolio, in the bottom right corner: hover shows its pictures.
+const projectFolders = () =>
+  work
+    .map(
+      (p) =>
+        `<li><a class="desk-icon desk-coll desk-proj" href="${projectURL(p)}" data-href="${projectURL(p)}" data-id="p-${p.id}" draggable="false"><span class="desk-glyph">${floatFolder([p.cover, ...p.images].filter(Boolean).slice(0, 3))}</span><span class="desk-label">${esc((work.filter((q) => q.brand === p.brand).length > 1 && p.title !== p.brand ? p.title : p.brand).toLowerCase())}</span></a></li>`,
+    )
+    .join("");
 export function archiveMarkup() {
   const icons = [
     `<li><a class="desk-icon" href="#readme" data-open="readme" draggable="false"><span class="desk-glyph">${fileSVG("TXT")}</span><span class="desk-label">readme.txt</span></a></li>`,
     ...collections.map(
       (c) =>
-        `<li><a class="desk-icon desk-coll" href="${collectionURL(c)}" data-href="${collectionURL(c)}" data-id="${c.id}" draggable="false"><span class="desk-glyph">${floatFolder(c.items.slice(0, 5).map((i) => i.thumb))}</span><span class="desk-label">${esc(c.title.toLowerCase())}</span></a></li>`,
+        `<li><a class="desk-icon desk-obj" href="${collectionURL(c)}" data-href="${collectionURL(c)}" data-id="${c.id}" draggable="false"><span class="desk-glyph">${archiveObject[c.id] ? archiveObject[c.id]() : floatFolder(c.items.slice(0, 5).map((i) => i.thumb))}</span><span class="desk-label">${esc(c.title.toLowerCase())}</span></a></li>`,
     ),
     ...experiences.map(
       (x) =>
-        `<li><a class="desk-icon desk-coll desk-${x.id}" href="${collectionURL(x)}" data-href="${collectionURL(x)}" data-id="${x.id}" draggable="false"><span class="desk-glyph">${floatFolder(x.icon)}</span><span class="desk-label">${esc(x.label)}</span></a></li>`,
+        `<li><a class="desk-icon desk-obj desk-${x.id}" href="${collectionURL(x)}" data-href="${collectionURL(x)}" data-id="${x.id}" draggable="false"><span class="desk-glyph">${archiveObject[x.id] ? archiveObject[x.id]() : floatFolder(x.icon)}</span><span class="desk-label">${esc(x.label)}</span></a></li>`,
     ),
-    `<li><a class="desk-icon" href="mailto:hello.nicolombardi@gmail.com?subject=Archive" data-open="mail" draggable="false"><span class="desk-glyph">${fileSVG("@")}</span><span class="desk-label">contact.mail</span></a></li>`,
   ];
   return `<section class="desk" aria-labelledby="arch-title"><h1 id="arch-title" class="sr-only">Archive</h1>
 <nav class="desk-bar" aria-label="Archive menu bar"><a class="desk-brand" href="/">Nicoló Lombardi</a><ul class="desk-menus">
@@ -220,8 +239,9 @@ export function archiveMarkup() {
 <div class="desk-wall" aria-hidden="true"><canvas class="desk-particles"></canvas></div>
 <p class="sr-only desk-phrase" aria-live="off">ARCHIVE</p>
 <ul class="desk-icons" aria-label="Archive">${icons.join("")}</ul>
+<ul class="desk-icons desk-projects" aria-label="Portfolio projects">${projectFolders()}</ul>
 <div class="desk-windows"></div>
-<footer class="desk-task"><button type="button" class="desk-start" aria-haspopup="true" aria-expanded="false">archive</button><ul class="desk-tabs" aria-label="Open windows"></ul><div class="desk-startmenu"><p class="desk-sm-title caslon">Archive</p><ul>${collections.map((c) => `<li><a href="${collectionURL(c)}">${esc(c.title)}<span>${c.items.length} pieces</span></a></li>`).join("")}${experiences.map((x) => `<li><a href="${collectionURL(x)}">${esc(x.title)}<span>interactive</span></a></li>`).join("")}<li><a href="#readme" data-open="readme">readme.txt<span>about</span></a></li><li><a href="mailto:hello.nicolombardi@gmail.com?subject=Archive">contact.mail<span>write</span></a></li></ul></div></footer>
+<footer class="desk-task"><ul class="desk-tabs" aria-label="Open windows"></ul></footer>
 </section>`.replace(/\n/g, "");
 }
 
@@ -253,7 +273,7 @@ export function tarotMarkup() {
   return `<section class="tarot" aria-labelledby="tr-title"><header class="sr-only"><nav aria-label="Breadcrumb"><a href="/archive/">Archive</a></nav><h1 id="tr-title">The Tarot Reader</h1><p>${esc(x.blurb)}</p><p>Shuffle the deck, cut it, meet the guiding card at the bottom of the deck, then choose five cards for your past, present, future, shadow and conscious potential. Use the mouse, touch, or the keyboard: Enter or Space to continue, arrow keys to choose, Escape to put a card back, M for sound.</p></header>
 <div class="tr-stage" role="application" aria-label="The fortune teller's table" tabindex="-1"></div>
 <div class="tr-grain" aria-hidden="true"></div>
-<nav class="tr-top" aria-label="Tarot Reader"><a class="tr-back caslon" href="/archive/">Back</a><button type="button" class="tr-sound" aria-pressed="true">Sound on</button></nav>
+<nav class="tr-top" aria-label="Tarot Reader"><a class="tr-back caslon" href="/archive/">Back</a></nav>
 <p class="tr-caption" aria-live="polite" hidden></p>
 <div class="tr-prompts" aria-live="polite"></div>
 <div class="tr-dialogue" hidden><p class="tr-text caslon" aria-hidden="true"></p><span class="tr-more" aria-hidden="true" hidden></span></div>

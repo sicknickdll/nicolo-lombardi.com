@@ -24,6 +24,8 @@ import { TOPICS } from "./life.js";
 import { PHASE_LINES } from "./lines.js";
 import * as E from "./engine.js";
 import { Vector3, Quaternion } from "../vendor/three.js";
+import { play as playSound, loop as loopSound } from "../sound.js";
+import { navigateTo } from "../menu.js";
 
 const SAVE = "nl-tarot-v2";
 const FLOW = {
@@ -435,6 +437,7 @@ export function mountTarot(root) {
     caption.hidden = true;
     aside.classList.remove("on");
     root.classList.add("tr-dying");
+    stopAmbience(0.4);
     clock.scale = 1;
     eyes.setState("dramatic", { hold: 60 });
     audio.play("dread");
@@ -466,19 +469,65 @@ export function mountTarot(root) {
     location.assign("/");
   }
 
-  // ── sound button ──
-  const soundBtn = $(".tr-sound");
+  // ── sound: M mutes the synthesised room (the recorded layers follow it) ──
   function toggleSound() {
     audio.unlock();
     audio.setMuted(!audio.muted);
-    paintSound();
+    if (audio.muted) stopAmbience();
+    else startAmbience();
   }
-  function paintSound() {
-    soundBtn.setAttribute("aria-pressed", String(!audio.muted));
-    soundBtn.textContent = audio.muted ? "Sound off" : "Sound on";
+  // Recorded layers (assets/sounds): an ambience under the drone, a sound for each decision, and
+  // now and then some foley in the dark.
+  let stopAmb = null,
+    foleyTimer = 0;
+  function startAmbience() {
+    if (stopAmb || audio.muted || !alive) return;
+    stopAmb = loopSound("tarot-ambience", 0.2, 4);
+    const foley = () => {
+      foleyTimer = setTimeout(foley, 35000 + Math.random() * 45000);
+      if (alive && !audio.muted && !document.hidden) playSound("tarot-fooley", 0.16);
+    };
+    foleyTimer = setTimeout(foley, 20000 + Math.random() * 20000);
   }
-  soundBtn.addEventListener("click", (e) => (e.stopPropagation(), toggleSound()));
-  paintSound();
+  function stopAmbience(out = 1.2) {
+    stopAmb?.(out);
+    stopAmb = null;
+    clearTimeout(foleyTimer);
+  }
+  const decided = () => !audio.muted && playSound("tarot-decision", 0.5);
+
+  // ── leaving: she says goodbye, the candles go out, back to the Archive ──
+  let leaving = false;
+  $(".tr-back").addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (leaving || dying) return;
+    goodbye();
+  });
+  async function goodbye() {
+    leaving = true;
+    alive = false; // the ritual stops where it is
+    waiter = null;
+    dialogue.cancel();
+    clearPrompt();
+    endMenu?.classList.remove("on");
+    caption.hidden = true;
+    root.classList.add("tr-leaving");
+    eyes.setState("soft");
+    deck.withdrawHands(2);
+    dialogue.say([{ t: "Goodbye.", eyes: "soft" }]).catch(() => {});
+    await sleep(1300);
+    audio.play("blow");
+    stage.lights(0, 0.5); // the candles are blown out
+    stopAmbience(1.6);
+    await sleep(700);
+    eyes.setState("disappear");
+    dialogue.cancel();
+    await sleep(900);
+    stage.fade(0);
+    await sleep(1000);
+    navigateTo("/archive/");
+  }
 
   // ─────────────────────────── the ritual ───────────────────────────
   // Her questions: the answers appear as words under her line; click or tap one (or use Tab + Enter).
@@ -486,6 +535,7 @@ export function mountTarot(root) {
     await say(lines, { hold: true });
     prompt(options.map((o, i) => ({ label: o.label, action: "answer", primary: i === 0, data: () => o.key })));
     const { data } = await waitFor(["answer"]);
+    decided();
     clearPrompt();
     dialogue.clear();
     return data;
@@ -512,6 +562,7 @@ export function mountTarot(root) {
     await wait(reduce ? 200 : 900);
     eyes.setState("idle");
     await say(E.phaseLines(saved ? "returning" : "arrival", seedFor(), "a"));
+    startAmbience(); // after her first line: the visitor has clicked, sound may play
     // the candles catch, the room appears
     stage.lights(1, reduce ? 0.3 : 2.4);
     audio.play("slide");
@@ -560,6 +611,7 @@ export function mountTarot(root) {
         { label: "That's enough", action: "answer", primary: true, data: () => "enough" },
       ]);
       const { a, data } = await waitFor(["answer", "deck"]);
+      if (a === "answer") decided();
       clearPrompt();
       dialogue.clear();
       if (a === "answer" && data === "enough") break;
@@ -703,6 +755,7 @@ export function mountTarot(root) {
     for (;;) {
       showEnd(true);
       const { a } = await waitFor(["review", "again", "keep"]);
+      decided();
       showEnd(false);
       if (a === "again") return restart();
       go("READING_SUMMARY");
@@ -757,6 +810,7 @@ export function mountTarot(root) {
 
   async function resume(s) {
     ritual = s.ritual;
+    root.addEventListener("pointerdown", startAmbience, { once: true });
     deck.restore(ritual);
     stage.lights(1, reduce ? 0 : 1.6);
     await anim(stage.setShot("table", reduce ? 0 : 1800));
@@ -819,6 +873,7 @@ export function mountTarot(root) {
 
   return () => {
     alive = false;
+    stopAmbience(0.3);
     waiter = null;
     dialogue.cancel();
     removeEventListener("keydown", onKey);
