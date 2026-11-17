@@ -273,7 +273,7 @@ export function tarotMarkup() {
   return `<section class="tarot" aria-labelledby="tr-title"><header class="sr-only"><nav aria-label="Breadcrumb"><a href="/archive/">Archive</a></nav><h1 id="tr-title">The Tarot Reader</h1><p>${esc(x.blurb)}</p><p>Shuffle the deck, cut it, meet the guiding card at the bottom of the deck, then choose five cards for your past, present, future, shadow and conscious potential. Use the mouse, touch, or the keyboard: Enter or Space to continue, arrow keys to choose, Escape to put a card back, M for sound.</p></header>
 <div class="tr-stage" role="application" aria-label="The fortune teller's table" tabindex="-1"></div>
 <div class="tr-grain" aria-hidden="true"></div>
-<nav class="tr-top" aria-label="Tarot Reader"><a class="tr-back caslon" href="/archive/">Back</a></nav>
+<nav class="tr-top" aria-label="Tarot Reader"><a class="tr-back" href="/archive/" aria-label="Leave the reading, back to the Archive">X</a></nav>
 <p class="tr-caption" aria-live="polite" hidden></p>
 <div class="tr-prompts" aria-live="polite"></div>
 <div class="tr-dialogue" hidden><p class="tr-text caslon" aria-hidden="true"></p><span class="tr-more" aria-hidden="true" hidden></span></div>

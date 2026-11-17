@@ -3529,3 +3529,139 @@ html.tarot-page .header {
   pointer-events: none;
   transition: opacity 0.6s;
 }
+
+/* the way out: an X, top left */
+.tr-back {
+  font-family: var(--tr-voice);
+  font-size: 30px;
+}
+/* ── easter egg: matches, when both candles are out ── */
+.tr-matches {
+  position: absolute;
+  z-index: 9;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+.tr-matches.on {
+  opacity: 1;
+}
+.trm-box {
+  position: absolute;
+  left: 50%;
+  bottom: 42%;
+  width: 190px;
+  height: 64px;
+  margin-left: -95px;
+  background: linear-gradient(#6e1d1d, #4a1012);
+  border: 2px solid #1d0708;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  display: grid;
+  place-items: center;
+  transform: rotate(-3deg);
+}
+.trm-strike {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: -9px;
+  height: 9px;
+  background: repeating-linear-gradient(90deg, #3b2418 0 3px, #2a170f 3px 5px);
+  border-radius: 2px;
+}
+.trm-label {
+  font-family: var(--tr-voice);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  color: #e8c98c;
+}
+.trm-match {
+  position: absolute;
+  left: calc(50% - 60px);
+  bottom: calc(42% + 86px);
+  width: 120px;
+  height: 7px;
+  background: #d8b98a;
+  border-radius: 2px;
+  transform: rotate(-8deg);
+  transform-origin: 6px 50%;
+  cursor: var(--cursor-grab);
+  touch-action: none;
+}
+.tr-matches.on .trm-match {
+  pointer-events: auto;
+}
+.trm-match.free {
+  left: 0;
+  top: 0;
+  bottom: auto;
+  cursor: var(--cursor-grabbing);
+}
+.trm-match.lit {
+  pointer-events: none !important;
+}
+.trm-head {
+  position: absolute;
+  left: -6px;
+  top: -3px;
+  width: 15px;
+  height: 13px;
+  border-radius: 50%;
+  background: #8e1b16;
+}
+.trm-match.lit .trm-head::after {
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: -34px;
+  width: 26px;
+  height: 46px;
+  border-radius: 50% 50% 45% 45% / 65% 65% 35% 35%;
+  background: radial-gradient(circle at 50% 75%, #fff8e0, #ffc469 35%, rgba(255, 110, 30, 0.6) 65%, transparent 72%);
+  box-shadow: 0 0 60px 30px rgba(255, 150, 60, 0.28);
+  transform: rotate(35deg);
+  animation: tr-flicker 0.16s ease-in-out infinite alternate;
+}
+.tarot.trm-lit .tr-stage {
+  cursor: none;
+}
+
+/* Archive: leaving through the name. The files catch fire and burn away, bottom to top. */
+.dw-choices {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+.dw-btn-go {
+  background: #1a1a1a;
+  color: #fff;
+}
+.desk-icon.burning {
+  pointer-events: none;
+  animation: desk-burn 1.3s ease-in forwards;
+}
+@keyframes desk-burn {
+  0% {
+    filter: none;
+    clip-path: inset(0 0 0 0);
+  }
+  25% {
+    filter: sepia(1) saturate(5) hue-rotate(-25deg) brightness(1.25) drop-shadow(0 0 6px #ff7a1a);
+  }
+  70% {
+    filter: sepia(1) saturate(6) hue-rotate(-35deg) brightness(0.6) drop-shadow(0 -4px 8px #ff4d00);
+    opacity: 1;
+  }
+  100% {
+    filter: brightness(0.1) drop-shadow(0 -6px 10px #ff3000);
+    clip-path: inset(0 0 100% 0);
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+.desk.farewell .desk-task,
+.desk.farewell .desk-menus {
+  opacity: 0;
+  transition: opacity 0.6s;
+}

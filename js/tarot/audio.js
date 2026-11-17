@@ -173,6 +173,17 @@ export function createAudio() {
       for (let i = 0; i < 7; i++) noise({ t: now() + i * (0.06 + i * 0.018), dur: 0.015, f0: 1800, q: 4, gain: 0.05 });
     },
     low: () => tone({ f0: 55, f1: 49, type: "sawtooth", dur: 1.8, a: 0.6, gain: 0.07, lp: 260, send: 1 }),
+    // a match on the striker, then the flame catching
+    strike: () => {
+      noise({ dur: 0.18, type: "bandpass", f0: 2600, f1: 1200, q: 0.9, gain: 0.22, a: 0.01 });
+      noise({ t: now() + 0.16, dur: 0.6, type: "lowpass", f0: 900, f1: 300, gain: 0.12, a: 0.05 });
+    },
+    sand: () => {
+      for (let i = 0; i < 14; i++) noise({ t: now() + 0.3 + i * 0.05, dur: 0.05, type: "highpass", f0: 5000, gain: 0.015 });
+    },
+    coin: () => {
+      for (const [d, f] of [[0, 3100], [0.85, 2900], [0.95, 3300]]) tone({ t: now() + d, f0: f, dur: 0.25, gain: 0.03, send: 1 });
+    },
     // a breath across the candle flames
     blow: () => {
       noise({ dur: 0.9, type: "bandpass", f0: 500, f1: 260, q: 0.6, gain: 0.16, a: 0.12 });

@@ -112,7 +112,11 @@ you only ever see the eyes and the hands. She asks what keeps you up at night (l
 family, work) and reads for that, in short, everyday lines; after the second card she asks a
 question that can steer the reading to another topic. There are no instruction buttons: you
 touch the deck and the cards; only her questions offer answers. Poke her eyes five times and
-it ends badly (her hand, a broken neck, a glitch, and you're back on the portfolio). You shuffle the deck, cut it,
+it ends badly (her hand, a broken neck, a glitch, and you're back on the portfolio). Other easter eggs: touch a
+candle and it goes out; blow out both and she hands you matches (drag one along the side of the
+box to strike it, then touch each candle with the flame); the hourglass turns over and the coin
+flips. Leaving with the X, she says goodbye and blows the candles out. On the Archive desktop,
+clicking the name asks before leaving; if you go, the files burn and the dots say goodbye. You shuffle the deck, cut it,
 she turns up the card at the bottom (the **guiding card**, which colours the whole reading), then
 you pick five cards for a cross: Past (left), Present (centre), Future (right), The Shadow
 (bottom), Conscious Potential (top). She comments on each card, then reads the whole spread and

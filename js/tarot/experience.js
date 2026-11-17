@@ -335,8 +335,15 @@ export function mountTarot(root) {
   }
   // A click or tap that is not a pick or a cut.
   function tap(x, y) {
-    if (dying) return;
+    if (dying || leaving) return;
+    if (matches.active) return matches.tap(x, y);
     if (hitEyes(x, y) && eyes.state !== "disappear" && stage.fx.level > 0.5) return poke();
+    if (stage.fx.level > 0.5 && !deck.inspecting) {
+      const ci = stage.candleAt(x, y);
+      if (ci >= 0 && !(accepts("deck") && cardAt(x, y, (c) => c.where === "deck"))) return blowCandle(ci);
+      const prop = stage.propAt(x, y);
+      if (prop) return touchProp(prop);
+    }
     if (deck.inspecting) return putBack();
     if (accepts("deck") && cardAt(x, y, (c) => c.where === "deck")) return act("deck");
     if (canInspect()) {
@@ -382,6 +389,7 @@ export function mountTarot(root) {
     if (e.key === "Enter" || e.key === " ") {
       if (onButton) return; // the focused button handles it
       e.preventDefault();
+      if (matches.active) return matches.key();
       if (deck.inspecting) return putBack();
       if (dialogue.advance()) return;
       if (accepts("pick") && hovered) return act("pick", hovered);
@@ -416,17 +424,164 @@ export function mountTarot(root) {
     const line = PHASE_LINES.poked[pokes++];
     if (!line) return kill();
     // said aside, over whatever she was saying, without losing her place
-    eyes.setState(line[0].eyes, { hold: 1.8, then: "watching" });
-    aside.textContent = line[0].t;
-    aside.classList.add("on");
-    clearTimeout(aside.timer);
-    aside.timer = setTimeout(() => aside.classList.remove("on"), 1800);
+    sayAside(line[0].t, line[0].eyes, 1800);
   }
   const aside = document.createElement("p");
   aside.className = "tr-aside";
   aside.setAttribute("aria-live", "assertive");
   root.append(aside);
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  // A line said aside, over whatever else is happening (her place in the ritual is kept).
+  let asideQueue = Promise.resolve();
+  function sayAside(t, eyesState, ms = 2200) {
+    asideQueue = asideQueue.then(async () => {
+      if (dying || leaving) return;
+      if (eyesState) eyes.setState(eyesState, { hold: ms / 1000, then: "watching" });
+      aside.textContent = t;
+      aside.classList.add("on");
+      await sleep(ms);
+      aside.classList.remove("on");
+      await sleep(250);
+    });
+    return asideQueue;
+  }
+
+  // ── easter eggs ──
+  // The candles: touch one and it goes out. Both out, and she hands you matches: strike one on the
+  // box, then touch each candle with the flame.
+  function blowCandle(i) {
+    if (!stage.candles[i].onTo) return;
+    audio.play("blow");
+    stage.setCandle(i, false);
+    if (stage.candlesLit === 1) sayAside("Careful. I need that one.", "suspicious");
+    else {
+      root.classList.add("tr-dark");
+      sayAside("Wonderful. Now neither of us can see a thing.", "suspicious", 2600);
+      sayAside("Here. Matches. Strike one on the box.", "watching", 2600).then(() => !dying && !leaving && matches.open());
+    }
+  }
+  const PROP_LINES = {
+    hourglass: ["Turn it as much as you like. It won't give you the time back.", "Time isn't your problem. Trust me.", "Again? It's sand, not a reset button."],
+    coin: ["Heads or tails. The cards are better at this.", "Keep the change.", "That one's mine, by the way."],
+  };
+  const propCount = { hourglass: 0, coin: 0 };
+  function touchProp(name) {
+    if (name === "hourglass") (stage.flipHourglass(), audio.play("sand"));
+    else (stage.tossCoin(), audio.play("coin"));
+    const list = PROP_LINES[name];
+    sayAside(list[propCount[name]++ % list.length], "amused");
+  }
+  const matches = createMatches();
+  function createMatches() {
+    const el = document.createElement("div");
+    el.className = "tr-matches";
+    el.innerHTML = `<div class="trm-box"><span class="trm-strike"></span><span class="trm-label">SAFETY MATCHES</span></div><div class="trm-match" aria-label="A match: drag it across the side of the box"><span class="trm-head"></span></div>`;
+    root.append(el);
+    const box = el.querySelector(".trm-box"),
+      strike = el.querySelector(".trm-strike"),
+      match = el.querySelector(".trm-match");
+    let lit = false,
+      drag = null,
+      burnOut = 0,
+      rubbed = 0,
+      moveFn = null;
+    const api = {
+      active: false,
+      open() {
+        api.active = true;
+        el.classList.add("on");
+        reset();
+      },
+      close() {
+        api.active = false;
+        lit = false;
+        clearTimeout(burnOut);
+        if (moveFn) removeEventListener("pointermove", moveFn);
+        moveFn = null;
+        root.classList.remove("trm-lit");
+        el.classList.remove("on", "lit");
+        match.classList.remove("lit", "free");
+        match.style.transform = "";
+        root.classList.remove("tr-dark");
+      },
+      tap(x, y) {
+        if (!lit) return;
+        const i = stage.candleAt(x, y);
+        if (i < 0 || stage.candles[i].onTo) return;
+        stage.setCandle(i, true);
+        audio.play("strike");
+        if (stage.candlesLit === 2) {
+          api.close();
+          sayAside("Better. Don't do that again.", "serious", 2400);
+        } else sayAside("One more.", "watching", 1600);
+      },
+    };
+    function reset() {
+      lit = false;
+      rubbed = 0;
+      match.classList.remove("lit", "free");
+      match.style.transform = "";
+    }
+    function follow(x, y) {
+      const r = el.getBoundingClientRect();
+      match.style.transform = `translate(${x - r.left - 6}px, ${y - r.top - 6}px) rotate(-35deg)`;
+    }
+    match.addEventListener("pointerdown", (e) => {
+      if (lit) return;
+      e.preventDefault();
+      e.stopPropagation();
+      audio.unlock();
+      match.setPointerCapture(e.pointerId);
+      match.classList.add("free");
+      drag = { x: e.clientX };
+      follow(e.clientX, e.clientY);
+    });
+    match.addEventListener("pointermove", (e) => {
+      if (!drag || lit) return;
+      follow(e.clientX, e.clientY);
+      const s = strike.getBoundingClientRect();
+      // the head has to be dragged along the striker, not just dropped on it
+      if (e.clientX > s.left - 10 && e.clientX < s.right + 10 && e.clientY > s.top - 18 && e.clientY < s.bottom + 18) rubbed += Math.abs(e.clientX - drag.x);
+      drag.x = e.clientX;
+      if (rubbed > 70) light(e.clientX, e.clientY);
+    });
+    const end = () => {
+      drag = null;
+      if (!lit) reset();
+    };
+    match.addEventListener("pointerup", end);
+    match.addEventListener("pointercancel", end);
+    function light(x, y) {
+      lit = true;
+      drag = null;
+      audio.play("strike");
+      match.classList.add("lit");
+      el.classList.add("lit");
+      // the burning match follows the pointer; touch the candles with it
+      root.classList.add("trm-lit");
+      moveFn = (e) => follow(e.clientX, e.clientY);
+      addEventListener("pointermove", moveFn);
+      follow(x, y);
+      burnOut = setTimeout(() => {
+        removeEventListener("pointermove", moveFn);
+        moveFn = null;
+        root.classList.remove("trm-lit");
+        if (!api.active) return;
+        audio.play("blow");
+        el.classList.remove("lit");
+        reset();
+        sayAside("It burnt out. Strike another.", "amused", 1800);
+      }, 22000);
+    }
+    // keyboard: Enter strikes and lights both
+    api.key = () => {
+      if (!lit) light(innerWidth / 2, innerHeight / 2);
+      [0, 1].forEach((i) => stage.setCandle(i, true));
+      api.close();
+      sayAside("Better. Don't do that again.", "serious", 2400);
+    };
+    return api;
+  }
   async function kill() {
     dying = true;
     alive = false; // every flow in progress stops here
@@ -436,6 +591,7 @@ export function mountTarot(root) {
     endMenu?.classList.remove("on");
     caption.hidden = true;
     aside.classList.remove("on");
+    matches.close();
     root.classList.add("tr-dying");
     stopAmbience(0.4);
     clock.scale = 1;
@@ -482,7 +638,11 @@ export function mountTarot(root) {
     foleyTimer = 0;
   function startAmbience() {
     if (stopAmb || audio.muted || !alive) return;
-    stopAmb = loopSound("tarot-ambience", 0.2, 4);
+    try {
+      stopAmb = loopSound("tarot-ambience", 0.2, 4);
+    } catch {
+      stopAmb = () => {}; // never let a sound stop the ritual
+    }
     const foley = () => {
       foleyTimer = setTimeout(foley, 35000 + Math.random() * 45000);
       if (alive && !audio.muted && !document.hidden) playSound("tarot-fooley", 0.16);
@@ -513,6 +673,7 @@ export function mountTarot(root) {
     endMenu?.classList.remove("on");
     caption.hidden = true;
     root.classList.add("tr-leaving");
+    matches.close();
     eyes.setState("soft");
     deck.withdrawHands(2);
     dialogue.say([{ t: "Goodbye.", eyes: "soft" }]).catch(() => {});

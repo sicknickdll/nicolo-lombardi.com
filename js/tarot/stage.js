@@ -232,7 +232,7 @@ export function createStage(container, { reduce = false, low = false } = {}) {
     }
     g.add(dish, body, wick, glow, flame, light);
     scene.add(g);
-    const c = { g, flame, glow, light, base: 1, seed: Math.random() * 10, x, z, bend: 0, top: light.position.y };
+    const c = { g, flame, glow, light, base: 1, seed: Math.random() * 10, x, z, bend: 0, top: light.position.y, on: 1, onTo: 1 };
     candles.push(c);
     return c;
   }
@@ -295,6 +295,7 @@ export function createStage(container, { reduce = false, low = false } = {}) {
     sandTop.position.y = 0.112;
     hg.add(lower, upper, sand, sandTop);
     props.add(hg);
+    props.userData.hourglass = hg;
     // coins, front left
     const coinMat = new MeshLambertMaterial({ color: 0x9d7637, emissive: 0x140b02 });
     for (let i = 0; i < 4; i++) {
@@ -302,6 +303,7 @@ export function createStage(container, { reduce = false, low = false } = {}) {
       coin.position.set(-1.1 + (i === 3 ? 0.06 : (Math.random() - 0.5) * 0.004), 0.002 + (i === 3 ? 0 : i * 0.0042), 0.24 + (i === 3 ? 0.03 : 0));
       coin.castShadow = coin.receiveShadow = true;
       props.add(coin);
+      (props.userData.coins ||= []).push(coin);
     }
     // dried rose petals
     const petal = new MeshLambertMaterial({ color: 0x5e0f16, side: DoubleSide });
@@ -545,23 +547,26 @@ export function createStage(container, { reduce = false, low = false } = {}) {
       for (const h of [hands.left, hands.right]) near = Math.max(near, 1 - clamp(h.position.distanceTo(c.g.position) / 0.5, 0, 1));
       const f = wobble(time * (2.2 + near * 3), c.seed) * (0.08 + near * 0.12) + (fx.flicker > 0 ? (Math.random() - 0.5) * 0.9 * fx.flicker : 0);
       const lvl = (c === candles[0] ? 1.15 : 0.8) * fx.boost * (1 - fx.dark * (c === candles[0] ? 0.35 : 0.55)) * (1 + f);
-      c.light.intensity = Math.max(0.05, lvl) * lit;
+      c.on = approach(c.on, c.onTo, c.onTo ? 3 : 9, dt); // blown out / lit again
+      c.light.intensity = Math.max(0.05, lvl) * lit * c.on;
       c.light.color.setRGB(1, lerp(0.62, 0.7, fx.warm), lerp(0.33, 0.42, fx.warm));
       c.bend = approach(c.bend, (fx.sway > 0 ? Math.sin(time * 3) * 0.4 : 0) + near * Math.sin(time * 9) * 0.25, 6, dt);
       c.flame.scale.set((1 + f * 0.6) * lit, (1 + f * 1.4 + fx.warm * 0.15) * lit, 1);
-      c.flame.visible = lit > 0.02;
+      c.flame.visible = lit > 0.02 && c.on > 0.05;
+      if (c.on < 1) c.flame.scale.multiplyScalar(c.on);
       c.flame.rotation.z = c.bend * 0.6;
-      c.glow.material.opacity = 0.28 * Math.max(0.2, lvl) * lit;
+      c.glow.material.opacity = 0.28 * Math.max(0.2, lvl) * lit * c.on;
       c.light.position.x = c.bend * 0.05;
       c.flame.lookAt(camera.position);
       c.flame.rotation.z += c.bend * 0.5;
       c.glow.lookAt(camera.position);
     }
-    ambient.intensity = (0.55 + fx.warm * 0.15) * (1 - fx.dark * 0.6) * lit;
-    lamp.intensity = 0.2 * lit * (1 - fx.dark * 0.5);
+    const burning = (candles[0].on + candles[1].on) / 2; // with both candles out, only her eyes remain
+    ambient.intensity = (0.55 + fx.warm * 0.15) * (1 - fx.dark * 0.6) * lit * burning;
+    lamp.intensity = 0.2 * lit * (1 - fx.dark * 0.5) * burning;
+    hands.left.root.visible = hands.right.root.visible = lit > 0.01 && burning > 0.08;
     silhouette.material.opacity = 0.26 * lit;
     wax.emissiveIntensity = lit;
-    hands.left.root.visible = hands.right.root.visible = lit > 0.01;
     spreadLight.intensity = approach(spreadLight.intensity, fx.darkTo * 0.22, 1.5, dt);
     spreadLight.position.set(0, 0.55, layout.cz);
     readLight.intensity = approach(readLight.intensity, readTo, 4, dt);
@@ -690,6 +695,62 @@ export function createStage(container, { reduce = false, low = false } = {}) {
       fx.levelSpeed = seconds <= 0 ? 1000 : 2.5 / seconds;
     },
     react,
+    // ── easter eggs: the candles, the hourglass, the coins ──
+    candleAt(x, y) {
+      for (let i = 0; i < candles.length; i++) {
+        const c = candles[i];
+        const top = toScreen(c.g.position.clone().setY(c.top)),
+          base = toScreen(c.g.position.clone());
+        const r = Math.max(26, Math.abs(base.y - top.y) * 0.45);
+        if (Math.abs(x - top.x) < r && y > top.y - r && y < base.y + 12) return i;
+      }
+      return -1;
+    },
+    setCandle(i, on) {
+      candles[i].onTo = on ? 1 : 0;
+    },
+    get candlesLit() {
+      return candles.filter((c) => c.onTo).length;
+    },
+    candleScreen: (i) => toScreen(candles[i].g.position.clone().setY(candles[i].top)),
+    propAt(x, y) {
+      const h = hit(x, y, [props]);
+      if (!h) return null;
+      let o = h.object;
+      while (o && o !== props) {
+        if (o === props.userData.hourglass) return "hourglass";
+        if (props.userData.coins?.includes(o)) return "coin";
+        o = o.parent;
+      }
+      return null;
+    },
+    flipHourglass() {
+      // turned end over end around its middle (the group's origin is at its foot)
+      const hg = props.userData.hourglass;
+      if (hg.userData.flipping) return Promise.resolve();
+      hg.userData.flipping = true;
+      const base = hg.userData.base || (hg.userData.base = hg.position.clone());
+      const z0 = hg.rotation.z,
+        half = 0.09,
+        ry = hg.rotation.y;
+      return clock
+        .tween(1100, (k) => {
+          const a = z0 + Math.PI * k;
+          const dx = half * Math.sin(a),
+            dy = half - half * Math.cos(a) + Math.sin(k * Math.PI) * 0.06;
+          hg.rotation.z = a;
+          hg.position.set(base.x + dx * Math.cos(ry), base.y + dy, base.z - dx * Math.sin(ry));
+        })
+        .finally(() => (hg.userData.flipping = false));
+    },
+    tossCoin() {
+      const coin = props.userData.coins[props.userData.coins.length - 1];
+      const y0 = coin.position.y;
+      return clock.tween(900, (k) => {
+        coin.position.y = y0 + Math.sin(k * Math.PI) * 0.22;
+        coin.rotation.x = k * Math.PI * 7;
+      });
+    },
     cameraFx,
     readLight(on, at) {
       readTo = on ? 0.55 : 0;
