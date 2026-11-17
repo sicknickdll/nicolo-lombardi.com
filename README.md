@@ -14,12 +14,11 @@ js/menu.js          the "Menu +" button and the full-screen menu (Work, About, A
 js/archive-data.js  ← ARCHIVE CONTENT: collections and their pieces (name, country, location, scans)
 js/archive-desktop.js  /archive/: a desktop (menu bar, floating folders, draggable windows, taskbar)
 js/particle-text.js the Archive wallpaper: text drawn in dots, glitching into other phrases every 5 s
-js/shuffle.js       letters sliding into place (landing intro words)
 js/archive.js       archive collection page: infinite pannable grid, search bar, 3D viewer
 js/card3d.js        the 3D card (tilt + glare, drag to turn it over)
 js/head.js          About page: 3D head (follows the cursor, rotates on drag / two-finger scroll, reacts to taps)
 js/vendor/three.js  the parts of three.js the head needs   (npm install && npm run vendor:three)
-js/intro.js         landing intro: words shuffling in inside a ring of spinning frames
+js/intro.js         landing intro: name on a light screen, a black panel sweeps up, the screen lifts away
 js/eye.js           landing video: the eye follows the cursor
 js/galleries.js     video and image carousels on project pages
 js/player.js        custom film interface: wheel scrub, bottom progress line, text controls
@@ -29,7 +28,6 @@ tools/optimize-model.mjs  shrinks a 3D scan for the web (assets/about/head.glb)
 tools/vendor-three.mjs    rebuilds js/vendor/three.js
 tools/make-og-images.py  link-preview images in assets/og/
 tools/prepare-video.sh   converts a new video into the needed formats
-tools/make-intro-clips.sh  short, light loop clips for the landing intro (assets/intro/)
 index.html, about/, work/<id>/   GENERATED pages, don't edit by hand
 film/, visuals/     GENERATED redirects: old addresses forward to the Work list on the landing page
 assets/fonts/        Hanken Grotesk + Geist Mono (free look-alikes of A24's PP Neue Montreal / Mono; swap in the real ones via --sans / --mono in style.css), Caslon + Jost for the Archive
@@ -96,11 +94,10 @@ from there, not from `js/` and `style.css`), then commit and push, `dist/` inclu
 - **Head reactions** (`js/head.js`): drag or two-finger scroll rotates (too much = dizzy, eyes roll);
   move over the head = smile; tap an eye = hurt; tap the nose 3 times = it grows; tap the mouth =
   pucker; tap elsewhere = boop; press and hold, then pull = stretch (Mario 64); idle 14 s = sleeps.
-- **Landing intro**: the words and the frames that orbit the name are `intro` in `js/data.js`.
-  The frames' clips are 4-second, 360px cuts of the project videos: list a new one in
-  `tools/make-intro-clips.sh`, run it, then add it to `intro.frames`. It plays when someone enters the site or reloads the landing page, not when they come back
-  to it from another page; any click, tap or key skips it, and it never plays with reduced
-  motion turned on.
+- **Landing intro**: the name and the italic line are `NAME` and `LINE` at the top of
+  `js/intro.js`, timings in `T`. It plays when someone enters the site or reloads the landing
+  page, not when they come back to it from another page; any click, tap or key skips it, and
+  it never plays with reduced motion turned on.
 
 Keep every file under 24 MB so it fits all free hosts.
 

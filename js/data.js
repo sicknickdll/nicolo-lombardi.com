@@ -407,52 +407,6 @@ export const clients = [
 // Create an account at https://www.goatcounter.com and put your code here, e.g. "nicolo".
 export const goatcounter = "";
 
-// Landing intro (js/intro.js). `words` roll through in the name's place before the
-// name itself appears, while the `frames` spin around them on a ring; the ring is then
-// pulled back into the name. ratio = width ÷ height. A frame with `video` plays that
-// clip on a loop (its .mp4 twin must exist; `src` is its first frame, shown until it
-// plays). The clips are 4-second, 360px cuts of the project videos made by
-// tools/make-intro-clips.sh, so they load fast: add new ones there.
-const clip = (name, ratio) => ({
-  src: `/assets/intro/${name}.webp`,
-  video: `/assets/intro/${name}.webm`,
-  ratio,
-});
-const still = (name, ratio) => ({ src: `/assets/intro/${name}.webp`, ratio });
-export const intro = {
-  words: [
-    "AI Production Specialist",
-    "Art Direction",
-    "AI Filmmaking",
-    "VFX",
-    "Virtual Production",
-  ],
-  frames: [
-    clip("elaguila-hero", 16 / 9),
-    still("elaguila-still-02", 16 / 9),
-    still("wppproduction-still-01", 16 / 9),
-    clip("malik-cross-hero", 2.3453),
-    still("soapandglory-01", 1),
-    still("lexus-header", 16 / 9),
-    clip("pgvXtdMshKqmetkpEhgM2k1TI", 1.333),
-    still("elaguila-still-05", 16 / 9),
-    still("malik-cross-still-02", 2.357),
-    still("wppproduction-still-04", 16 / 9),
-    clip("Ste489lG9zmVBFJeCYP9xDo", 0.5625),
-    still("soapandglory-03", 1),
-    still("elaguila-still-08", 16 / 9),
-    clip("wppproduction-hero", 2.3529),
-    still("wppproduction-still-06", 16 / 9),
-    still("SKCYB8BMwkneaPvdQDQqhbuyVKE", 1),
-    still("malik-cross-still-06", 2.35),
-    clip("q65cZYQLVwWuvK4CaJ99qUKYaI0", 0.8),
-    still("elaguila-still-01", 16 / 9),
-    still("wichita-666-header", 16 / 9),
-    still("soapandglory-02", 1),
-    still("wppproduction-still-03", 16 / 9),
-  ],
-};
-
 // Landing page background loop (an .mp4 with the same name is the Safari fallback).
 export const hero = "/assets/anime-eye.webm";
 export const heroPoster = "/assets/anime-eye-poster.webp";
