@@ -27,6 +27,7 @@ import {
   PAIRS,
   SYNTHESIS,
 } from "./lines.js";
+import { LIFE, TOPICS, QUESTIONS } from "./life.js";
 
 export const POSITIONS = [
   { key: "past", label: "Past", place: "left", prompt: "Look Into Your Past" },
@@ -91,7 +92,7 @@ export const newSeed = (next = secure()) => next();
 
 // ── the ritual ──
 export function newRitual({ seed = newSeed(), deck = DECK_IDS } = {}) {
-  return { v: 1, seed: seed >>> 0, deck: deck.slice(), shuffles: 0, cutIndex: null, guiding: null, picks: [] };
+  return { v: 1, seed: seed >>> 0, deck: deck.slice(), shuffles: 0, cutIndex: null, guiding: null, picks: [], topic: null, answers: [] };
 }
 export function shuffleDeck(r, next = secure()) {
   if (r.guiding) throw new Error("The deck can't be shuffled once the guiding card is out.");
@@ -130,6 +131,7 @@ export function validRitual(r) {
     if (new Set(all).size !== all.length) return false;
     if (r.picks.some((p, i) => p.position !== POSITIONS[i]?.key)) return false;
     if (r.picks.length && !r.guiding) return false;
+    if (r.topic != null && !TOPICS.some((t) => t.key === r.topic)) return false;
     return Number.isInteger(r.seed);
   } catch {
     return false;
@@ -216,119 +218,88 @@ export function echoes(r) {
   return { list: out, avoid };
 }
 
-// What she says when the i-th card of the cross is turned over.
+// ── the everyday reading (js/tarot/life.js) ──
+// The topic of the i-th card: the one chosen at the start, unless an answer to her question
+// steered the reading elsewhere before that card was drawn.
+export function topicFor(r, i = r.picks.length) {
+  let t = r.topic || "love";
+  for (const a of r.answers || []) if (a.after < i && a.to) t = a.to;
+  return t;
+}
+export function setTopic(r, topic) {
+  if (!TOPICS.some((t) => t.key === topic)) throw new Error(`Unknown topic: ${topic}`);
+  return { ...r, topic, answers: [] };
+}
+// Her question after the `after`-th card, answered with `key`.
+export function answer(r, after, key) {
+  const q = QUESTIONS[topicFor(r, after + 1)];
+  const a = q.a.find((x) => x.key === key);
+  if (!a) throw new Error(`Unknown answer: ${key}`);
+  return { ...r, answers: [...(r.answers || []), { after, key, topic: topicFor(r, after + 1), to: a.to || null }] };
+}
+export const question = (r, after) => QUESTIONS[topicFor(r, after + 1)];
+const answerOf = (x) => QUESTIONS[x.topic].a.find((a) => a.key === x.key);
+
+// What she says when the i-th card of the cross is turned over: three short lines.
 export function commentary(r, i) {
   const p = r.picks[i],
     c = card(p.id),
-    g = card(r.guiding),
-    s = `${r.seed}:${i}`;
+    s = `${r.seed}:${i}`,
+    topic = topicFor(r, i);
+  const life = LIFE[c.id][topic];
   const lines = [
-    { t: `${c.name}... ${choose(POSITION_PHRASES[p.position], s, "pp")}.`, eyes: c.react.eyes, pause: c.react.pause || 0, react: c.id },
+    { t: `${c.name}, ${choose(POSITION_PHRASES[p.position], s, "pp")}.`, eyes: c.react.eyes, pause: c.react.pause || 0, react: c.id },
     { t: choose(c.reveal, s, "rv") },
-    { t: c.pos[p.position] },
+    { t: life, eyes: "watching" },
   ];
-  const lens = lensLine(g, c, p.position);
-  lines.push({ t: lens, eyes: "watching" });
-  const echo = echoes(r).list[i];
-  if (echo) {
-    lines.push({ t: fill(echo.intro, { prev: mid(card(echo.with)) }), eyes: "curious" });
-    lines.push({ t: echo.text });
-  }
-  return { lines, interpretation: `${c.pos[p.position]} ${lens}`, echo };
+  return { lines, interpretation: life, topic };
 }
 
-// The guiding card's reveal: before the flip, her reading of it, and the hand-off to the spread.
+// The guiding card's reveal: her first look, what it means for your topic, the hand-off.
 export function guidingLines(r) {
   const g = card(r.guiding);
+  const topic = r.topic || "love";
   return {
     before: phaseLines("guidingSeen", r.seed),
-    open: g.guideOpen.map((t, i) => (i === 0 ? { t, eyes: g.react.eyes, pause: g.react.pause || 400, react: g.id } : { t })),
+    open: [{ t: `${g.name}.`, eyes: g.react.eyes, pause: g.react.pause || 400, react: g.id }, { t: LIFE[g.id][topic] }],
     after: phaseLines("guidingAfter", r.seed),
   };
 }
 
-// Layers 1–4 again, stage by stage, then the synthesis (Layer 5).
+// The final reading: one line per card, the warning, the advice, and how it ends.
 export function finalReading(r) {
   if (!isComplete(r)) throw new Error("The cross isn't complete.");
   const g = card(r.guiding),
-    side = g.lens.side,
-    at = Object.fromEntries(r.picks.map((p) => [p.position, card(p.id)]));
-  const avoid = echoes(r).avoid;
-  const partner = {
-    past: [g],
-    present: [at.past, g],
-    future: [at.present, g],
-    shadow: [g, at.present],
-    potential: [at.shadow, g],
+    at = Object.fromEntries(r.picks.map((p) => [p.position, card(p.id)])),
+    s = `${r.seed}:fin`;
+  const say = {
+    past: choose([`It started with ${mid(at.past)}.`, `Behind you, ${mid(at.past)}.`], s, "pa"),
+    present: choose([`Now it's ${mid(at.present)}.`, `Today, ${mid(at.present)}.`], s, "pr"),
+    future: choose([`Next comes ${mid(at.future)}, if nothing changes.`, `Then ${mid(at.future)}. Unless you change course.`], s, "fu"),
+    shadow: `Careful with ${mid(at.shadow)}. ${LIFE[at.shadow.id].warning}`,
+    potential: `${at.potential.name} says this. ${LIFE[at.potential.id].advice}`,
   };
-  const stages = POSITIONS.map(({ key }, i) => {
-    const c = at[key],
-      s = `${r.seed}:st${i}`;
-    const face = key === "shadow" ? "shade" : key === "potential" ? "light" : side;
-    const lines = [{ t: choose(STAGE_OPENERS[key], s, "op"), eyes: "serious" }];
-    if (face === "light") lines.push({ t: c.light, focus: true });
-    else lines.push({ t: `${c.name}.`, focus: true }, { t: c.shade });
-    let link = null;
-    for (const other of partner[key]) if (!link) link = relation(c, other, s, { avoid });
-    if (link) remember(avoid, link);
-    lines.push({ t: link ? link.text : fill(choose(GUIDE_LINKS[key], s, "gl"), { guide: mid(g) }), eyes: "watching" });
-    if (key === "future") lines.push({ t: choose(FUTURE_CAVEATS, s, "fc"), eyes: "soft" });
-    return { position: key, id: c.id, lines, reflection: lines.slice(1).map((l) => l.t).join(" ") };
-  });
-  return { stages, synthesis: synthesis(r, avoid) };
+  const stages = POSITIONS.map(({ key }) => ({ position: key, id: at[key].id, lines: [{ t: say[key], focus: true, eyes: "watching" }], reflection: say[key] }));
+  return { stages, synthesis: synthesis(r) };
 }
 
-// The closing synthesis: 150–250 words that name all six cards.
-export function synthesis(r, avoid = echoes(r).avoid) {
-  avoid = new Set(avoid);
+// The closing words (and the whole reading, written down).
+export function synthesis(r) {
   const g = card(r.guiding),
-    side = g.lens.side,
-    s = `${r.seed}:syn`,
-    at = Object.fromEntries(r.picks.map((p) => [p.position, card(p.id)]));
-  const phrase = (c) => (side === "light" ? c.lightShort : c.shadeShort);
-  const parts = [];
-  parts.push(g.guiding);
-  parts.push(
-    fill(choose(SYNTHESIS.arc, s, "arc"), {
-      past: mid(at.past),
-      present: mid(at.present),
-      pastPhrase: phrase(at.past),
-      presentPhrase: phrase(at.present),
-    }),
-  );
-  const bridge = relation(at.past, at.present, s, { avoid });
-  parts.push(bridge ? remember(avoid, bridge).text : choose(SYNTHESIS.bridge, s, "br"));
-  parts.push(
-    fill(choose(side === "light" ? SYNTHESIS.futureLight : SYNTHESIS.futureShade, s, "fu"), {
-      future: mid(at.future),
-      futureLight: at.future.lightShort,
-      futureShade: at.future.shadeShort,
-    }),
-  );
-  parts.push(fill(choose(SYNTHESIS.shadow, s, "sh"), { shadow: mid(at.shadow), shadowPhrase: at.shadow.shadeShort }));
-  parts.push(fill(choose(SYNTHESIS.potential, s, "po"), { potential: mid(at.potential), potentialPhrase: at.potential.lightShort }));
-  const closing = g.lens.closing;
-  const words = (list) => list.join(" ").split(/\s+/).filter(Boolean).length;
-  // Then the strongest links left among all six cards (named pairs first, then oppositions),
-  // while the whole stays under ~250 words: at least one if there is any.
-  const six = [g, at.past, at.present, at.future, at.shadow, at.potential];
-  const rank = { pair: 0, contrast: 1, shared: 2 };
-  for (let added = 0; added < 3; added++) {
-    const links = [];
-    for (let i = 0; i < six.length; i++)
-      for (let j = i + 1; j < six.length; j++) {
-        const rel = relation(six[i], six[j], s, { avoid });
-        if (rel) links.push(rel);
-      }
-    if (!links.length) break;
-    links.sort((a, b) => rank[a.kind] - rank[b.kind] || hash(`${s}:${a.key}`) - hash(`${s}:${b.key}`));
-    const l = links[0];
-    if (added > 0 && words([...parts, l.text, closing]) > 250) break;
-    parts.push(remember(avoid, l).text);
-    if (words([...parts, closing]) >= 175) break;
-  }
-  parts.push(closing);
-  return { text: parts.join(" "), sentences: parts, words: words(parts) };
+    fr = POSITIONS.map(({ key }) => card(r.picks.find((p) => p.position === key).id));
+  const ends = (r.answers || []).map((x) => answerOf(x)?.end).filter(Boolean);
+  const parts = [
+    `${g.name} sat under all of it.`,
+    `${LIFE[fr[0].id][topicFor(r, 0)]}`,
+    `${LIFE[fr[1].id][topicFor(r, 1)]}`,
+    `${LIFE[fr[2].id][topicFor(r, 2)]}`,
+    `Careful with ${mid(fr[3])}. ${LIFE[fr[3].id].warning}`,
+    LIFE[fr[4].id].advice,
+    ...ends,
+    g.lens.closing,
+  ];
+  const words = parts.join(" ").split(/\s+/).length;
+  return { text: parts.join(" "), sentences: [...ends, g.lens.closing], words };
 }
 
 // Everything the summary (and the saved reading) shows.
@@ -337,7 +308,8 @@ export function summary(r) {
   const final = finalReading(r);
   return {
     seed: r.seed,
-    guiding: { id: g.id, name: g.name, roman: g.roman, art: g.art, keywords: g.keywords, text: g.guiding },
+    topic: r.topic,
+    guiding: { id: g.id, name: g.name, roman: g.roman, art: g.art, keywords: g.keywords, text: LIFE[g.id][r.topic || "love"] },
     cards: r.picks.map((p, i) => {
       const c = card(p.id);
       return {

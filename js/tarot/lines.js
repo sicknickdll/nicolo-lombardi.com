@@ -11,89 +11,57 @@
 
 export const PHASE_LINES = {
   arrival: [
-    [{ t: "At last.", eyes: "idle", pause: 600 }, "I was beginning to wonder whether you would come.", { t: "Don't ask how I knew.", eyes: "amused" }, "The cards have their ways."],
-    [{ t: "At last.", eyes: "idle", pause: 600 }, "I was beginning to think you'd changed your mind.", { t: "Sit. The chair won't bite.", eyes: "amused" }, "I make no promises about the cards."],
+    [{ t: "At last.", eyes: "idle", pause: 600 }, { t: "Sit. Let's see what's going on with you.", eyes: "amused" }],
+    [{ t: "There you are.", eyes: "idle", pause: 600 }, { t: "Sit down. The cards are restless tonight.", eyes: "amused" }],
   ],
   returning: [
-    [{ t: "You again.", eyes: "curious", pause: 500 }, { t: "Good. The cards remember you, even if you'd rather they didn't.", eyes: "amused" }],
-    [{ t: "Back so soon.", eyes: "curious", pause: 500 }, { t: "Most people need a little longer before they want to hear more.", eyes: "amused" }],
+    [{ t: "You again.", eyes: "curious", pause: 500 }, { t: "Something new, or the same old thing?", eyes: "amused" }],
   ],
-  deck: [
-    [{ t: "Twenty-one cards.", eyes: "watching" }, { t: "The Fool wandered off long ago. We read without him.", eyes: "amused" }, "Whenever you're ready."],
-    [{ t: "Twenty-one cards, and every one of them has seen worse than you.", eyes: "watching" }, "Whenever you're ready."],
-  ],
+  topic: [[{ t: "So. What keeps you up at night?", eyes: "curious" }]],
   shuffle: [
-    [{ t: "First, we must disturb the order of things.", eyes: "watching", hand: "present" }, "Shuffle them.", "Take your time. Important things rarely happen in a hurry."],
-    [{ t: "First, we must disturb the order of things.", eyes: "watching", hand: "present" }, "Touch the deck. Mix them. Lose them a little."],
+    [{ t: "Shuffle them. Just touch the deck.", eyes: "watching", hand: "present" }],
+    [{ t: "Touch the deck. Mix them up a little.", eyes: "watching", hand: "present" }],
   ],
-  shuffleMore: [
-    [{ t: "Again, if you like.", eyes: "idle" }, "Or tell me when the order feels wrong enough."],
-    [{ t: "Once more, or stop. The cards don't mind.", eyes: "idle" }, "Well. They mind a little."],
-  ],
+  shuffleMore: [[{ t: "Again, or is that enough?", eyes: "idle" }]],
   shuffleMany: [[{ t: "They won't get any more lost than that.", eyes: "amused" }]],
   cut: [
-    [{ t: "Now cut the deck.", eyes: "watching" }, { t: "Somewhere between these cards lies the moment everything changed.", eyes: "curious" }],
-    [{ t: "Now cut the deck.", eyes: "watching" }, { t: "Let's see what you've been hiding.", eyes: "amused" }],
+    [{ t: "Now cut it. Drag the top half away.", eyes: "watching" }],
+    [{ t: "Cut the deck. Pull some off the top, wherever feels right.", eyes: "watching" }],
   ],
-  cutDone: [
-    [{ t: "There.", eyes: "idle" }, "The bottom becomes the top. It usually does, eventually."],
-    [{ t: "Good.", eyes: "idle" }, "Now the order is yours, whether you like it or not."],
-  ],
-  guidingBefore: [
-    [{ t: "Now. The card at the very bottom.", eyes: "curious" }, "The one beneath all the others."],
-    [{ t: "Before anything else, the bottom card.", eyes: "curious" }, "The one that has been lying under everything."],
-  ],
-  guidingSeen: [
-    [{ t: "Ah...", eyes: "curious", pause: 300 }, "This one was beneath all the others."],
-    [{ t: "Ah...", eyes: "curious", pause: 300 }, "So this is what was hiding beneath everything else."],
-  ],
-  guidingAfter: [
-    [{ t: "Interesting. It will guide everything that follows.", eyes: "watching" }, "I'll keep it here, where we can both see it."],
-    [{ t: "It lay under everything. That is where the truth usually waits.", eyes: "watching" }, "I'll set it beside us. It will be listening."],
-  ],
+  cutDone: [[{ t: "Good.", eyes: "idle" }], [{ t: "There.", eyes: "idle" }]],
+  guidingBefore: [[{ t: "Touch the deck. I'll take the card from the bottom.", eyes: "curious" }]],
+  guidingSeen: [[{ t: "Ah.", eyes: "curious", pause: 300 }]],
+  guidingAfter: [[{ t: "That one stays here, under everything.", eyes: "watching" }]],
   spreadBefore: [
-    [{ t: "Now. Five cards.", eyes: "watching" }, "Choose with your hand, not your head. Your head has had its turn."],
-    [{ t: "Five cards, laid in a cross.", eyes: "watching" }, "Don't think too hard. The cards can tell."],
+    [{ t: "Five cards. Pick with your hand, not your head.", eyes: "watching" }],
+    [{ t: "Now pick five. Don't think too hard, the cards can tell.", eyes: "watching" }],
   ],
-  // before each pick (index = position in the cross)
   pick: {
-    past: [["The first card is your past."], ["Begin with what's behind you."]],
-    present: [["Now, the present."], ["The second card: where you stand."]],
-    future: [["The third: what lies ahead."], ["Now, a little further down the road."]],
-    shadow: [["The fourth goes beneath. Your shadow."], ["Now, the part you don't look at."]],
-    potential: [["The last card goes above everything."], ["And finally, what you could choose."]],
+    past: [["First, your past."]],
+    present: [["Now, where you are."]],
+    future: [["Next, where it's going."]],
+    shadow: [["Now the part you don't talk about."]],
+    potential: [["Last one. What you can do about it."]],
   },
-  crossDone: [
-    [{ t: "Five cards.", eyes: "watching", pause: 400 }, "But only one story.", { t: "Let's see whether you're ready to hear it.", eyes: "curious" }],
-  ],
-  finalBefore: [
-    [{ t: "Now I can see the pattern.", eyes: "serious" }, "The cards seemed separate.", { t: "They never were.", eyes: "dramatic" }],
-  ],
-  synthesisBefore: [[{ t: "Now, all of it together.", eyes: "serious", pause: 400 }], [{ t: "And now the whole of it.", eyes: "serious", pause: 400 }]],
-  end: [
-    [{ t: "The cards have spoken.", eyes: "idle", pause: 900 }, { t: "The rest...", pause: 500 }, { t: "Is yours to decide.", eyes: "soft" }],
-  ],
-  resume: [
-    [{ t: "You left in the middle of something.", eyes: "curious" }, "The cards waited. They're patient. I am less so."],
-  ],
+  crossDone: [[{ t: "That's all five. Let me look.", eyes: "watching", pause: 300 }]],
+  finalBefore: [[{ t: "Right. Here's how it goes.", eyes: "serious" }]],
+  end: [[{ t: "That's it.", eyes: "idle", pause: 700 }, { t: "The rest is up to you.", eyes: "soft" }]],
+  resume: [[{ t: "You left in the middle. Shall we finish?", eyes: "curious" }]],
   reviewOffer: [[{ t: "Your last reading is still on the table, if you want it.", eyes: "idle" }]],
-  idle: [
-    [{ t: "Take your time. I have a great deal of it.", eyes: "amused" }],
-    [{ t: "The cards are not going anywhere. Neither, it seems, are you.", eyes: "amused" }],
-    [{ t: "Any of them. They're all listening.", eyes: "watching" }],
-  ],
+  idle: [[{ t: "Any of them. They don't bite.", eyes: "amused" }], [{ t: "Take your time. I'm not going anywhere.", eyes: "amused" }]],
+  // poking her in the eye, in order. The fifth time there are no more words.
   poked: [
     [{ t: "Eyes on the cards, please.", eyes: "suspicious" }],
-    [{ t: "I'm not the one being read tonight.", eyes: "amused" }],
-    [{ t: "Careful. I look back.", eyes: "dramatic" }],
-    [{ t: "Rude.", eyes: "suspicious" }],
+    [{ t: "Don't do that.", eyes: "suspicious" }],
+    [{ t: "I said don't.", eyes: "serious" }],
+    [{ t: "Once more. I dare you.", eyes: "dramatic" }],
   ],
 };
 
 // How she names each place of the cross when a card lands there.
 export const POSITION_PHRASES = {
   past: ["in your past", "behind you", "where you came from"],
-  present: ["at the centre of it all", "in the present", "here, now"],
+  present: ["right now", "in the present", "here and now"],
   future: ["in what lies ahead", "on the road ahead", "in what is coming"],
   shadow: ["beneath it all", "in the shadow", "underneath"],
   potential: ["above it all", "at the crown", "in what you could become"],
