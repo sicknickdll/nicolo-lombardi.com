@@ -675,9 +675,9 @@ video {
   text-decoration: underline;
 }
 
-/* Landing intro (js/intro.js). `html.intro` is set by the inline script in the page head
-   so the page never flashes before the intro; that script also lifts the cover if the
-   intro hasn't started 5 s later. */
+/* Landing intro (js/intro.js), after auge-xp.com. `html.intro` is set by the inline script in
+   the page head so the page never flashes before the intro (a light cover, the intro's first
+   colour); that script also lifts the cover if the intro hasn't started 5 s later. */
 html.intro,
 html.intro body {
   overflow: hidden;
@@ -687,104 +687,83 @@ html.intro body::after {
   position: fixed;
   inset: 0;
   z-index: 999;
-  background: #000;
+  background: #edebe4;
 }
 html.intro .home-tagline {
   animation-play-state: paused;
 }
 .intro-overlay {
+  --curve: cubic-bezier(0.76, 0, 0.24, 1);
   position: fixed;
   inset: 0;
   z-index: 1000;
   overflow: hidden;
+  background: #edebe4;
   cursor: var(--cursor-default);
+  /* lifts away with a curved bottom edge */
+  transition:
+    transform 0.9s var(--curve),
+    border-radius 0.9s var(--curve);
 }
-.intro-bg {
-  position: absolute;
-  inset: 0;
-  background: #000;
-}
-.intro-ring {
-  position: absolute;
-  inset: 0;
-}
-.intro-frame {
-  contain: strict;
-  position: absolute;
-  left: 0;
-  top: 0;
-  overflow: hidden;
-  opacity: 0;
-  background: #111;
-  will-change: transform, opacity;
-}
-.intro-frame img,
-.intro-frame video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  max-width: none;
-}
-.intro-word {
-  position: absolute;
-  left: 0;
-  width: 100%;
-  z-index: 200;
-  overflow: hidden;
-  text-align: center;
-  white-space: nowrap;
-}
-.intro-word.is-settled {
-  overflow: visible;
-}
-.intro-word.is-settled .intro-item:not(:last-child) {
-  visibility: hidden;
-}
-.intro-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.intro-word h1 {
-  font: inherit;
-  letter-spacing: inherit;
-}
-.intro-word .name-letter {
-  animation: none;
-}
-.intro-pulse {
-  animation: intro-pulse 0.5s var(--ease);
-}
-@keyframes intro-pulse {
-  30% {
-    transform: scale(1.06);
-    text-shadow: 0 0 28px rgba(255, 255, 255, 0.55);
-  }
-}
-.intro-skip {
-  position: absolute;
-  right: 20px;
-  bottom: 20px;
-  z-index: 300;
-  font-size: 14px;
-  opacity: 0.45;
-}
-.intro-overlay.is-revealing .intro-bg {
-  opacity: 0;
-  transition: opacity 0.85s ease;
-}
-.intro-overlay.is-revealing .intro-skip,
-.intro-overlay.is-revealing .intro-ring {
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-.intro-overlay.is-revealing .intro-word {
-  opacity: 0;
-  transition: opacity 0.25s 0.6s;
+.intro-overlay.is-lifting {
+  transform: translateY(-105%);
+  border-radius: 0 0 50% 50% / 0 0 18vh 18vh;
 }
 .intro-overlay.is-skipped {
   opacity: 0;
   transition: opacity 0.4s ease;
+}
+/* the black panel that sweeps up, its top edge curved while it moves */
+.intro-sweep {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  transform: translateY(102%);
+  border-radius: 50% 50% 0 0 / 22vh 22vh 0 0;
+  transition:
+    transform 0.85s var(--curve),
+    border-radius 0.85s var(--curve);
+}
+.intro-overlay.is-swept .intro-sweep {
+  transform: none;
+  border-radius: 0;
+}
+/* white with "difference": black on the light screen, white on the black panel */
+.intro-mark,
+.intro-count {
+  position: absolute;
+  color: #fff;
+  mix-blend-mode: difference;
+  margin: 0;
+}
+.intro-mark {
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+.intro-mark p {
+  margin: 0;
+}
+.intro-name {
+  font-family: var(--head);
+  font-weight: 700;
+  font-size: clamp(40px, 9vw, 132px);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+.intro-line {
+  font-style: italic;
+  font-size: clamp(20px, 2.6vw, 36px);
+  margin-top: 0.2em !important;
+}
+.intro-count {
+  left: 50%;
+  bottom: 22px;
+  translate: -50% 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
 }
 
 /* Case layout (projects with `stills` in js/data.js): stills grid, "Behind the scenes"
