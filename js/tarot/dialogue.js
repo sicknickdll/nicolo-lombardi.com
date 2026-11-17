@@ -9,7 +9,9 @@ export function createDialogue(root, { onCue = () => {}, onType = () => {}, redu
     live = root.querySelector(".tr-live");
   let typing = null, // { full, i, timer, done }
     waiting = null, // resolve() of the current line
-    token = 0;
+    token = 0,
+    current = "", // her line being said (put back after a remark)
+    lineNo = 0;
 
   const norm = (l) => (typeof l === "string" ? { t: l } : l);
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -60,6 +62,8 @@ export function createDialogue(root, { onCue = () => {}, onType = () => {}, redu
       }
       if (my !== token) return;
       onCue(line);
+      current = line.t;
+      lineNo++;
       live.textContent = line.t;
       await type(line.t);
       if (my !== token) return;
@@ -69,6 +73,7 @@ export function createDialogue(root, { onCue = () => {}, onType = () => {}, redu
     if (!hold && my === token) clear();
   }
   function clear() {
+    current = "";
     text.textContent = "";
     more.hidden = true;
     box.classList.remove("on");
@@ -81,18 +86,22 @@ export function createDialogue(root, { onCue = () => {}, onType = () => {}, redu
   }
   // A remark over whatever she was saying: it takes the same line for a moment, then her line
   // comes back (unless she has moved on meanwhile).
-  async function interject(t, ms = 2000) {
-    if (typing) typing.finish();
-    const prev = text.textContent,
-      wasOn = box.classList.contains("on");
-    box.classList.add("on", "aside");
-    text.textContent = t;
-    live.textContent = t;
-    await sleep(ms);
-    if (text.textContent !== t) return; // a new line has taken over
-    box.classList.remove("aside");
-    text.textContent = prev;
-    if (!wasOn && !typing && !waiting) box.classList.remove("on");
+  // Remarks wait their turn (one at a time). Her own line is put back whole afterwards, unless
+  // she has already moved on to the next one.
+  let chain = Promise.resolve();
+  function interject(t, ms = 2000) {
+    return (chain = chain.then(async () => {
+      if (typing) typing.finish();
+      const n = lineNo;
+      box.classList.add("on", "aside");
+      text.textContent = t;
+      live.textContent = t;
+      await sleep(ms);
+      if (lineNo !== n) return; // a new line has taken over
+      box.classList.remove("aside");
+      text.textContent = current;
+      if (!current && !waiting) box.classList.remove("on");
+    }));
   }
   return {
     say,

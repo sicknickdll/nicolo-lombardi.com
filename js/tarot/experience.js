@@ -438,7 +438,6 @@ export function mountTarot(root) {
       if (dying || leaving) return;
       if (eyesState) eyes.setState(eyesState, { hold: ms / 1000, then: "watching" });
       await dialogue.interject(t, ms); // in her usual line at the bottom, not a second one
-      await sleep(150);
     });
     return asideQueue;
   }
@@ -509,7 +508,8 @@ export function mountTarot(root) {
         audio.play("strike");
         if (stage.candlesLit === 2) {
           api.close();
-          sayAside("Better. Don't do that again.", "serious", 2400);
+          sayAside("Better. Don't do that again.", "serious", 2200);
+          sayAside("Let's get back to it.", "watching", 1600);
         } else sayAside("One more.", "watching", 1600);
       },
     };
@@ -575,7 +575,8 @@ export function mountTarot(root) {
       if (!lit) light(innerWidth / 2, innerHeight / 2);
       [0, 1].forEach((i) => stage.setCandle(i, true));
       api.close();
-      sayAside("Better. Don't do that again.", "serious", 2400);
+      sayAside("Better. Don't do that again.", "serious", 2200);
+      sayAside("Let's get back to it.", "watching", 1600);
     };
     return api;
   }
