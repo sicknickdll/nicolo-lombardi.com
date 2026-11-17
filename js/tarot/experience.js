@@ -706,7 +706,12 @@ export function mountTarot(root) {
     // loading: the back of the cards and the type
     await Promise.all([deck.backReady, document.fonts?.load?.('24px "Heavyweight"').catch(() => {}), new Promise((r) => setTimeout(r, 700))]);
     if (!alive) return;
+    // her eyes, alone while it loads, close; the dark stays dark; then the session begins
+    loading.classList.add("closing");
+    await sleep(reduce ? 150 : 900);
+    if (!alive) return;
     loading.classList.add("gone");
+    await sleep(reduce ? 0 : 600);
     go("INTRO");
     stage.setShot("wide", 0);
     stage.lights(0, 0);

@@ -278,6 +278,6 @@ export function tarotMarkup() {
 <div class="tr-prompts" aria-live="polite"></div>
 <div class="tr-dialogue" hidden><p class="tr-text caslon" aria-hidden="true"></p><span class="tr-more" aria-hidden="true" hidden></span></div>
 <p class="sr-only tr-live" aria-live="polite"></p>
-<div class="tr-loading" aria-hidden="true"><span class="tr-candle"></span><p class="caslon">The cards are being prepared…</p></div>
+<div class="tr-loading" aria-hidden="true"><span class="tr-leyes"><i></i><i></i></span><p></p></div>
 <noscript><p class="tr-noscript caslon">The fortune teller only reads by candlelight, and the candles need JavaScript.</p></noscript></section>`.replace(/\n/g, "");
 }
