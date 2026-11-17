@@ -47,6 +47,22 @@ export function preload(name) {
     load(name);
   }
 }
+// The same sound played backwards (the Archive's boot sound, rewinding as you leave it).
+const reversed = new Map();
+export function playReversed(name, volume = 0.6) {
+  const c = context();
+  if (!c || document.hidden) return;
+  if (c.state === "suspended") c.resume().catch(() => {});
+  Promise.resolve(load(name)).then((b) => {
+    if (!b) return;
+    if (!reversed.has(name)) {
+      const r = ctx.createBuffer(b.numberOfChannels, b.length, b.sampleRate);
+      for (let ch = 0; ch < b.numberOfChannels; ch++) r.getChannelData(ch).set(b.getChannelData(ch).slice().reverse());
+      reversed.set(name, r);
+    }
+    start(`${name}:rev`, reversed.get(name), volume);
+  });
+}
 export function play(name, volume = 0.6) {
   if (document.hidden) return;
   const c = context();

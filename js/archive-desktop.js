@@ -13,7 +13,12 @@
 import { navigateTo } from "./menu.js";
 import { esc, projectsWindow } from "./views.js";
 import { mountParticleText } from "./particle-text.js";
-import { play as playSound } from "./sound.js";
+import { play as playSound, playReversed } from "./sound.js";
+// Going back to the portfolio (anywhere outside /archive/): the boot sound plays in reverse.
+const go = (href) => {
+  if (!new URL(href, location.href).pathname.startsWith("/archive")) playReversed("archive-loading", 0.55);
+  navigateTo(href);
+};
 
 const KEY = "nl-desk";
 const PHRASES = [
@@ -228,7 +233,7 @@ export function bindDesktop(main) {
       return w && close(w);
     }
     const a = e.target.closest("a[href^='/']");
-    if (a) (e.preventDefault(), navigateTo(a.getAttribute("href")));
+    if (a) (e.preventDefault(), go(a.getAttribute("href")));
   });
 
   // ── icons ──
@@ -244,7 +249,7 @@ export function bindDesktop(main) {
   icons.forEach(iconPos);
   const leave = (href) => {
     desk.classList.add("leaving");
-    setTimeout(() => navigateTo(href), reduce ? 0 : 260);
+    setTimeout(() => go(href), reduce ? 0 : 260);
   };
   const openIcon = (icon) => {
     if (icon.dataset.href) return leave(icon.dataset.href); // a collection: straight to its page
@@ -371,7 +376,7 @@ export function bindDesktop(main) {
       return;
     }
     const a = e.target.closest("a[href^='/']");
-    if (a) (e.preventDefault(), closeMenus(), navigateTo(a.getAttribute("href")));
+    if (a) (e.preventDefault(), closeMenus(), go(a.getAttribute("href")));
   });
 
   // Time in Madrid, e.g. "16:27 CET" (CEST in summer).
