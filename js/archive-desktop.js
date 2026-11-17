@@ -116,7 +116,7 @@ export function bindDesktop(main) {
       return {
         title: "leave.exe",
         w: 340,
-        body: `<div class="dw-doc"><p class="dw-kicker">Leaving the Archive</p><h2 class="caslon">Back to the portfolio?</h2><p>You are going back to the portfolio. Are you sure?</p><p class="dw-choices"><button type="button" class="dw-btn" data-leave="stay">Stay</button><button type="button" class="dw-btn dw-btn-go" data-leave="go">Yes, take me back</button></p></div>`,
+        body: `<div class="dw-doc"><h2>Back to the portfolio?</h2><p class="dw-choices"><button type="button" class="dw-btn" data-leave="stay">Stay</button><button type="button" class="dw-btn dw-btn-go" data-leave="go">Yes, take me back</button></p></div>`,
       };
     if (id === "mail")
       return {

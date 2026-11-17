@@ -437,11 +437,8 @@ export function mountTarot(root) {
     asideQueue = asideQueue.then(async () => {
       if (dying || leaving) return;
       if (eyesState) eyes.setState(eyesState, { hold: ms / 1000, then: "watching" });
-      aside.textContent = t;
-      aside.classList.add("on");
-      await sleep(ms);
-      aside.classList.remove("on");
-      await sleep(250);
+      await dialogue.interject(t, ms); // in her usual line at the bottom, not a second one
+      await sleep(150);
     });
     return asideQueue;
   }
@@ -475,7 +472,7 @@ export function mountTarot(root) {
   function createMatches() {
     const el = document.createElement("div");
     el.className = "tr-matches";
-    el.innerHTML = `<div class="trm-box"><span class="trm-strike"></span><span class="trm-label">SAFETY MATCHES</span></div><div class="trm-match" aria-label="A match: drag it across the side of the box"><span class="trm-head"></span></div>`;
+    el.innerHTML = `<div class="trm-box"><span class="trm-strike"></span></div><div class="trm-match" aria-label="A match: drag it across the top of the box"><span class="trm-head"></span></div>`;
     root.append(el);
     const box = el.querySelector(".trm-box"),
       strike = el.querySelector(".trm-strike"),

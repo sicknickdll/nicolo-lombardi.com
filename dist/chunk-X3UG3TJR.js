@@ -76,5 +76,5 @@ Edited the music video and in charge of the VFX, shaping the visuals and final l
 <div class="tr-prompts" aria-live="polite"></div>
 <div class="tr-dialogue" hidden><p class="tr-text caslon" aria-hidden="true"></p><span class="tr-more" aria-hidden="true" hidden></span></div>
 <p class="sr-only tr-live" aria-live="polite"></p>
-<div class="tr-loading" aria-hidden="true"><span class="tr-leyes"><i></i><i></i></span><p></p></div>
+<div class="tr-loading" aria-hidden="true"><span class="tr-leyes"></span><p></p></div>
 <noscript><p class="tr-noscript caslon">The fortune teller only reads by candlelight, and the candles need JavaScript.</p></noscript></section>`.replace(/\n/g,"")}export{R as a,xe as b,i as c,Ee as d,Se as e,Ie as f,Ce as g,Fe as h,Ve as i,Te as j,We as k};
