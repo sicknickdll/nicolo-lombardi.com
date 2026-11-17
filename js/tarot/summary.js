@@ -30,7 +30,7 @@ export function summaryMarkup(sum, { note = "" } = {}) {
   const fig = (c, alt) => `<figure><img src="${c.art}" alt="${esc(alt)}" width="720" height="1280" loading="lazy" decoding="async"></figure>`;
   const kw = (k) => `<p class="trs-kw">${k.map(esc).join(" · ")}</p>`;
   return `<div class="trs-inner">
-<header class="trs-head"><p class="trs-kicker">The Tarot Reader · ${esc(fmtDate(sum.savedAt || sum.at || Date.now()))}</p><h2 class="caslon" id="trs-title">Your Reading</h2>${note ? `<p class="trs-note">${esc(note)}</p>` : ""}</header>
+<button type="button" class="trs-x" data-act="close" aria-label="Close">X</button><header class="trs-head"><p class="trs-kicker">The Tarot Reader · ${esc(fmtDate(sum.savedAt || sum.at || Date.now()))}</p><h2 class="caslon" id="trs-title">Your Reading</h2>${note ? `<p class="trs-note">${esc(note)}</p>` : ""}</header>
 <section class="trs-card trs-guide">${fig(sum.guiding, sum.guiding.name)}<div><p class="trs-pos">The Guiding Card</p><h3 class="caslon">${esc(sum.guiding.name)}</h3>${kw(sum.guiding.keywords)}<p>${esc(sum.guiding.text)}</p></div></section>
 <ol class="trs-cross">${sum.cards
     .map(
@@ -39,7 +39,7 @@ export function summaryMarkup(sum, { note = "" } = {}) {
     )
     .join("")}</ol>
 <section class="trs-story"><h3 class="caslon">The Story</h3><p>${esc(sum.synthesis)}</p></section>
-<footer class="trs-actions"><button type="button" data-act="keep">Save Reading</button><button type="button" data-act="image">Download Image</button><button type="button" data-act="print">Print</button><button type="button" data-act="again">Begin Again</button><button type="button" data-act="close">Close</button></footer>
+<footer class="trs-actions"><button type="button" data-act="keep">Save Reading</button><button type="button" data-act="image">Download Image</button><button type="button" data-act="print">Print</button><button type="button" data-act="again">Begin Again</button></footer>
 </div>`;
 }
 

@@ -173,6 +173,11 @@ export function createAudio() {
       for (let i = 0; i < 7; i++) noise({ t: now() + i * (0.06 + i * 0.018), dur: 0.015, f0: 1800, q: 4, gain: 0.05 });
     },
     low: () => tone({ f0: 55, f1: 49, type: "sawtooth", dur: 1.8, a: 0.6, gain: 0.07, lp: 260, send: 1 }),
+    // a breath across the candle flames
+    blow: () => {
+      noise({ dur: 0.9, type: "bandpass", f0: 500, f1: 260, q: 0.6, gain: 0.16, a: 0.12 });
+      noise({ t: now() + 0.25, dur: 0.7, type: "bandpass", f0: 420, f1: 200, q: 0.6, gain: 0.1, a: 0.08 });
+    },
     crack: () => {
       for (let i = 0; i < 4; i++) noise({ t: now() + i * 0.018, dur: 0.035, type: "bandpass", f0: 1400 + i * 500, q: 3, gain: 0.35 });
       tone({ f0: 90, f1: 40, dur: 0.25, gain: 0.4 });
