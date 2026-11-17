@@ -17,6 +17,19 @@ const scan = (dir, id) => ({
   thumb: `/assets/archive/${dir}/${id}-thumb.webp`,
 });
 
+// Interactive pieces in the Archive, each with its own page at /archive/<id>/ (not a collection
+// of scans). icon: the images that float out of its folder on the desktop.
+export const experiences = [
+  {
+    id: "tarot",
+    title: "THE TAROT READER",
+    label: "tarot",
+    blurb:
+      "An interactive tarot reading by candlelight: a fortune teller in the dark, twenty-one Major Arcana illustrated for this archive, a guiding card and a cross of five.",
+    icon: ["death", "star", "moon", "magician", "sun"].map((id) => `/assets/archive/tarot/${id}-thumb.webp`),
+  },
+];
+
 // Projects named on the Archive landing that have no page yet: their links lead to the 404 page.
 export const upcoming = [
   { title: "KONBINI WARS", href: "/archive/konbini-wars/" },

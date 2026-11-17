@@ -10,7 +10,7 @@ import { eyeTracking } from "./eye.js";
 import { isMenuOpen, setNavigator } from "./menu.js";
 import { smoothScroll } from "./smooth.js";
 import { bindReveal } from "./reveal.js";
-import { work, homeMarkup, projectMarkup, projectURL, aboutMarkup, archiveMarkup, collectionMarkup, archiveCollections } from "./views.js";
+import { work, homeMarkup, projectMarkup, projectURL, aboutMarkup, archiveMarkup, collectionMarkup, archiveCollections, archiveExperiences, tarotMarkup } from "./views.js";
 const main = document.querySelector("#main");
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
 let cleanup = () => {};
@@ -102,6 +102,21 @@ function showCollection(id) {
     off();
   };
 }
+// /archive/tarot/: the Tarot Reader. Its scripts (three.js included) load only here.
+function showTarot() {
+  main.innerHTML = tarotMarkup();
+  let off = () => {},
+    gone = false;
+  import("./tarot/experience.js")
+    .then((m) => {
+      if (!gone) off = m.mountTarot(main.querySelector(".tarot"));
+    })
+    .catch(() => main.querySelector(".tr-loading p") && (main.querySelector(".tr-loading p").textContent = "The cards could not be brought to the table. Reload to try again."));
+  cleanup = () => {
+    gone = true;
+    off();
+  };
+}
 function showAbout() {
   main.innerHTML = aboutMarkup();
   const stage = main.querySelector(".about-head");
@@ -133,6 +148,7 @@ function render() {
   const collection = path.match(/^\/archive\/([^/]+)\/?$/);
   if (path === "/about/") showAbout();
   else if (path === "/archive/") showArchive();
+  else if (path === "/archive/tarot/" || path === "/archive/tarot") showTarot();
   else if (collection) showCollection(collection[1]);
   else if (project) showProject(project[1]);
   else showHome();
@@ -145,7 +161,7 @@ function render() {
 const titles = new Map([[location.pathname, document.title]]);
 function go(href) {
   const url = new URL(href, location.href);
-  if (!(url.pathname === "/" || url.pathname === "/about/" || url.pathname === "/archive/" || archiveCollections.some((c) => url.pathname === `/archive/${c.id}/`) || /^\/work\/[^/]+\/?$/.test(url.pathname))) return false;
+  if (!(url.pathname === "/" || url.pathname === "/about/" || url.pathname === "/archive/" || [...archiveCollections, ...archiveExperiences].some((c) => url.pathname === `/archive/${c.id}/`) || /^\/work\/[^/]+\/?$/.test(url.pathname))) return false;
   cleanup();
   cleanup = () => {};
   history.pushState(null, "", url);

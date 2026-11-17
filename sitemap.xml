@@ -44,6 +44,31 @@
     <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/la-barra/krispy-kreme-front.webp</image:loc></image:image>
   </url>
   <url>
+    <loc>https://nicolo-lombardi.com/archive/tarot/</loc>
+    <lastmod>2026-11-17</lastmod>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/magician.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/high-priestess.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/empress.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/emperor.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/hierophant.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/lovers.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/chariot.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/strength.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/hermit.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/wheel-of-fortune.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/justice.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/hanged-man.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/death.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/temperance.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/devil.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/tower.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/star.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/moon.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/sun.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/judgement.webp</image:loc></image:image>
+    <image:image><image:loc>https://nicolo-lombardi.com/assets/archive/tarot/world.webp</image:loc></image:image>
+  </url>
+  <url>
     <loc>https://nicolo-lombardi.com/privacy/</loc>
     <lastmod>2026-11-17</lastmod>
 
