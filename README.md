@@ -30,6 +30,7 @@ tools/optimize-model.mjs  shrinks a 3D scan for the web (assets/about/head.glb)
 tools/vendor-three.mjs    rebuilds js/vendor/three.js
 tools/make-og-images.py  link-preview images in assets/og/
 tools/make-tarot-assets.py  the tarot card images (assets/archive/tarot/) from the original PNGs
+tools/make-tarot-sprites.py the tarot's pixel-art overlays (loading eyes, matchbox, match, flame)
 tools/prepare-video.sh   converts a new video into the needed formats
 index.html, about/, work/<id>/   GENERATED pages, don't edit by hand
 film/, visuals/     GENERATED redirects: old addresses forward to the Work list on the landing page

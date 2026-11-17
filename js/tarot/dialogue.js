@@ -79,8 +79,24 @@ export function createDialogue(root, { onCue = () => {}, onType = () => {}, redu
     if (waiting) return waiting(), true;
     return false;
   }
+  // A remark over whatever she was saying: it takes the same line for a moment, then her line
+  // comes back (unless she has moved on meanwhile).
+  async function interject(t, ms = 2000) {
+    if (typing) typing.finish();
+    const prev = text.textContent,
+      wasOn = box.classList.contains("on");
+    box.classList.add("on", "aside");
+    text.textContent = t;
+    live.textContent = t;
+    await sleep(ms);
+    if (text.textContent !== t) return; // a new line has taken over
+    box.classList.remove("aside");
+    text.textContent = prev;
+    if (!wasOn && !typing && !waiting) box.classList.remove("on");
+  }
   return {
     say,
+    interject,
     advance,
     clear,
     // stop whatever is being said (leaving the page, restarting)
