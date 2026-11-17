@@ -112,6 +112,12 @@ export function bindDesktop(main) {
         w: 380,
         body: `<div class="dw-doc"><p class="dw-kicker">Archive · Nicoló Lombardi</p><h2 class="caslon">Hello, welcome in.</h2><p>This is my personal archive and playground: things I find and keep, and things I make for fun. Feel free to explore.</p><p class="dw-hint">Hover a folder to peek inside, click to open it.</p></div>`,
       };
+    if (id === "leave")
+      return {
+        title: "leave.exe",
+        w: 340,
+        body: `<div class="dw-doc"><p class="dw-kicker">Leaving the Archive</p><h2 class="caslon">Back to the portfolio?</h2><p>You are going back to the portfolio. Are you sure?</p><p class="dw-choices"><button type="button" class="dw-btn" data-leave="stay">Stay</button><button type="button" class="dw-btn dw-btn-go" data-leave="go">Yes, take me back</button></p></div>`,
+      };
     if (id === "mail")
       return {
         title: "contact.mail",
@@ -214,6 +220,12 @@ export function bindDesktop(main) {
     });
   }
   on(layer, "click", (e) => {
+    const choice = e.target.closest("[data-leave]");
+    if (choice) {
+      const w = wins.get("leave");
+      if (choice.dataset.leave === "go") return goodbye();
+      return w && close(w);
+    }
     const a = e.target.closest("a[href^='/']");
     if (a) (e.preventDefault(), navigateTo(a.getAttribute("href")));
   });
@@ -311,6 +323,44 @@ export function bindDesktop(main) {
     arrange: () => ((state.icons = {}), icons.forEach(iconPos), save()),
     theme: () => setTheme(!desk.classList.contains("dark")),
   };
+  // Clicking the name: a window asks if you really want to go. If so, the windows close, the files
+  // burn away, the dots spell a farewell, and the portfolio comes back.
+  let gone = false;
+  on(desk.querySelector(".desk-brand"), "click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!gone) open("leave");
+  });
+  async function goodbye() {
+    if (gone) return;
+    gone = true;
+    clearInterval(glitchTimer);
+    clearTimeout(scrambleTimer);
+    [...wins.values()].forEach(close);
+    const all = [...desk.querySelectorAll(".desk-icon")];
+    all.forEach((icon, i) => {
+      icon.style.animationDelay = `${(reduce ? 0 : i * 70 + Math.random() * 120) | 0}ms`;
+      icon.classList.add("burning");
+    });
+    desk.classList.add("farewell");
+    const word = Math.random() < 0.5 ? "SEE YOU SOON" : "BYE BYE!";
+    setTimeout(() => {
+      phrase.textContent = word;
+      if (reduce) return particles.setText(word);
+      const t0 = performance.now();
+      const tick = () => {
+        const k = Math.min(1, (performance.now() - t0) / 900);
+        if (k >= 1) return particles.setText(word);
+        const done = Math.floor(k * k * word.length);
+        let txt = "";
+        for (let i = 0; i < word.length; i++) txt += i < done || word[i] === " " ? word[i] : GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+        particles.setText(txt, { glitch: true });
+        scrambleTimer = setTimeout(tick, GLITCH_STEP);
+      };
+      tick();
+    }, reduce ? 0 : 500);
+    setTimeout(() => leave("/"), reduce ? 1200 : 3600);
+  }
   on(desk.querySelector(".desk-bar"), "click", (e) => {
     const cmd = e.target.closest("[data-cmd]");
     if (cmd) {

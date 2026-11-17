@@ -92,7 +92,8 @@ export function loop(name, volume = 0.3, fade = 2.5) {
   let src = null,
     gain = null,
     stopped = false;
-  load(name).then((b) => {
+  // load() gives the decoded buffer itself once it's cached, a promise before that
+  Promise.resolve(load(name)).then((b) => {
     if (!b || stopped) return;
     src = ctx.createBufferSource();
     gain = ctx.createGain();
