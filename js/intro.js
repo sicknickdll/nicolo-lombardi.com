@@ -1,46 +1,20 @@
-// Landing intro, modelled on voku.studio. The first word shuffles in on black in the hero
-// name's place while the frames load; project frames then burst out onto a ring that
-// keeps spinning around the words as they shuffle in, ending on the name. The ring is
-// pulled back into the name, and the page appears behind it.
-// It only runs when the inline script in template.html added `html.intro` (entering
-// the site or reloading the landing page, not coming back to it from another page,
-// and never with reduced motion). Any click, tap or key skips it.
-import { intro } from "./data.js";
-import { shuffleIn } from "./shuffle.js";
+// Landing intro, in the manner of auge-xp.com. On a light screen: the name in bold capitals,
+// a line in italic Caslon under it and a counter at the bottom. A black panel with a curved
+// edge sweeps up behind the text (which turns white with it: mix-blend-mode), the italic line
+// scrambles while the counter runs to 100, then the whole screen lifts away with a curved
+// bottom edge and the page is underneath.
+// It only runs when the inline script in template.html added `html.intro` (entering the site
+// or reloading the landing page, not coming back to it from another page, and never with
+// reduced motion). Any click, tap or key skips it.
 
-const easeOut = (t) => 1 - (1 - t) ** 3;
-const easeIn = (t) => t ** 3;
-const clamp = (t) => Math.min(1, Math.max(0, t));
-const lerp = (a, b, t) => a + (b - a) * t;
-
-// Durations in ms; spin speeds in radians per second (negative = anticlockwise,
-// so frames cross the top of the ring from right to left as on voku.studio).
-const T = {
-  firstWord: 700, // the first word shows at least this long while the frames load
-  loadCap: 2500, // …and at most this long
-  word: 650, // each following word, with the ring turning around it (each shuffles in: js/shuffle.js)
-  name: 1000, // the name, ring still turning, before the ring collapses into it
-  burst: 950, // frames fly out to the ring
-  settle: 1800, // spin slows from its burst speed to cruising speed
-  absorb: 820, // frames are pulled into the name
-  reveal: 850, // black fades away, page appears
-};
-const SPIN = { burst: -5.5, cruise: -0.45, absorb: -4 };
+const NAME = "NICOLÓ LOMBARDI";
+const LINE = "Portfolio";
+const GLYPHS = "abcdefghijklmnopqrstuvwxyz";
+// ms
+const T = { sweep: 250, count: 1900, scrambleFrom: 450, scrambleTo: 1700, lift: 2150, liftFor: 900 };
 
 export function playIntro() {
   const root = document.documentElement;
-  const heroName = document.querySelector(".home .animated-name");
-  const finishNow = () => root.classList.remove("intro");
-  if (!heroName) return (finishNow(), Promise.resolve());
-
-  const saveData = navigator.connection?.saveData;
-  // Only a few frames play at once, spread around the ring (the rest show their
-  // first frame): decoding many clips together is what makes the ring stutter.
-  const maxClips = saveData ? 0 : matchMedia("(max-width: 991px)").matches ? 2 : 4;
-  const withVideo = intro.frames.filter((f) => f.video);
-  const step = Math.ceil(withVideo.length / maxClips);
-  const playing = new Set(withVideo.filter((_, i) => i % step === 0).slice(0, maxClips));
-  // The hero video under the intro is invisible until the end: no need to decode it.
   const heroVideo = document.querySelector("#entrance-video");
   heroVideo?.pause();
   const blocked = [document.querySelector("#main"), document.querySelector(".header")];
@@ -48,257 +22,52 @@ export function playIntro() {
 
   const el = document.createElement("div");
   el.className = "intro-overlay";
-  el.innerHTML = `<div class="intro-bg"></div><div class="intro-ring" aria-hidden="true"></div><div class="intro-word" aria-hidden="true"><div class="intro-roll"></div></div><button class="intro-skip" type="button">skip intro</button>`;
+  el.innerHTML = `<div class="intro-sweep"></div><div class="intro-mark" aria-hidden="true"><p class="intro-name">${NAME}</p><p class="intro-line caslon">${LINE}</p></div><p class="intro-count" aria-hidden="true">000</p>`;
   document.body.append(el);
-  const ring = el.querySelector(".intro-ring"),
-    word = el.querySelector(".intro-word"),
-    roll = el.querySelector(".intro-roll");
+  const line = el.querySelector(".intro-line"),
+    count = el.querySelector(".intro-count");
 
-  // Words, then a copy of the hero name (same letter spans, so the same kerning) that
-  // ends exactly on top of the real one.
-  const items = intro.words.map((w) => {
-    const s = document.createElement("span");
-    s.textContent = w;
-    return s;
-  });
-  const name = heroName.cloneNode(true);
-  name.removeAttribute("aria-label");
-  items.push(name);
-  items.forEach((item) => {
-    item.classList.add("intro-item");
-    roll.append(item);
-  });
-
-  // Frames, each with its own random tilt so the ring doesn't look mechanical.
-  const loads = [];
-  const frames = intro.frames.map((f, i) => {
-    const frame = document.createElement("div");
-    frame.className = "intro-frame";
-    const img = new Image();
-    img.decoding = "async";
-    img.alt = "";
-    loads.push(
-      new Promise((done) => {
-        img.onload = img.onerror = done;
-      }),
-    );
-    img.src = f.src;
-    let media = img;
-    if (playing.has(f)) {
-      // Muted + inline + autoplay is what lets phones play it without a tap. It counts
-      // as loaded once it can play, so the ring never shows a frozen clip.
-      const v = document.createElement("video");
-      v.muted = v.loop = v.playsInline = true;
-      v.setAttribute("muted", "");
-      v.setAttribute("playsinline", "");
-      v.preload = "auto";
-      v.poster = f.src;
-      v.innerHTML = `<source src="${f.video}" type="video/webm"><source src="${f.video.replace(/\.webm$/, ".mp4")}" type="video/mp4">`;
-      loads.push(
-        new Promise((done) => {
-          v.addEventListener("canplay", done, { once: true });
-          v.lastElementChild.addEventListener("error", done, { once: true });
-        }),
-      );
-      media = v;
-    }
-    frame.append(media);
-    ring.append(frame);
-    return {
-      frame,
-      ratio: f.ratio,
-      slot: (i / intro.frames.length) * Math.PI * 2,
-      tiltZ: (Math.random() * 2 - 1) * 4,
-      delay: Math.random() * 0.3,
-    };
-  });
-
-  // Geometry: the ring is centred on the hero name and sized to the screen.
-  let cx = 0,
-    cy = 0,
-    rx = 0,
-    ry = 0,
-    lineHeight = 0;
-  const layout = () => {
-    const r = heroName.getBoundingClientRect(),
-      cs = getComputedStyle(heroName);
-    cx = r.left + r.width / 2;
-    cy = r.top + r.height / 2;
-    lineHeight = parseFloat(cs.lineHeight) || r.height;
-    Object.assign(word.style, {
-      top: cy - lineHeight / 2 + "px",
-      height: lineHeight + "px",
-      fontSize: cs.fontSize,
-      fontWeight: cs.fontWeight,
-      fontFamily: cs.fontFamily,
-      letterSpacing: cs.letterSpacing,
-      lineHeight: lineHeight + "px",
-      transformOrigin: `${cx}px 50%`,
-      transform: cs.transform === "none" ? "" : cs.transform,
-    });
-    items.forEach((item) => (item.style.height = lineHeight + "px"));
-    placeRoll(current);
-    const vw = innerWidth,
-      vh = innerHeight,
-      // More frames than before: shrink them a little so the ring stays readable.
-      base =
-        Math.max(64, Math.min(230, Math.min(vw, vh) * 0.21)) *
-        Math.min(1, Math.sqrt(16 / frames.length));
-    rx = vw * (vw < vh ? 0.34 : 0.37);
-    ry = vh * (vw < vh ? 0.3 : 0.34);
-    frames.forEach((f) => {
-      f.w = base * Math.sqrt(f.ratio) * 0.78;
-      f.h = (base / Math.sqrt(f.ratio)) * 0.78;
-      Object.assign(f.frame.style, {
-        width: f.w + "px",
-        height: f.h + "px",
-        marginLeft: -f.w / 2 + "px",
-        marginTop: -f.h / 2 + "px",
-      });
-    });
-  };
-  let current = -1;
-  // Each word takes the place of the last at once, and its letters shuffle in (React Bits' Shuffle).
-  const placeRoll = (i) => (roll.style.transform = `translateY(${-i * lineHeight}px)`);
-  const showWord = (i) => {
-    current = i;
-    placeRoll(i);
-    const item = items[i];
-    shuffleIn(item, { stagger: 0.015, letters: item === name ? item.querySelectorAll(".name-letter") : undefined });
-  };
-  layout();
-  addEventListener("resize", layout);
-
-  // One clock for the ring: `radius` 0 → 1 → 0, `spin` integrated every frame.
   let raf = 0,
-    last = 0,
-    angle = -Math.PI / 2,
-    phase = "idle",
-    phaseStart = 0,
-    clock = 0,
-    checks = 0;
-  const slowFrames = [];
-  const startPhase = (p) => {
-    phase = p;
-    phaseStart = clock;
-  };
-  // The ring leans towards the pointer (frames nearer the viewer move more). Desktop only.
-  const look = { x: 0, y: 0, tx: 0, ty: 0 };
-  const onMove = (e) => {
-    look.tx = (e.clientX / innerWidth - 0.5) * 2;
-    look.ty = (e.clientY / innerHeight - 0.5) * 2;
-  };
-  if (matchMedia("(hover: hover) and (pointer: fine)").matches)
-    addEventListener("pointermove", onMove, { passive: true });
-  const draw = (now) => {
-    const dt = Math.min(0.05, last ? (now - last) / 1000 : 0);
-    last = now;
-    clock += dt * 1000;
-    const t = clock - phaseStart;
-    let radius = 0,
-      spin = 0;
-    if (phase === "orbit") {
-      const k = clamp(t / T.burst);
-      radius = easeOut(k);
-      spin = lerp(SPIN.burst, SPIN.cruise, easeOut(clamp(t / T.settle)));
-    } else if (phase === "absorb") {
-      const k = clamp(t / T.absorb);
-      radius = 1 - easeIn(k);
-      spin = lerp(SPIN.cruise, SPIN.absorb, easeIn(k));
-      if (k >= 1) {
-        startPhase("done");
-        absorbed();
-      }
-    }
-    angle += spin * dt;
-    // Safeguard: if the ring comes out slow (checked over four short windows), this
-    // device can't decode the clips and animate at once, so the clips pause on their
-    // current frame and the ring stays smooth.
-    if (phase === "orbit" && checks < 4 && dt && t > 250) {
-      slowFrames.push(dt);
-      if (slowFrames.length === 20) {
-        checks++;
-        const mean = slowFrames.reduce((sum, d) => sum + d, 0) / slowFrames.length;
-        slowFrames.length = 0;
-        if (mean > 1 / 45) {
-          checks = 4;
-          el.querySelectorAll("video").forEach((v) => v.pause());
-        }
-      }
-    }
-    look.x += (look.tx - look.x) * Math.min(1, dt * 4);
-    look.y += (look.ty - look.y) * Math.min(1, dt * 4);
-    const burstAge = phase === "orbit" ? t / 1000 : 1;
-    frames.forEach((f) => {
-      const a = angle + f.slot,
-        depth = Math.sin(a), // -1 back (top of the ring) … +1 front (bottom)
-        shrink = 0.15 + 0.85 * radius ** 0.7,
-        scale = shrink * (0.88 + 0.14 * (depth + 1));
-      const fade = phase === "orbit" ? clamp((burstAge - f.delay) / 0.18) : clamp(radius / 0.35);
-      f.frame.style.opacity = phase === "done" ? 0 : fade;
-      const z = Math.round((depth + 1) * 4);
-      if (z !== f.z) f.frame.style.zIndex = f.z = z; // restacking is costly: only on change
-      f.frame.style.transform =
-        `translate(${cx + Math.cos(a) * rx * radius - look.x * 34 * (depth + 1.3) * radius}px,${cy + depth * ry * radius - look.y * 20 * (depth + 1.3) * radius}px)` +
-        ` rotate(${f.tiltZ}deg) scale(${scale})`; // 2D only: far cheaper to draw than 3D
-    });
-    if (phase !== "done") raf = requestAnimationFrame(draw);
-  };
-
-  let resolve;
+    ended = false,
+    resolve;
   const finished = new Promise((r) => (resolve = r));
-  const timers = [];
-  const at = (ms, fn) => timers.push(setTimeout(fn, ms));
-  let ended = false;
-  const end = (fast) => {
+  const t0 = performance.now();
+  const frame = (now) => {
+    const t = now - t0;
+    count.textContent = String(Math.round(Math.min(1, t / T.count) * 100)).padStart(3, "0");
+    // the italic line: random letters between scrambleFrom and scrambleTo, resolving left to right
+    if (t > T.scrambleFrom && t < T.scrambleTo) {
+      const k = (t - T.scrambleFrom) / (T.scrambleTo - T.scrambleFrom),
+        done = Math.floor(k * k * LINE.length);
+      line.textContent = [...LINE].map((c, i) => (i < done ? c : GLYPHS[Math.floor(Math.random() * GLYPHS.length)])).join("");
+    } else if (t >= T.scrambleTo) line.textContent = LINE;
+    if (t >= T.lift) return end(false);
+    raf = requestAnimationFrame(frame);
+  };
+  setTimeout(() => el.classList.add("is-swept"), T.sweep);
+  raf = requestAnimationFrame(frame);
+
+  function end(fast) {
     if (ended) return;
     ended = true;
-    timers.forEach(clearTimeout);
-    finishNow();
+    cancelAnimationFrame(raf);
+    count.textContent = "100";
+    line.textContent = LINE;
+    root.classList.remove("intro");
     heroVideo?.play().catch(() => {});
     blocked.forEach((b) => b && (b.inert = false));
-    el.classList.add(fast ? "is-skipped" : "is-revealing");
+    el.classList.add(fast ? "is-skipped" : "is-lifting");
+    removeEventListener("keydown", skipKey);
     setTimeout(
       () => {
-        cancelAnimationFrame(raf);
-        removeEventListener("resize", layout);
-        removeEventListener("keydown", skipKey);
-        removeEventListener("pointermove", onMove);
-        el.querySelectorAll("video").forEach((v) => v.pause());
         el.remove();
         resolve();
       },
-      fast ? 450 : T.reveal + 50,
+      fast ? 450 : T.liftFor + 50,
     );
-  };
-  const absorbed = () => {
-    name.classList.add("intro-pulse");
-    at(260, () => end(false));
-  };
-  const skip = () => end(true);
-  const skipKey = (e) => {
-    if (!e.metaKey && !e.ctrlKey && !e.altKey) skip();
-  };
-  el.addEventListener("pointerdown", skip);
+  }
+  const skipKey = (e) => !e.metaKey && !e.ctrlKey && !e.altKey && end(true);
+  el.addEventListener("pointerdown", () => end(true));
   addEventListener("keydown", skipKey);
-
-  // Timeline: first word while the frames load; then the ring bursts out and the
-  // other words roll by while it turns; the name; the ring collapses into it.
-  at(80, () => showWord(0));
-  const minWait = new Promise((r) => setTimeout(r, T.firstWord));
-  const capWait = new Promise((r) => setTimeout(r, T.loadCap));
-  Promise.race([Promise.all([minWait, ...loads]), capWait]).then(() => {
-    if (ended) return;
-    el.querySelectorAll("video").forEach((v) => v.play().catch(() => {}));
-    startPhase("orbit");
-    raf = requestAnimationFrame(draw);
-    for (let i = 1; i < items.length; i++) at(T.word * i, () => showWord(i));
-    const nameAt = T.word * (items.length - 1);
-    at(nameAt + 450, () => word.classList.add("is-settled"));
-    at(nameAt + T.name, () => {
-      startPhase("absorb");
-      el.querySelectorAll("video").forEach((v) => v.pause());
-    });
-  });
   return finished;
 }
