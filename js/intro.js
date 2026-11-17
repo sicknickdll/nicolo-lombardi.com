@@ -1,11 +1,12 @@
-// Landing intro, modelled on voku.studio. The first word rolls in on black in the hero
+// Landing intro, modelled on voku.studio. The first word shuffles in on black in the hero
 // name's place while the frames load; project frames then burst out onto a ring that
-// keeps spinning around the words as they roll by, ending on the name. The ring is
+// keeps spinning around the words as they shuffle in, ending on the name. The ring is
 // pulled back into the name, and the page appears behind it.
 // It only runs when the inline script in template.html added `html.intro` (entering
 // the site or reloading the landing page, not coming back to it from another page,
 // and never with reduced motion). Any click, tap or key skips it.
 import { intro } from "./data.js";
+import { shuffleIn } from "./shuffle.js";
 
 const easeOut = (t) => 1 - (1 - t) ** 3;
 const easeIn = (t) => t ** 3;
@@ -17,8 +18,8 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const T = {
   firstWord: 700, // the first word shows at least this long while the frames load
   loadCap: 2500, // …and at most this long
-  word: 450, // each following word, with the ring turning around it
-  name: 700, // the name, ring still turning, before the ring collapses into it
+  word: 650, // each following word, with the ring turning around it (each shuffles in: js/shuffle.js)
+  name: 1000, // the name, ring still turning, before the ring collapses into it
   burst: 950, // frames fly out to the ring
   settle: 1800, // spin slows from its burst speed to cruising speed
   absorb: 820, // frames are pulled into the name
@@ -136,7 +137,7 @@ export function playIntro() {
       transform: cs.transform === "none" ? "" : cs.transform,
     });
     items.forEach((item) => (item.style.height = lineHeight + "px"));
-    showWord(current);
+    placeRoll(current);
     const vw = innerWidth,
       vh = innerHeight,
       // More frames than before: shrink them a little so the ring stays readable.
@@ -157,9 +158,13 @@ export function playIntro() {
     });
   };
   let current = -1;
+  // Each word takes the place of the last at once, and its letters shuffle in (React Bits' Shuffle).
+  const placeRoll = (i) => (roll.style.transform = `translateY(${-i * lineHeight}px)`);
   const showWord = (i) => {
     current = i;
-    roll.style.transform = `translateY(${-i * lineHeight}px)`;
+    placeRoll(i);
+    const item = items[i];
+    shuffleIn(item, { stagger: 0.015, letters: item === name ? item.querySelectorAll(".name-letter") : undefined });
   };
   layout();
   addEventListener("resize", layout);

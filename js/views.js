@@ -2,7 +2,7 @@
 // (tools/build.mjs), so the pre-built HTML Google reads is exactly what visitors see.
 // Pure string functions: no DOM access here.
 import { projects, workOrder, hero, heroPoster, clients } from "./data.js";
-import { collections, upcoming } from "./archive-data.js";
+import { collections } from "./archive-data.js";
 import { videoGalleryMarkup, imageGalleryMarkup, tickerMarkup, videoSources } from "./galleries.js";
 
 export const esc = (s) =>
@@ -178,34 +178,46 @@ export function clientsMarkup() {
 // ── Archive ──────────────────────────────────────────────────────────────────
 export const collectionURL = (c) => `/archive/${c.id}/`;
 
-// /archive/: a desktop (js/archive-desktop.js). Each collection is a folder icon; double-click
-// opens it in a window (its pieces as files), a piece opens in its own window, and "Open
-// collection" goes to the full page. Projects without a page yet (`upcoming`) are empty folders.
+// /archive/: a desktop (js/archive-desktop.js). Icons in the top-left corner: readme.txt, one
+// folder per collection, contact.mail. A collection's folder opens on hover and its pieces float
+// out (after React Bits' "Folder Float"); a click goes straight to the collection's page. The
+// collections without a page yet (`upcoming` in js/archive-data.js) are not shown.
+// Behind everything, js/particle-text.js draws "ARCHIVE" in dots, glitching into other phrases.
 // The icons are real links, so the page still works (and is readable by search engines) without JS.
-const folderSVG = `<svg class="desk-folder" viewBox="0 0 64 52" aria-hidden="true"><path class="back" d="M2 8a4 4 0 0 1 4-4h17l5 6h30a4 4 0 0 1 4 4v32a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4z"/><path class="front" d="M2 18a4 4 0 0 1 4-4h52a4 4 0 0 1 4 4v28a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4z"/></svg>`;
 const fileSVG = (ext) => `<svg class="desk-file" viewBox="0 0 48 60" aria-hidden="true"><path d="M4 2h28l14 14v40a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path class="fold" d="M32 2v14h14"/><text x="24" y="46" text-anchor="middle">${ext}</text></svg>`;
+// Pieces leaving the folder: an arc above it, each a little tilted (fixed, so it never jumps).
+const floatSpots = (n) =>
+  Array.from({ length: n }, (_, i) => {
+    const u = n > 1 ? i / (n - 1) - 0.5 : 0,
+      j = Math.abs(Math.sin(i * 12.9898 + 4.1414) * 43758.5453) % 1;
+    return { x: Math.round(34 + u * 110 + (j - 0.5) * 6), y: Math.round(-30 - (1 - (2 * u) ** 2) * 20 - j * 6), r: Math.round(8 * (j * 2 - 1)) };
+  });
+const floatFolder = (thumbs) => {
+  const spots = floatSpots(thumbs.length);
+  return `<span class="ff" style="--n:${thumbs.length}" aria-hidden="true"><span class="ff-back"></span><span class="ff-paper"></span><span class="ff-items">${thumbs.map((t, i) => `<span class="ff-item" style="--i:${i};--x:${spots[i].x}px;--y:${spots[i].y}px;--r:${spots[i].r}deg"><img src="${t}" alt="" loading="lazy" draggable="false"></span>`).join("")}</span><span class="ff-front"></span></span>`;
+};
+const sunSVG = `<svg viewBox="0 0 24 24" aria-hidden="true" class="i-sun"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>`;
+const moonSVG = `<svg viewBox="0 0 24 24" aria-hidden="true" class="i-moon"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>`;
 export function archiveMarkup() {
-  const folders = [
-    ...collections.map((c) => ({ id: c.id, title: c.title, href: collectionURL(c), count: c.items.length, thumbs: c.items.slice(0, 3).map((i) => i.thumb) })),
-    ...upcoming.map((u) => ({ id: u.href.split("/").filter(Boolean).pop(), title: u.title, href: u.href, count: 0, thumbs: [] })),
-  ];
-  const icon = (f) =>
-    `<li><a class="desk-icon" href="${f.href}" data-open="folder:${f.id}" draggable="false"><span class="desk-glyph">${folderSVG}${f.thumbs.map((t, k) => `<img src="${t}" alt="" loading="lazy" style="--k:${k}">`).join("")}</span><span class="desk-label">${esc(f.title.toLowerCase())}</span></a></li>`;
   const icons = [
     `<li><a class="desk-icon" href="#readme" data-open="readme" draggable="false"><span class="desk-glyph">${fileSVG("TXT")}</span><span class="desk-label">readme.txt</span></a></li>`,
-    ...folders.map(icon),
+    ...collections.map(
+      (c) =>
+        `<li><a class="desk-icon desk-coll" href="${collectionURL(c)}" data-href="${collectionURL(c)}" data-id="${c.id}" draggable="false"><span class="desk-glyph">${floatFolder(c.items.slice(0, 5).map((i) => i.thumb))}</span><span class="desk-label">${esc(c.title.toLowerCase())}</span></a></li>`,
+    ),
     `<li><a class="desk-icon" href="mailto:hello.nicolombardi@gmail.com?subject=Archive" data-open="mail" draggable="false"><span class="desk-glyph">${fileSVG("@")}</span><span class="desk-label">contact.mail</span></a></li>`,
   ];
   return `<section class="desk" aria-labelledby="arch-title"><h1 id="arch-title" class="sr-only">Archive</h1>
 <nav class="desk-bar" aria-label="Archive menu bar"><a class="desk-brand" href="/">Nicoló Lombardi</a><ul class="desk-menus">
-<li><button type="button" aria-haspopup="true" aria-expanded="false">File</button><ul class="desk-drop" hidden><li><button type="button" data-cmd="open-readme">Open readme.txt</button></li><li><button type="button" data-cmd="close-all">Close all windows</button></li><li><button type="button" data-cmd="restore">Restore windows</button></li></ul></li>
-<li><button type="button" aria-haspopup="true" aria-expanded="false">View</button><ul class="desk-drop" hidden><li><button type="button" data-cmd="arrange">Clean up icons</button></li><li><button type="button" data-cmd="theme">Dark / light</button></li></ul></li>
-<li><button type="button" aria-haspopup="true" aria-expanded="false">Go</button><ul class="desk-drop" hidden><li><a href="/#work">Work</a></li><li><a href="/about/">About</a></li><li><a href="mailto:hello.nicolombardi@gmail.com?subject=Project%20enquiry">Contact</a></li></ul></li>
-</ul><span class="desk-date" aria-hidden="true"></span></nav>
-<p class="desk-wall caslon" aria-hidden="true">Archive</p>
-<ul class="desk-icons" aria-label="Collections">${icons.join("")}</ul>
+<li><button type="button" aria-haspopup="true" aria-expanded="false">File</button><ul class="desk-drop"><li><button type="button" data-cmd="open-readme">Open readme.txt</button></li><li><button type="button" data-cmd="close-all">Close all windows</button></li><li><button type="button" data-cmd="restore">Restore windows</button></li></ul></li>
+<li><button type="button" aria-haspopup="true" aria-expanded="false">View</button><ul class="desk-drop"><li><button type="button" data-cmd="arrange">Clean up icons</button></li><li><button type="button" data-cmd="theme">Dark / light</button></li></ul></li>
+<li><button type="button" aria-haspopup="true" aria-expanded="false">Go</button><ul class="desk-drop"><li><a href="/#work">Work</a></li><li><a href="/about/">About</a></li><li><a href="mailto:hello.nicolombardi@gmail.com?subject=Project%20enquiry">Contact</a></li></ul></li>
+</ul><div class="desk-corner"><span class="desk-based">Based in Madrid</span><span class="desk-time" aria-label="Time in Madrid"></span><button type="button" class="desk-theme" data-cmd="theme" aria-label="Switch dark / light mode">${sunSVG}${moonSVG}</button></div></nav>
+<div class="desk-wall" aria-hidden="true"><canvas class="desk-particles"></canvas></div>
+<p class="sr-only desk-phrase" aria-live="off">ARCHIVE</p>
+<ul class="desk-icons" aria-label="Archive">${icons.join("")}</ul>
 <div class="desk-windows"></div>
-<footer class="desk-task"><button type="button" class="desk-start" aria-haspopup="true" aria-expanded="false">archive</button><ul class="desk-tabs" aria-label="Open windows"></ul><div class="desk-startmenu" hidden><p class="desk-sm-title caslon">Archive</p><ul>${folders.map((f) => `<li><a href="${f.href}" data-open="folder:${f.id}">${esc(f.title)}<span>${f.count ? `${f.count} pieces` : "soon"}</span></a></li>`).join("")}</ul></div></footer>
+<footer class="desk-task"><button type="button" class="desk-start" aria-haspopup="true" aria-expanded="false">archive</button><ul class="desk-tabs" aria-label="Open windows"></ul><div class="desk-startmenu"><p class="desk-sm-title caslon">Archive</p><ul>${collections.map((c) => `<li><a href="${collectionURL(c)}">${esc(c.title)}<span>${c.items.length} pieces</span></a></li>`).join("")}<li><a href="#readme" data-open="readme">readme.txt<span>about</span></a></li><li><a href="mailto:hello.nicolombardi@gmail.com?subject=Archive">contact.mail<span>write</span></a></li></ul></div></footer>
 </section>`.replace(/\n/g, "");
 }
 

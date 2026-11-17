@@ -740,9 +740,6 @@ html.intro .home-tagline {
 .intro-word.is-settled .intro-item:not(:last-child) {
   visibility: hidden;
 }
-.intro-roll {
-  transition: transform 0.42s var(--ease);
-}
 .intro-item {
   display: flex;
   align-items: center;
@@ -2164,6 +2161,8 @@ html.desk-page .header {
 .desk-menus > li > button:hover {
   background: var(--d-line);
 }
+/* the menus drop with an eased motion: a little scale and slide from the top, items one after
+   the other */
 .desk-drop {
   position: absolute;
   top: calc(100% + 4px);
@@ -2176,6 +2175,51 @@ html.desk-page .header {
   border: 1px solid var(--d-line);
   border-radius: 8px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+  transform-origin: 12px 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px) scale(0.96);
+  transition:
+    opacity 0.16s ease,
+    transform 0.2s cubic-bezier(0.4, 0, 1, 1),
+    visibility 0s 0.2s;
+}
+.desk-menus > li.open .desk-drop {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 0.22s ease,
+    transform 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s;
+}
+.desk-drop > li,
+.desk-startmenu li {
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity 0.12s,
+    transform 0.12s;
+}
+.desk-menus > li.open .desk-drop > li,
+.desk-task.open .desk-startmenu li {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.3s ease calc(0.04s + var(--k, 0) * 0.035s),
+    transform 0.45s cubic-bezier(0.16, 1, 0.3, 1) calc(0.04s + var(--k, 0) * 0.035s);
+}
+.desk-drop > li:nth-child(2),
+.desk-startmenu li:nth-child(2) {
+  --k: 1;
+}
+.desk-drop > li:nth-child(3),
+.desk-startmenu li:nth-child(3) {
+  --k: 2;
+}
+.desk-drop > li:nth-child(4),
+.desk-startmenu li:nth-child(4) {
+  --k: 3;
 }
 .desk-drop button,
 .desk-drop a {
@@ -2190,44 +2234,94 @@ html.desk-page .header {
   background: var(--d-sel);
   color: #fff;
 }
-.desk-date {
-  margin-left: auto;
-  font-family: var(--mono);
-  font-size: 11px;
-  text-transform: uppercase;
-  color: var(--d-mute);
-}
 
-/* the word on the wallpaper */
-.desk-wall {
-  position: absolute;
-  inset: 0;
+/* right of the menu bar: "Based in Madrid", the time there, dark / light */
+.desk-corner {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.desk-based {
+  font-weight: 700;
+}
+.desk-time {
+  color: var(--d-mute);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.desk .desk-theme {
+  position: relative;
   display: grid;
   place-items: center;
-  margin: 0;
-  font-size: clamp(90px, 19vw, 300px);
-  line-height: 1;
-  color: transparent;
-  -webkit-text-stroke: 1px var(--d-mute);
-  opacity: 0.45;
-  pointer-events: none;
+  width: 26px;
+  height: 22px;
+  border-radius: 5px;
+}
+.desk .desk-theme:hover {
+  background: var(--d-line);
+}
+.desk-theme svg {
+  grid-area: 1 / 1;
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  transition:
+    opacity 0.3s,
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.desk-theme .i-moon {
+  fill: currentColor;
+  stroke: none;
+}
+/* light: shows the moon (go dark); dark: shows the sun (go light) */
+.desk-theme .i-sun,
+.desk.dark .desk-theme .i-moon {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.5);
+}
+.desk.dark .desk-theme .i-sun {
+  opacity: 1;
+  transform: none;
 }
 
-/* icons */
+/* wallpaper: the particle text (js/particle-text.js); its dots take this colour */
+.desk-wall {
+  position: absolute;
+  inset: 30px 0 38px;
+  color: var(--d-ink);
+  font-family: var(--head);
+  pointer-events: none;
+}
+.desk-particles {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* icons: top-left corner, in columns */
 .desk-icons {
   position: absolute;
-  z-index: 1;
+  z-index: 3;
   top: 46px;
-  right: 14px;
+  left: 14px;
   display: flex;
   flex-direction: column;
-  flex-wrap: wrap-reverse;
+  flex-wrap: wrap;
   align-content: flex-start;
   gap: 10px;
   max-height: calc(100% - 100px);
   list-style: none;
   margin: 0;
   padding: 0;
+}
+/* while a folder is open its pieces float over everything, menu bar included */
+.desk-icons:has(.desk-coll:hover),
+.desk-icons:has(.desk-coll:focus-visible) {
+  z-index: 10001;
 }
 .desk-icon {
   display: flex;
@@ -2253,52 +2347,115 @@ html.desk-page .header {
   height: 56px;
   border-radius: 6px;
 }
-.desk-folder {
+.desk.leaving {
+  opacity: 0;
+  transition: opacity 0.26s ease;
+}
+
+/* A collection's folder, after React Bits' "Folder Float": on hover the front flap tips open and
+   the pieces fly out on a spring, one after the other, then bob gently; they drop back in on leave. */
+.ff {
+  --spring: cubic-bezier(0.34, 1.57, 0.64, 1);
+  --out: cubic-bezier(0.23, 1, 0.32, 1);
+  position: relative;
   width: 62px;
-  height: 50px;
+  height: 48px;
+  perspective: 300px;
 }
-.desk-folder .back {
-  fill: #9aa0ad;
-}
-.desk-folder .front {
-  fill: #c4c9d3;
-}
-.desk.dark .desk-folder .back {
-  fill: #4b4f58;
-}
-.desk.dark .desk-folder .front {
-  fill: #6c717c;
-}
-/* a few pieces peek out of a collection's folder: back of the folder, the pieces, then a front
-   panel (::after) drawn over them */
-.desk-glyph img {
+.ff-back {
   position: absolute;
-  z-index: 1;
-  width: 26px;
-  height: 30px;
-  object-fit: contain;
-  left: calc(14px + var(--k) * 11px);
-  top: calc(-2px + var(--k) * 2px);
-  rotate: calc(-10deg + var(--k) * 10deg);
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
-  transition: translate 0.25s var(--ease);
+  inset: 4px 0 0;
+  border-radius: 5px;
+  background: #3f3f46;
 }
-.desk-glyph:has(img)::after {
+.ff-back::before {
+  /* the tab */
   content: "";
   position: absolute;
-  z-index: 2;
-  left: 2px;
-  right: 2px;
-  bottom: 3px;
-  height: 36px;
-  border-radius: 4px;
-  background: #c4c9d3;
+  left: 0;
+  top: -4px;
+  width: 24px;
+  height: 8px;
+  border-radius: 4px 4px 0 0;
+  background: inherit;
 }
-.desk.dark .desk-glyph:has(img)::after {
-  background: #6c717c;
+.ff-paper {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 8px;
+  height: 30px;
+  border-radius: 3px;
+  background: #f5f5f5;
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 0.2s,
+    transform 0.31s var(--out);
 }
-.desk-icon:hover .desk-glyph img {
-  translate: 0 -5px;
+.ff-front {
+  position: absolute;
+  inset: 14px 0 0;
+  border-radius: 5px;
+  background: #52525b;
+  transform-origin: 50% 100%;
+  transform: rotateX(-16deg);
+  transition: transform 0.31s var(--out);
+}
+.ff-items {
+  position: absolute;
+  left: 50%;
+  top: 22px;
+}
+.ff-item {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 34px;
+  height: 38px;
+  opacity: 0;
+  transform: translate(-50%, 6px) scale(0.6);
+  transition:
+    transform 0.31s var(--out) calc((var(--n) - 1 - var(--i)) * 22ms),
+    opacity 0.16s calc((var(--n) - 1 - var(--i)) * 22ms);
+}
+.ff-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.28));
+  animation: ff-drift 3.2s ease-in-out calc(var(--i) * -0.7s) infinite;
+  animation-play-state: paused;
+}
+@keyframes ff-drift {
+  50% {
+    transform: translateY(-3px);
+  }
+}
+.desk-coll:hover .ff-front,
+.desk-coll:focus-visible .ff-front {
+  transform: rotateX(-34deg);
+  transition-duration: 0.52s;
+}
+.desk-coll:hover .ff-paper,
+.desk-coll:focus-visible .ff-paper {
+  opacity: 1;
+  transform: translateY(-10px);
+}
+.desk-coll:hover .ff-item,
+.desk-coll:focus-visible .ff-item {
+  opacity: 1;
+  transform: translate(calc(-50% + var(--x)), var(--y)) rotate(var(--r));
+  transition:
+    transform 0.52s var(--spring) calc(var(--i) * 45ms),
+    opacity 0.16s calc(var(--i) * 45ms);
+}
+.desk-coll:hover .ff-item img,
+.desk-coll:focus-visible .ff-item img {
+  animation-play-state: running;
+}
+.desk-coll .ff-item:hover img {
+  scale: 1.08;
 }
 .desk-file {
   width: 42px;
@@ -2486,108 +2643,6 @@ html.desk-page .header {
   margin-bottom: 0 !important;
 }
 
-/* folder windows: the pieces as files */
-.dw-blurb {
-  margin: 0;
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--d-line);
-  color: var(--d-mute);
-}
-.dw-files {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-  gap: 6px;
-  list-style: none;
-  margin: 0;
-  padding: 12px;
-}
-.dw-files button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-  padding: 8px 4px;
-  border-radius: 6px;
-}
-.dw-files button:hover,
-.dw-files button:focus-visible {
-  background: var(--d-line);
-  outline: none;
-}
-.dw-files img {
-  width: 64px;
-  height: 64px;
-  object-fit: contain;
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
-  transition: transform 0.25s var(--ease);
-}
-.dw-files button:hover img {
-  transform: scale(1.06) rotate(-2deg);
-}
-.dw-files span {
-  font-size: 11px;
-  line-height: 1.25;
-  text-align: center;
-}
-.dw-empty {
-  display: grid;
-  place-items: center;
-  min-height: 200px;
-  margin: 0;
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--d-mute);
-}
-
-/* a piece: click the scan to turn it over */
-.desk .dw-scan {
-  display: grid;
-  width: 100%;
-  padding: 18px;
-  grid-template-columns: minmax(0, 1fr);
-  perspective: 900px;
-  overflow: hidden;
-  background: radial-gradient(var(--d-dot) 1px, transparent 1.2px) 0 0 / 12px 12px;
-  border-bottom: 1px solid var(--d-line);
-}
-.dw-scan img {
-  grid-area: 1 / 1;
-  width: 100%;
-  height: min(42vh, 300px);
-  object-fit: contain;
-  backface-visibility: hidden;
-  transition: transform 0.6s var(--ease);
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.2));
-}
-.dw-scan .back {
-  transform: rotateY(180deg);
-}
-.dw-scan.flipped .front {
-  transform: rotateY(-180deg);
-}
-.dw-scan.flipped .back {
-  transform: rotateY(0);
-}
-.dw-facts {
-  margin: 0;
-  padding: 10px 14px;
-}
-.dw-facts div {
-  display: flex;
-  gap: 10px;
-  padding: 3px 0;
-}
-.dw-facts dt {
-  width: 52px;
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--d-mute);
-}
-.dw-facts dd {
-  margin: 0;
-}
-
 /* taskbar */
 .desk-task {
   position: absolute;
@@ -2655,6 +2710,23 @@ html.desk-page .header {
   border: 1px solid var(--d-line);
   border-radius: 10px;
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+  transform-origin: 12px 100%;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px) scale(0.96);
+  transition:
+    opacity 0.16s ease,
+    transform 0.2s cubic-bezier(0.4, 0, 1, 1),
+    visibility 0s 0.2s;
+}
+.desk-task.open .desk-startmenu {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 0.22s ease,
+    transform 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s;
 }
 .desk-sm-title {
   margin: 0 10px 8px;
@@ -2708,14 +2780,18 @@ html.desk-page .header {
     width: calc(100vw - 16px) !important;
     left: 8px;
   }
-  .desk-wall {
-    align-items: end;
-    padding-bottom: 60px;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   .dw.pop,
   .dw.closing {
     animation: none;
+  }
+  .ff *,
+  .desk-drop,
+  .desk-drop > li,
+  .desk-startmenu,
+  .desk-startmenu li {
+    transition-duration: 0.01s !important;
+    animation: none !important;
   }
 }
