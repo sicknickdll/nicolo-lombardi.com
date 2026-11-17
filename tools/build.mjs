@@ -11,6 +11,7 @@ import { build as bundle, transform } from "esbuild";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { projects, goatcounter } from "../js/data.js";
+import { CARDS, DECK_IDS } from "../js/tarot/cards.js";
 import {
   esc,
   work,
@@ -20,6 +21,8 @@ import {
   archiveMarkup,
   collectionMarkup,
   archiveCollections,
+  archiveExperiences,
+  tarotMarkup,
   projectImages,
   projectMarkup,
 } from "../js/views.js";
@@ -209,7 +212,7 @@ write(
   "archive",
   head({
     title: `Archive — ${NAME}`,
-    description: `Collections found and kept by ${NAME}: ${archiveCollections.map((c) => c.title).join(", ")}.`,
+    description: `Collections found and kept by ${NAME}, and things made for fun: ${[...archiveCollections, ...archiveExperiences].map((c) => c.title).join(", ")}.`,
     path: "/archive/",
     image: "/assets/og-image.jpg",
     imageAlt: NAME,
@@ -250,6 +253,38 @@ for (const c of archiveCollections) {
     collectionMarkup(c),
   );
 }
+
+// The Tarot Reader: an interactive reading (js/tarot/). The page holds its description; the
+// table itself is drawn by the script.
+const tarot = archiveExperiences.find((x) => x.id === "tarot");
+write(
+  "archive/tarot",
+  head({
+    title: `The Tarot Reader — Archive, ${NAME}`,
+    description: tarot.blurb,
+    path: "/archive/tarot/",
+    image: existsSync(join(root, "assets/og/tarot.jpg")) ? "/assets/og/tarot.jpg" : "/assets/og-image.jpg",
+    imageAlt: "The Tarot Reader: three cards of the deck on a dark table",
+    schema: [
+      {
+        "@type": "CreativeWork",
+        url: `${SITE}/archive/tarot/`,
+        name: "The Tarot Reader",
+        description: tarot.blurb,
+        genre: "Interactive experience",
+        inLanguage: "en",
+        author: { "@id": person["@id"] },
+      },
+      breadcrumbs([
+        [NAME, "/"],
+        ["Archive", "/archive/"],
+        ["The Tarot Reader", "/archive/tarot/"],
+      ]),
+      person,
+    ],
+  }),
+  tarotMarkup(),
+);
 
 // The Film and Visuals lists now live on the landing page: their old addresses forward there.
 for (const slug of ["film", "visuals"]) {
@@ -358,6 +393,7 @@ const pages = [
   ["/about/", []],
   ["/archive/", []],
   ...archiveCollections.map((c) => [`/archive/${c.id}/`, c.items.map((i) => i.front)]),
+  ["/archive/tarot/", CARDS.filter((c) => DECK_IDS.includes(c.id)).map((c) => c.art)],
   ["/privacy/", []],
   ...projects.map((p) => [`/work/${p.id}/`, [p.cover, ...projectImages(p)]]),
 ];

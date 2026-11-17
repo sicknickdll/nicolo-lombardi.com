@@ -1,0 +1,769 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// THE TAROT READER (/archive/tarot/): the ritual from arrival to the last word.
+//
+// One explicit state machine (FLOW) and one ritual object (js/tarot/engine.js) are the single
+// source of truth; the scene (stage.js, deck.js) only ever shows them. Phases:
+//   INTRO → DECK_PRESENTED → SHUFFLING ⇄ SHUFFLE_COMPLETE → WAITING_FOR_CUT → CUTTING →
+//   REASSEMBLING → GUIDING_CARD_REVEAL → GUIDING_CARD_DIALOGUE → CARD_SELECTION → CARD_FLIPPING →
+//   CARD_COMMENTARY → NEXT_CARD_SELECTION … → CROSS_COMPLETE → FINAL_READING → END ⇄
+//   READING_SUMMARY, and RESTART (gather the cards, shuffle again).
+//
+// Controls: mouse, touch and keyboard. Click / tap / Enter / Space moves the dialogue on (and
+// speeds up an animation in progress). Arrow keys choose in the fan, or move the cut; Escape puts
+// an inspected card back; M mutes. Every physical action also has a button.
+// The reading in progress is kept in localStorage: reloading offers to continue it.
+// Development: ?seed=123 gives a reproducible shuffle; ?debug exposes window.__tarot.
+// ─────────────────────────────────────────────────────────────────────────────
+import { createStage, CARD_H, CARD_W, CARD_T } from "./stage.js";
+import { createDeck } from "./deck.js";
+import { createAudio } from "./audio.js";
+import { createDialogue } from "./dialogue.js";
+import { openSummary, keepReading } from "./summary.js";
+import { DECK_IDS, card } from "./cards.js";
+import * as E from "./engine.js";
+import { Vector3 } from "../vendor/three.js";
+
+const SAVE = "nl-tarot-v1";
+const FLOW = {
+  LOADING: ["INTRO"],
+  INTRO: ["DECK_PRESENTED", "CARD_SELECTION", "NEXT_CARD_SELECTION", "CROSS_COMPLETE", "END"],
+  DECK_PRESENTED: ["SHUFFLING"],
+  SHUFFLING: ["SHUFFLE_COMPLETE"],
+  SHUFFLE_COMPLETE: ["SHUFFLING", "WAITING_FOR_CUT"],
+  WAITING_FOR_CUT: ["CUTTING"],
+  CUTTING: ["REASSEMBLING"],
+  REASSEMBLING: ["GUIDING_CARD_REVEAL"],
+  GUIDING_CARD_REVEAL: ["GUIDING_CARD_DIALOGUE"],
+  GUIDING_CARD_DIALOGUE: ["CARD_SELECTION"],
+  CARD_SELECTION: ["CARD_FLIPPING"],
+  CARD_FLIPPING: ["CARD_COMMENTARY"],
+  CARD_COMMENTARY: ["NEXT_CARD_SELECTION", "CROSS_COMPLETE"],
+  NEXT_CARD_SELECTION: ["CARD_FLIPPING"],
+  CROSS_COMPLETE: ["FINAL_READING"],
+  FINAL_READING: ["END"],
+  END: ["READING_SUMMARY"],
+  READING_SUMMARY: ["END"],
+  RESTART: ["DECK_PRESENTED"],
+};
+// When a revealed card may be picked up and looked at.
+const INSPECTABLE = new Set(["GUIDING_CARD_DIALOGUE", "CARD_SELECTION", "NEXT_CARD_SELECTION", "CARD_COMMENTARY", "CROSS_COMPLETE", "FINAL_READING", "END"]);
+const ABORT = Symbol("abort");
+
+export function mountTarot(root) {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const params = new URLSearchParams(location.search);
+  const debug = params.has("debug");
+  const fixedSeed = params.has("seed") ? Number(params.get("seed")) >>> 0 : null;
+  const touch = matchMedia("(hover: none)").matches;
+  const low = (navigator.deviceMemory || 8) <= 3 || (navigator.hardwareConcurrency || 8) <= 3;
+  const $ = (s) => root.querySelector(s);
+  const html = document.documentElement;
+  html.classList.add("tarot-page");
+
+  const loading = $(".tr-loading");
+  let stage, deck;
+  try {
+    stage = createStage($(".tr-stage"), { reduce, low });
+    deck = createDeck(stage, DECK_IDS, { reduce });
+  } catch (e) {
+    console.error(e);
+    root.classList.add("tr-failed");
+    loading.querySelector("p").textContent = "The cards need WebGL, which this browser has turned off. The candles won't light.";
+    return () => html.classList.remove("tarot-page");
+  }
+  const { eyes, hands, clock } = stage;
+  const audio = createAudio();
+  stage.sfx = (name) => audio.play(name);
+
+  // ── state ──
+  let alive = true,
+    phase = "LOADING",
+    ritual = null,
+    active = null, // the card everyone is looking at
+    hovered = null,
+    kbIndex = -1,
+    animating = 0,
+    waiter = null,
+    endMenu = null;
+  const rng = fixedSeed != null ? E.seeded(fixedSeed) : E.secure();
+  const seedFor = () => (fixedSeed != null ? fixedSeed : E.newSeed());
+
+  function go(next) {
+    const ok = (FLOW[phase] || []).includes(next) || next === "RESTART";
+    if (!ok) {
+      const msg = `Tarot: ${phase} → ${next} is not a valid transition`;
+      if (debug) throw new Error(msg);
+      console.warn(msg);
+    }
+    phase = next;
+    root.dataset.phase = next;
+  }
+  const guard = async (p) => {
+    const v = await p;
+    if (!alive) throw ABORT;
+    return v;
+  };
+  const anim = async (p) => {
+    animating++;
+    root.classList.add("tr-busy");
+    try {
+      return await guard(p);
+    } finally {
+      if (--animating === 0) root.classList.remove("tr-busy");
+    }
+  };
+  const wait = (ms) => guard(clock.wait(ms));
+
+  // ── saving ──
+  function persist(extra = {}) {
+    try {
+      localStorage.setItem(SAVE, JSON.stringify({ ritual, at: Date.now(), ...extra }));
+    } catch {}
+  }
+  function loadSaved() {
+    try {
+      const s = JSON.parse(localStorage.getItem(SAVE));
+      return s && E.validRitual(s.ritual) ? s : null;
+    } catch {
+      return null;
+    }
+  }
+  let saved = loadSaved();
+
+  // ── dialogue: her lines and their cues ──
+  const dialogue = createDialogue(root, {
+    reduce,
+    onType: () => audio.play("type"),
+    onCue(line) {
+      if (line.eyes) eyes.setState(line.eyes);
+      if (line.hand === "present") deck.restHands();
+      if (line.react) roomReacts(card(line.react).react);
+    },
+  });
+  const say = (lines, opts) => guard(dialogue.say(lines, opts));
+  function roomReacts(r) {
+    if (!r) return;
+    if (r.eyes) eyes.setState(r.eyes, r.eyes === "serious" ? { hold: 3, then: "watching" } : {});
+    stage.react(r.light);
+    stage.cameraFx(r.camera);
+    if (r.sfx) audio.play(r.sfx);
+    if (r.hand === "point" && active && deck.get(active).rest) deck.pointAt(active);
+  }
+
+  // ── waiting for the player ──
+  function waitFor(actions) {
+    clock.scale = 1;
+    return guard(
+      new Promise((resolve) => {
+        waiter = { accept: new Set(actions), resolve };
+        updateAffordances();
+      }),
+    );
+  }
+  function act(name, data) {
+    if (!waiter?.accept.has(name)) return false;
+    const w = waiter;
+    waiter = null;
+    updateAffordances();
+    w.resolve({ a: name, data });
+    return true;
+  }
+  const accepts = (name) => Boolean(waiter?.accept.has(name));
+  function updateAffordances() {
+    root.classList.toggle("tr-can-pick", accepts("pick"));
+    root.classList.toggle("tr-can-cut", accepts("cut"));
+    if (!accepts("pick")) setHover(null);
+  }
+
+  // ── prompts: the instruction on screen, and a button for every physical action ──
+  const prompts = $(".tr-prompts");
+  function prompt(items = [], hint = "") {
+    prompts.innerHTML = "";
+    for (const it of items) {
+      const el = document.createElement(it.action ? "button" : "p");
+      el.className = "tr-prompt" + (it.primary ? " primary" : "") + (it.action ? "" : " text");
+      if (it.action) el.type = "button";
+      el.textContent = it.label;
+      if (it.action) el.addEventListener("click", (e) => (e.stopPropagation(), audio.unlock(), act(it.action, it.data?.())));
+      prompts.append(el);
+    }
+    if (hint) {
+      const h = document.createElement("p");
+      h.className = "tr-hint";
+      h.textContent = hint;
+      prompts.append(h);
+    }
+    prompts.classList.toggle("on", items.length > 0 || Boolean(hint));
+    // keyboard users land on the main action
+    if (matchMedia("(hover: hover)").matches) prompts.querySelector("button.primary")?.focus({ preventScroll: true });
+  }
+  const clearPrompt = () => prompt([]);
+  const setHint = (t) => {
+    const h = prompts.querySelector(".tr-hint");
+    if (h) h.textContent = t;
+  };
+
+  // ── the eyes follow what matters ──
+  let pointer = { x: 0, y: 0, in: false };
+  stage.onFrame(() => {
+    const { W, H } = stage.size;
+    let target = null;
+    const id = hovered || active;
+    if (id) target = stage.toScreen(deck.get(id).group.position);
+    if (target) eyes.lookAt({ x: (target.x / W) * 2 - 1, y: -((target.y / H) * 2 - 1) * 0.8 });
+    else if (pointer.in) eyes.lookAt({ x: ((pointer.x / W) * 2 - 1) * 0.55, y: -((pointer.y / H) * 2 - 1) * 0.4 });
+    else eyes.lookAt(null);
+  });
+
+  // ── pointer: hover, pick, cut, inspect, advance ──
+  const stageEl = $(".tr-stage");
+  let down = null,
+    cutting = null; // { n, x0, dx }
+  const cutState = { n: 0, max: 0 };
+  function deckZone(x, y) {
+    // the stack, as seen on screen, with a margin: where a cut can be made
+    if (!ritual) return null;
+    const [cx, cz] = stage.layout.deck;
+    const n = ritual.deck.length;
+    const near = cz + CARD_H / 2;
+    const top = stage.toScreen(new Vector3(cx, n * CARD_T, near)),
+      bottom = stage.toScreen(new Vector3(cx, 0, near));
+    const left = stage.toScreen(new Vector3(cx - CARD_W / 2, 0, near)),
+      right = stage.toScreen(new Vector3(cx + CARD_W / 2, 0, near));
+    const back = stage.toScreen(new Vector3(cx, n * CARD_T, cz - CARD_H / 2));
+    const m = 40;
+    if (x < left.x - m || x > right.x + m || y < back.y - m || y > bottom.y + m) return null;
+    const k = (y - top.y) / Math.max(1, bottom.y - top.y);
+    return Math.max(1, Math.min(n - 1, Math.round(k * n)));
+  }
+  function fanCards() {
+    return [...deck.cards.values()].filter((c) => c.where === "fan" && !c.busy);
+  }
+  function fanOrder() {
+    // left to right on screen, for the keyboard
+    return fanCards().sort((a, b) => stage.toScreen(a.group.position).x - stage.toScreen(b.group.position).x);
+  }
+  function setHover(id) {
+    if (hovered === id) return;
+    if (hovered) deck.get(hovered).hoverTo = 0;
+    hovered = id;
+    if (id) {
+      deck.get(id).hoverTo = 1;
+      audio.play("hover");
+    }
+    stageEl.classList.toggle("tr-pointer", Boolean(id));
+  }
+  const revealedIds = () => (ritual ? [ritual.guiding, ...ritual.picks.map((p) => p.id)].filter(Boolean) : []);
+  function cardAt(x, y, filter) {
+    const h = stage.hit(x, y, deck.meshes(filter));
+    let o = h?.object;
+    while (o && !o.userData.cardId) o = o.parent;
+    return o?.userData.cardId || null;
+  }
+  const canInspect = () => INSPECTABLE.has(phase) && !animating && !deck.inspecting;
+  function hitEyes(x, y) {
+    const p = stage.toScreen(eyes.group.position);
+    return Math.abs(x - p.x) < 60 && Math.abs(y - p.y) < 30;
+  }
+
+  function onMove(e) {
+    pointer = { x: e.clientX, y: e.clientY, in: true };
+    const { W, H } = stage.size;
+    stage.parallax((e.clientX / W) * 2 - 1, -((e.clientY / H) * 2 - 1));
+    if (cutting) {
+      const p = stage.onTable(e.clientX, e.clientY, 0.04);
+      if (p) {
+        cutting.dx = p.x - cutting.x0;
+        deck.cutDrag(ritual.deck, cutting.n, cutting.dx, Math.min(0.06, Math.max(-0.03, p.z - cutting.z0)) * 0.5);
+      }
+      return;
+    }
+    if (accepts("pick") && (e.pointerType === "mouse" || down)) setHover(cardAt(e.clientX, e.clientY, (c) => c.where === "fan" && !c.busy));
+    else if (accepts("cut")) {
+      const n = deckZone(e.clientX, e.clientY);
+      if (n) previewCut(n);
+      stageEl.classList.toggle("tr-pointer", Boolean(n));
+    } else if (e.pointerType === "mouse") {
+      const over =
+        (accepts("deck") && cardAt(e.clientX, e.clientY, (c) => c.where === "deck")) ||
+        (canInspect() && cardAt(e.clientX, e.clientY, (c) => revealedIds().includes(c.id) && Boolean(c.rest)));
+      stageEl.classList.toggle("tr-pointer", Boolean(over));
+    }
+  }
+  function previewCut(n) {
+    cutState.n = n;
+    deck.cutPreview(ritual.deck, n);
+    setHint(`Cut ${n} of ${ritual.deck.length} from the top. Drag them aside, or tap.`);
+  }
+  function onDown(e) {
+    audio.unlock();
+    down = { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId };
+    if (accepts("cut")) {
+      const n = deckZone(e.clientX, e.clientY);
+      if (n) {
+        previewCut(n);
+        const p = stage.onTable(e.clientX, e.clientY, 0.04);
+        cutting = { n, x0: p?.x || 0, z0: p?.z || 0, dx: 0 };
+        stageEl.setPointerCapture?.(e.pointerId);
+        audio.play("lift");
+      }
+    }
+    if (accepts("pick") && e.pointerType !== "mouse") setHover(cardAt(e.clientX, e.clientY, (c) => c.where === "fan" && !c.busy));
+  }
+  function onUp(e) {
+    const d = down;
+    down = null;
+    if (cutting) {
+      const c = cutting;
+      cutting = null;
+      const side = Math.abs(c.dx) > 0.05 ? Math.sign(c.dx) : -1;
+      act("cut", { n: c.n, side });
+      return;
+    }
+    if (!d) return;
+    const moved = Math.hypot(e.clientX - d.x, e.clientY - d.y);
+    if (accepts("pick") && hovered && (moved < 12 || e.pointerType !== "mouse")) {
+      const id = hovered;
+      setHover(null);
+      return act("pick", id);
+    }
+    if (moved > 12) return;
+    tap(e.clientX, e.clientY);
+  }
+  // A click or tap that is not a pick or a cut.
+  function tap(x, y) {
+    if (deck.inspecting) return putBack();
+    if (accepts("deck") && cardAt(x, y, (c) => c.where === "deck")) return act("deck");
+    if (canInspect()) {
+      const id = cardAt(x, y, (c) => revealedIds().includes(c.id) && Boolean(c.rest));
+      if (id) return inspect(id);
+    }
+    if (!dialogue.active && !animating && hitEyes(x, y) && eyes.state !== "disappear") return poke();
+    if (dialogue.advance()) return;
+    if (animating) clock.scale = reduce ? 4 : 3;
+  }
+  stageEl.addEventListener("pointermove", onMove);
+  stageEl.addEventListener("pointerdown", onDown);
+  stageEl.addEventListener("pointerup", onUp);
+  stageEl.addEventListener("pointercancel", () => ((down = null), cutting && ((cutting = null), deck.clearLift(ritual.deck))));
+  stageEl.addEventListener("pointerleave", (e) => {
+    pointer.in = false;
+    if (e.pointerType === "mouse") setHover(null);
+  });
+  $(".tr-dialogue").addEventListener("click", () => (audio.unlock(), dialogue.advance() || (animating && (clock.scale = 3))));
+
+  function onKey(e) {
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (root.querySelector(".tr-summary")) return;
+    const tag = document.activeElement?.tagName;
+    const onButton = tag === "BUTTON" || tag === "A";
+    audio.unlock();
+    if (e.key === "m" || e.key === "M") return toggleSound();
+    if (e.key === "Escape" && deck.inspecting) return (e.preventDefault(), putBack());
+    if (accepts("pick") && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+      e.preventDefault();
+      const list = fanOrder();
+      if (!list.length) return;
+      const cur = list.findIndex((c) => c.id === hovered);
+      kbIndex = cur < 0 ? (e.key === "ArrowLeft" ? list.length - 1 : 0) : Math.max(0, Math.min(list.length - 1, cur + (e.key === "ArrowLeft" ? -1 : 1)));
+      setHover(list[kbIndex].id);
+      return;
+    }
+    if (accepts("cut") && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+      e.preventDefault();
+      const n = cutState.n || Math.floor(ritual.deck.length / 2);
+      previewCut(Math.max(1, Math.min(ritual.deck.length - 1, n + (e.key === "ArrowUp" ? -1 : 1))));
+      return;
+    }
+    if (e.key === "Enter" || e.key === " ") {
+      if (onButton) return; // the focused button handles it
+      e.preventDefault();
+      if (deck.inspecting) return putBack();
+      if (dialogue.advance()) return;
+      if (accepts("pick") && hovered) return act("pick", hovered);
+      if (accepts("cut") && cutState.n) return act("cut", { n: cutState.n, side: -1 });
+      if (animating) return void (clock.scale = reduce ? 4 : 3);
+      prompts.querySelector("button.primary, button")?.click();
+    }
+  }
+  addEventListener("keydown", onKey);
+
+  // ── inspecting a revealed card ──
+  const caption = $(".tr-caption");
+  async function inspect(id) {
+    const c = card(id);
+    const pos = ritual.guiding === id ? "The Guiding Card" : E.positionOf(ritual.picks.find((p) => p.id === id).position).label;
+    if (!(await deck.inspect(id))) return;
+    caption.innerHTML = `<b class="caslon">${c.name}</b><span>${pos} · ${c.roman}</span><small>${touch ? "Tap" : "Click"} anywhere to put it back</small>`;
+    caption.hidden = false;
+    eyes.setState("watching");
+  }
+  async function putBack() {
+    caption.hidden = true;
+    await deck.uninspect();
+  }
+
+  // Poking her in the eye.
+  let pokes = 0;
+  function poke() {
+    audio.play("poke");
+    dialogue.say(E.phaseLines("poked", pokes++, "poke")).catch(() => {});
+  }
+
+  // ── sound button ──
+  const soundBtn = $(".tr-sound");
+  function toggleSound() {
+    audio.unlock();
+    audio.setMuted(!audio.muted);
+    paintSound();
+  }
+  function paintSound() {
+    soundBtn.setAttribute("aria-pressed", String(!audio.muted));
+    soundBtn.textContent = audio.muted ? "Sound off" : "Sound on";
+  }
+  soundBtn.addEventListener("click", (e) => (e.stopPropagation(), toggleSound()));
+  paintSound();
+
+  // ─────────────────────────── the ritual ───────────────────────────
+  async function run() {
+    // loading: the back of the cards and the type
+    await Promise.all([deck.backReady, document.fonts?.load?.('24px "Caslon Antique"').catch(() => {}), new Promise((r) => setTimeout(r, 700))]);
+    if (!alive) return;
+    loading.classList.add("gone");
+    go("INTRO");
+    stage.setShot("wide", 0);
+    stage.lights(0, 0);
+    stage.fade(1);
+    deck.withdrawHands();
+    hands.left.snap();
+    hands.right.snap();
+    const resumable = saved && saved.ritual.guiding;
+    if (resumable) return resume(saved);
+    eyes.setState("disappear");
+    await wait(reduce ? 200 : 1100);
+    // two eyes open in the dark
+    eyes.setState("suspicious");
+    await wait(reduce ? 200 : 900);
+    eyes.setState("idle");
+    await say(E.phaseLines(saved ? "returning" : "arrival", seedFor(), "a"));
+    // the candles catch, the room appears
+    stage.lights(1, reduce ? 0.3 : 2.4);
+    audio.play("slide");
+    await anim(stage.setShot("table", reduce ? 0 : 2600));
+    ritual = E.newRitual({ seed: seedFor() });
+    await anim(deck.presentDeck(ritual.deck));
+    go("DECK_PRESENTED");
+    await say(E.phaseLines("deck", ritual.seed));
+    prompt([{ label: "Begin Reading", action: "begin", primary: true }]);
+    await waitFor(["begin", "deck"]);
+    clearPrompt();
+    await ritualFlow();
+  }
+
+  async function ritualFlow() {
+    await shufflePhase();
+    await cutPhase();
+    await guidingPhase();
+    await spreadPhase();
+    await finalPhase();
+    await endPhase();
+  }
+
+  async function shufflePhase() {
+    await say(E.phaseLines("shuffle", ritual.seed));
+    for (let count = 0; ; ) {
+      prompt(
+        count === 0
+          ? [{ label: "Shuffle the Deck", action: "shuffle", primary: true }]
+          : [
+              { label: "Shuffle Again", action: "shuffle" },
+              { label: "That's Enough", action: "enough", primary: true },
+            ],
+        count === 0 ? (touch ? "Or tap the deck." : "Or click the deck.") : "",
+      );
+      const { a } = await waitFor(count === 0 ? ["shuffle", "deck"] : ["shuffle", "deck", "enough"]);
+      clearPrompt();
+      if (a === "enough") break;
+      go("SHUFFLING");
+      eyes.setState("watching");
+      ritual = E.shuffleDeck(ritual, rng);
+      persist();
+      active = ritual.deck[0];
+      await anim(deck.shuffle(ritual.deck));
+      active = null;
+      go("SHUFFLE_COMPLETE");
+      count++;
+      if (count === 1) await say(E.phaseLines("shuffleMore", ritual.seed));
+      if (count === 4) await say(E.phaseLines("shuffleMany", ritual.seed));
+    }
+  }
+
+  async function cutPhase() {
+    go("WAITING_FOR_CUT");
+    await anim(stage.setShot("cut", reduce ? 0 : 1200));
+    await say(E.phaseLines("cut", ritual.seed));
+    cutState.n = 0;
+    prompt(
+      [{ label: "Cut the Deck", action: "cut", primary: true, data: () => ({ n: cutState.n || 5 + E.below(ritual.deck.length - 10, rng), side: -1 }) }],
+      touch ? "Touch the deck where you want to cut it, then drag aside." : "Point at the deck to choose where; drag the top part aside, or click.",
+    );
+    const { data } = await waitFor(["cut"]);
+    clearPrompt();
+    go("CUTTING");
+    const before = ritual.deck;
+    ritual = E.cutDeck(ritual, data.n);
+    persist();
+    go("REASSEMBLING");
+    eyes.setState("curious");
+    const merged = await anim(deck.finishCut(before, data.n, data.side));
+    if (merged.join() !== ritual.deck.join()) console.error("Tarot: the deck on the table doesn't match the cut");
+    await anim(stage.setShot("table", reduce ? 0 : 1100));
+    await say(E.phaseLines("cutDone", ritual.seed));
+  }
+
+  async function guidingPhase() {
+    await say(E.phaseLines("guidingBefore", ritual.seed));
+    prompt([{ label: "Reveal the Guiding Card", action: "reveal", primary: true }]);
+    await waitFor(["reveal", "deck"]);
+    clearPrompt();
+    go("GUIDING_CARD_REVEAL");
+    ritual = E.revealGuiding(ritual);
+    persist();
+    active = ritual.guiding;
+    eyes.setState("curious");
+    stage.push(0.3);
+    await anim(deck.revealGuiding(ritual.guiding, ritual.deck));
+    stage.react("flare");
+    stage.fx.boostTo = 1.25;
+    go("GUIDING_CARD_DIALOGUE");
+    const gl = E.guidingLines(ritual);
+    await say([...gl.before, ...gl.open, ...gl.after]);
+    stage.fx.boostTo = 1;
+    stage.push(0);
+    await anim(deck.placeGuide(ritual.guiding));
+    active = null;
+  }
+
+  async function spreadPhase(from = 0) {
+    if (from === 0) {
+      await say(E.phaseLines("spreadBefore", ritual.seed));
+      await anim(deck.fanOut(ritual.deck));
+    }
+    for (let i = ritual.picks.length; i < E.POSITIONS.length; i++) await pickOne(i);
+  }
+  async function pickOne(i) {
+    const P = E.POSITIONS[i];
+    go(i === 0 ? "CARD_SELECTION" : "NEXT_CARD_SELECTION");
+    eyes.setState("watching");
+    deck.restHands();
+    dialogue.say(E.pickLines(P.key, ritual.seed), { hold: true }).catch(() => {});
+    prompt([{ label: P.prompt }], touch ? "Choose a card: tap it, or slide along the fan and let go." : "Choose a card.");
+    const idle = setTimeout(() => !dialogue.active && dialogue.say(E.phaseLines("idle", ritual.seed, `idle${i}`), { hold: true }).catch(() => {}), 26000);
+    let id;
+    try {
+      ({ data: id } = await waitFor(["pick"]));
+    } finally {
+      clearTimeout(idle);
+    }
+    dialogue.cancel();
+    clearPrompt();
+    setHover(null);
+    go("CARD_FLIPPING");
+    ritual = E.pickCard(ritual, id);
+    persist();
+    active = id;
+    eyes.setState("curious");
+    await anim(deck.revealPick(id));
+    go("CARD_COMMENTARY");
+    const com = E.commentary(ritual, i);
+    await say([com.lines[0]]);
+    const placing = anim(deck.placePick(id, P.key));
+    await say(com.lines.slice(1));
+    await placing;
+    deck.restHands();
+    active = null;
+  }
+
+  async function finalPhase() {
+    go("CROSS_COMPLETE");
+    persist({ stage: "final" });
+    eyes.setState("watching");
+    await say(E.phaseLines("crossDone", ritual.seed));
+    prompt([{ label: "Hear the Reading", action: "continue", primary: true }]);
+    await waitFor(["continue"]);
+    clearPrompt();
+    go("FINAL_READING");
+    const fr = E.finalReading(ritual);
+    stage.darken(true);
+    deck.highlight([ritual.guiding], 0.34, 0.07);
+    await anim(stage.setShot("final", reduce ? 0 : 1600));
+    await say(E.phaseLines("finalBefore", ritual.seed));
+    for (const st of fr.stages) {
+      active = st.id;
+      deck.highlight([st.id, ritual.guiding], 0.48, 0.03);
+      deck.pointAt(st.id);
+      await say(st.lines);
+    }
+    active = null;
+    const six = revealedIds();
+    deck.highlight(six, 0.42, 0.03);
+    deck.restHands();
+    stage.push(0.25);
+    await say(E.phaseLines("synthesisBefore", ritual.seed));
+    await say(groupSentences(fr.synthesis.sentences));
+    stage.push(0);
+    persist({ stage: "done", summary: E.summary(ritual) });
+  }
+  // Short sentences travel in pairs, long ones alone.
+  function groupSentences(parts) {
+    const out = [];
+    for (const p of parts.flatMap((s) => s.match(/[^.!?]+[.!?]+(\s|$)/g) || [s]).map((s) => s.trim())) {
+      const last = out[out.length - 1];
+      if (last && last.length + p.length < 120) out[out.length - 1] = `${last} ${p}`;
+      else out.push(p);
+    }
+    return out;
+  }
+
+  async function endPhase() {
+    go("END");
+    stage.darken(false);
+    deck.unhighlight();
+    eyes.setState("soft");
+    await say(E.phaseLines("end", ritual.seed), { hold: true });
+    deck.withdrawHands(1.6); // she sits back into the dark
+    await endMenuLoop();
+  }
+  async function endMenuLoop() {
+    for (;;) {
+      showEnd(true);
+      const { a } = await waitFor(["review", "again", "keep"]);
+      showEnd(false);
+      if (a === "again") return restart();
+      go("READING_SUMMARY");
+      const sum = E.summary(ritual);
+      const note = a === "keep" ? (keepReading(sum) ? "Saved on this device. You can also download it as an image, or print it." : "This browser won't let me keep it here. Download it as an image instead.") : "";
+      const how = await guard(openSummary(root, sum, { note }));
+      go("END");
+      if (how === "again") return restart();
+    }
+  }
+  function showEnd(on) {
+    if (!endMenu) {
+      endMenu = document.createElement("div");
+      endMenu.className = "tr-end";
+      endMenu.innerHTML = `<button type="button" data-a="review">Review Reading</button><button type="button" data-a="again">Begin Again</button><button type="button" data-a="keep">Save Reading</button>`;
+      endMenu.addEventListener("click", (e) => {
+        const b = e.target.closest("[data-a]");
+        if (b) (e.stopPropagation(), act(b.dataset.a));
+      });
+      root.append(endMenu);
+    }
+    endMenu.classList.toggle("on", on);
+    endMenu.inert = !on;
+    if (on) endMenu.querySelector("button").focus({ preventScroll: true });
+  }
+
+  async function restart() {
+    go("RESTART");
+    dialogue.cancel();
+    clearPrompt();
+    showEnd(false);
+    if (deck.inspecting) await putBack();
+    caption.hidden = true;
+    stage.darken(false);
+    stage.push(0);
+    deck.unhighlight();
+    active = null;
+    try {
+      localStorage.removeItem(SAVE);
+    } catch {}
+    // gather everything into one stack, in the order the cards are picked up
+    const order = ritual ? [...ritual.deck, ...ritual.picks.map((p) => p.id).reverse(), ritual.guiding].filter(Boolean) : DECK_IDS.slice();
+    ritual = E.newRitual({ seed: seedFor(), deck: order });
+    eyes.setState("amused");
+    await anim(stage.setShot("table", reduce ? 0 : 900));
+    await anim(deck.gather(order));
+    go("DECK_PRESENTED");
+    await say([{ t: "Again, then.", eyes: "idle" }, "The cards never mind. They've heard everything twice."]);
+    await ritualFlow();
+  }
+
+  async function resume(s) {
+    ritual = s.ritual;
+    deck.restore(ritual);
+    stage.lights(1, reduce ? 0 : 1.6);
+    await anim(stage.setShot("table", reduce ? 0 : 1800));
+    eyes.setState("idle");
+    deck.restHands();
+    const done = s.stage === "done" && E.isComplete(ritual);
+    if (done) {
+      await say([...E.phaseLines("returning", ritual.seed, "r"), ...E.phaseLines("reviewOffer", ritual.seed)]);
+      go("END");
+      deck.unhighlight();
+      return endMenuLoop();
+    }
+    await say(E.phaseLines("resume", ritual.seed));
+    prompt([
+      { label: "Continue", action: "resume", primary: true },
+      { label: "Begin Anew", action: "anew" },
+    ]);
+    const { a } = await waitFor(["resume", "anew"]);
+    clearPrompt();
+    if (a === "anew") return restart();
+    if (!E.isComplete(ritual)) {
+      await spreadPhase(ritual.picks.length);
+    }
+    await finalPhase();
+    await endPhase();
+  }
+
+  // relayout when the screen changes shape
+  const offLayout = stage.onLayout(() => ritual && deck.relayout(ritual));
+
+  run().catch((e) => {
+    if (e !== ABORT) console.error(e);
+  });
+
+  if (debug)
+    window.__tarot = {
+      get phase() {
+        return phase;
+      },
+      get ritual() {
+        return ritual;
+      },
+      get waiting() {
+        return waiter ? [...waiter.accept] : [];
+      },
+      get animating() {
+        return animating;
+      },
+      get dialogueActive() {
+        return dialogue.active;
+      },
+      screenOf: (id) => stage.toScreen(deck.get(id).group.position),
+      fanOrder: () => fanOrder().map((c) => c.id),
+      where: (id) => deck.get(id).where,
+      deckScreen: () => {
+        const [cx, cz] = stage.layout.deck;
+        return stage.toScreen(new Vector3(cx, ritual.deck.length * CARD_T, cz + CARD_H / 2 - 0.01));
+      },
+      act,
+      stage,
+      deck,
+    };
+
+  return () => {
+    alive = false;
+    waiter = null;
+    dialogue.cancel();
+    removeEventListener("keydown", onKey);
+    offLayout();
+    deck.dispose();
+    stage.dispose();
+    audio.dispose();
+    html.classList.remove("tarot-page");
+    if (debug) delete window.__tarot;
+  };
+}

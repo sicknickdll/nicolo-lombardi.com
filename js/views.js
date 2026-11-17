@@ -2,7 +2,7 @@
 // (tools/build.mjs), so the pre-built HTML Google reads is exactly what visitors see.
 // Pure string functions: no DOM access here.
 import { projects, workOrder, hero, heroPoster, clients } from "./data.js";
-import { collections } from "./archive-data.js";
+import { collections, experiences } from "./archive-data.js";
 import { videoGalleryMarkup, imageGalleryMarkup, tickerMarkup, videoSources } from "./galleries.js";
 
 export const esc = (s) =>
@@ -205,6 +205,10 @@ export function archiveMarkup() {
       (c) =>
         `<li><a class="desk-icon desk-coll" href="${collectionURL(c)}" data-href="${collectionURL(c)}" data-id="${c.id}" draggable="false"><span class="desk-glyph">${floatFolder(c.items.slice(0, 5).map((i) => i.thumb))}</span><span class="desk-label">${esc(c.title.toLowerCase())}</span></a></li>`,
     ),
+    ...experiences.map(
+      (x) =>
+        `<li><a class="desk-icon desk-coll desk-${x.id}" href="${collectionURL(x)}" data-href="${collectionURL(x)}" data-id="${x.id}" draggable="false"><span class="desk-glyph">${floatFolder(x.icon)}</span><span class="desk-label">${esc(x.label)}</span></a></li>`,
+    ),
     `<li><a class="desk-icon" href="mailto:hello.nicolombardi@gmail.com?subject=Archive" data-open="mail" draggable="false"><span class="desk-glyph">${fileSVG("@")}</span><span class="desk-label">contact.mail</span></a></li>`,
   ];
   return `<section class="desk" aria-labelledby="arch-title"><h1 id="arch-title" class="sr-only">Archive</h1>
@@ -217,7 +221,7 @@ export function archiveMarkup() {
 <p class="sr-only desk-phrase" aria-live="off">ARCHIVE</p>
 <ul class="desk-icons" aria-label="Archive">${icons.join("")}</ul>
 <div class="desk-windows"></div>
-<footer class="desk-task"><button type="button" class="desk-start" aria-haspopup="true" aria-expanded="false">archive</button><ul class="desk-tabs" aria-label="Open windows"></ul><div class="desk-startmenu"><p class="desk-sm-title caslon">Archive</p><ul>${collections.map((c) => `<li><a href="${collectionURL(c)}">${esc(c.title)}<span>${c.items.length} pieces</span></a></li>`).join("")}<li><a href="#readme" data-open="readme">readme.txt<span>about</span></a></li><li><a href="mailto:hello.nicolombardi@gmail.com?subject=Archive">contact.mail<span>write</span></a></li></ul></div></footer>
+<footer class="desk-task"><button type="button" class="desk-start" aria-haspopup="true" aria-expanded="false">archive</button><ul class="desk-tabs" aria-label="Open windows"></ul><div class="desk-startmenu"><p class="desk-sm-title caslon">Archive</p><ul>${collections.map((c) => `<li><a href="${collectionURL(c)}">${esc(c.title)}<span>${c.items.length} pieces</span></a></li>`).join("")}${experiences.map((x) => `<li><a href="${collectionURL(x)}">${esc(x.title)}<span>interactive</span></a></li>`).join("")}<li><a href="#readme" data-open="readme">readme.txt<span>about</span></a></li><li><a href="mailto:hello.nicolombardi@gmail.com?subject=Archive">contact.mail<span>write</span></a></li></ul></div></footer>
 </section>`.replace(/\n/g, "");
 }
 
@@ -239,3 +243,21 @@ function viewerMarkup(c) {
   return `<div class="arch-viewer" id="arch-viewer" role="dialog" aria-modal="true" aria-label="${esc(c.title)} piece" hidden><button type="button" class="arch-close caslon" aria-label="Close viewer">X</button><h2 class="arch-name caslon" id="arch-name"></h2><div class="arch-stage" id="arch-stage" aria-label="3D view of the piece. Drag to turn it, double-click to flip."></div><dl class="arch-facts"><div><dt>Country</dt><dd id="arch-country"></dd></div><div><dt>Location</dt><dd id="arch-location"></dd></div><div><dt>Category</dt><dd id="arch-category"></dd></div></dl></div>`;
 }
 export const archiveCollections = collections;
+export const archiveExperiences = experiences;
+
+// /archive/tarot/: the Tarot Reader (js/tarot/experience.js). Everything on screen is drawn by
+// the script; this markup holds the overlays (dialogue, prompts, caption, loading screen) and,
+// for search engines and screen readers, what the piece is.
+export function tarotMarkup() {
+  const x = experiences.find((e) => e.id === "tarot");
+  return `<section class="tarot" aria-labelledby="tr-title"><header class="sr-only"><nav aria-label="Breadcrumb"><a href="/archive/">Archive</a></nav><h1 id="tr-title">The Tarot Reader</h1><p>${esc(x.blurb)}</p><p>Shuffle the deck, cut it, meet the guiding card at the bottom of the deck, then choose five cards for your past, present, future, shadow and conscious potential. Use the mouse, touch, or the keyboard: Enter or Space to continue, arrow keys to choose, Escape to put a card back, M for sound.</p></header>
+<div class="tr-stage" role="application" aria-label="The fortune teller's table" tabindex="-1"></div>
+<div class="tr-grain" aria-hidden="true"></div>
+<nav class="tr-top" aria-label="Tarot Reader"><a class="tr-back caslon" href="/archive/">Back</a><button type="button" class="tr-sound" aria-pressed="true">Sound on</button></nav>
+<p class="tr-caption" aria-live="polite" hidden></p>
+<div class="tr-prompts" aria-live="polite"></div>
+<div class="tr-dialogue" hidden><p class="tr-text caslon" aria-hidden="true"></p><span class="tr-more" aria-hidden="true" hidden></span></div>
+<p class="sr-only tr-live" aria-live="polite"></p>
+<div class="tr-loading" aria-hidden="true"><span class="tr-candle"></span><p class="caslon">The cards are being prepared…</p></div>
+<noscript><p class="tr-noscript caslon">The fortune teller only reads by candlelight, and the candles need JavaScript.</p></noscript></section>`.replace(/\n/g, "");
+}

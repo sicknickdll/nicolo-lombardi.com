@@ -16,6 +16,8 @@ js/archive-desktop.js  /archive/: a desktop (menu bar, floating folders, draggab
 js/particle-text.js the Archive wallpaper: text drawn in dots, glitching into other phrases every 5 s
 js/archive.js       archive collection page: infinite pannable grid, search bar, 3D viewer
 js/card3d.js        the 3D card (tilt + glare, drag to turn it over)
+js/tarot/           /archive/tarot/: THE TAROT READER, an interactive reading (see "Tarot Reader" below)
+tests/              npm test: the tarot rules and reading engine
 js/head.js          About page: 3D head (follows the cursor, rotates on drag / two-finger scroll, reacts to taps)
 js/vendor/three.js  the parts of three.js the head needs   (npm install && npm run vendor:three)
 js/intro.js         landing intro: name on a light screen, a black panel sweeps up, the screen lifts away
@@ -27,6 +29,7 @@ tools/build.mjs     generates the pages below + sitemap.xml   (npm run build)
 tools/optimize-model.mjs  shrinks a 3D scan for the web (assets/about/head.glb)
 tools/vendor-three.mjs    rebuilds js/vendor/three.js
 tools/make-og-images.py  link-preview images in assets/og/
+tools/make-tarot-assets.py  the tarot card images (assets/archive/tarot/) from the original PNGs
 tools/prepare-video.sh   converts a new video into the needed formats
 index.html, about/, work/<id>/   GENERATED pages, don't edit by hand
 film/, visuals/     GENERATED redirects: old addresses forward to the Work list on the landing page
@@ -45,6 +48,7 @@ Pages and addresses:
 | `/work/<id>/` | one page per project, e.g. `/work/lexus/` |
 | `/archive/` | the archive as a desktop: one folder per collection, draggable windows, taskbar |
 | `/archive/la-barra/` | LA BARRA: diagonal infinite pannable grid of the cut-outs on black, search bar, 3D viewer (editorial layout) (`#<piece id>` opens one) |
+| `/archive/tarot/` | THE TAROT READER: a candlelit table, a fortune teller in the dark, a guided five-card reading (the "tarot" folder on the Archive desktop) |
 
 Old links from the previous site (`/#film`, `/#project/lexus`) and the old `/film/` and
 `/visuals/` pages redirect to the new addresses.
@@ -100,6 +104,58 @@ from there, not from `js/` and `style.css`), then commit and push, `dist/` inclu
   it never plays with reduced motion turned on.
 
 Keep every file under 24 MB so it fits all free hosts.
+
+## Tarot Reader (`/archive/tarot/`)
+
+A small first-person game in the Archive: you sit across a table from a fortune teller of whom
+you only see the eyes (and her hands, when she handles the cards). You shuffle the deck, cut it,
+she turns up the card at the bottom (the **guiding card**, which colours the whole reading), then
+you pick five cards for a cross: Past (left), Present (centre), Future (right), The Shadow
+(bottom), Conscious Potential (top). She comments on each card, then reads the whole spread and
+closes with a story of about 200 words. The reading can be reviewed, kept on the device, saved as
+an image or printed. Everything is in English; no AI service is used: the texts come from an
+authored database and rules.
+
+```
+js/tarot/cards.js       ← THE CARDS: 22 Major Arcana (art, keywords, every interpretation, her reactions).
+                          DECK_IDS = the 21 that are shuffled (all but the Fool by default).
+js/tarot/lines.js       ← HER LINES between the cards, and the rules that link cards (named pairs, six
+                          oppositions) and build the closing story.
+js/tarot/engine.js      the rules: Fisher–Yates shuffle (crypto random), cut (deck = B + A), guiding
+                          card = bottom card, five picks, commentary, final reading, synthesis. Pure, tested.
+js/tarot/experience.js  the ritual, phase by phase (an explicit state machine), input, saving, resuming
+js/tarot/stage.js       the three.js room: low-res render + dither/grain pass, candles, props, camera shots
+js/tarot/deck.js        the 21 card objects and their choreography (shuffle, cut, guiding card, fan, cross)
+js/tarot/hands.js       her low-poly hands and sleeves (two-bone arms, finger poses)
+js/tarot/eyes.js        her eyes (canvas-drawn, ten expressions, blinking, gaze)
+js/tarot/dialogue.js    typewriter dialogue;  audio.js: synthesised sound (no files)
+js/tarot/summary.js     the written reading, local saving, image export, print
+js/tarot/textures.js    procedural textures (wood, cloth, flame, silhouette)
+js/tarot/outline.js     GENERATED card silhouette (die-cut notch) for the 3D card edges
+```
+
+- **New or changed card art**: put the PNGs in one folder (fronts named with their number first,
+  `13_Tarot_Death_Frontal.png`, and `BACK.png`), run
+  `python3 tools/make-tarot-assets.py that/folder` (needs Pillow and numpy), then
+  `node tools/build.mjs`. The fronts are only resized; the back is framed with the fronts' white rim
+  and die-cut silhouette (mirrored), so every card looks the same from behind.
+- **Another set of 21 cards**: edit `DECK_IDS` at the bottom of `js/tarot/cards.js` (e.g. put the
+  Fool back in place of another arcana).
+- **Texts**: every card's texts are in `cards.js`; her phase lines and the linking rules in
+  `lines.js`. Run `npm test` after editing: it checks that every card is complete, that no two
+  cards share a sentence and that the closing story stays between 150 and 250 words.
+- **Controls**: mouse, touch or keyboard (Enter / Space: continue, arrows: choose a card or move the
+  cut, Escape: put a held card back, M: sound). Every physical action also has a button.
+- **Saving**: the reading in progress is kept in `localStorage` (`nl-tarot-v1`), so a reload offers to
+  continue it; saved readings go to `nl-tarot-saved`. The same ritual always produces the same words.
+- **Development**: `/archive/tarot/?seed=123` makes the shuffle reproducible; `?debug` adds
+  `window.__tarot` (phase, ritual, `act()`, screen positions) for browser tests.
+- **Missing pieces never block it**: a missing image shows a plain card, no sound file is needed,
+  and without WebGL the page says so instead of breaking.
+
+## Tests
+
+`npm test` runs the tarot engine tests (`tests/tarot.test.mjs`, Node's built-in test runner).
 
 ## SEO checklist (after the site is live)
 

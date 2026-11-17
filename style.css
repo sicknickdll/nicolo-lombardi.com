@@ -2774,3 +2774,557 @@ html.desk-page .header {
     animation: none !important;
   }
 }
+
+/* ── /archive/tarot/: the Tarot Reader (js/tarot/) ─────────────────────────
+   Full screen, no scrolling. The table is a canvas rendered small and scaled up without
+   smoothing; dialogue, prompts and captions are HTML on top, in Caslon Antique and the
+   palette of candlelight: near-black, burgundy, crimson, candle gold, parchment. */
+html.tarot-page,
+html.tarot-page body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #070407;
+}
+html.tarot-page .header {
+  display: none; /* the Back link replaces the name and Menu */
+}
+.desk-tarot .ff-item {
+  width: 26px;
+  height: 46px;
+}
+.tarot {
+  --tr-gold: #d29a58;
+  --tr-parch: #e8d6b0;
+  --tr-line: rgba(210, 154, 88, 0.38);
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #070407;
+  color: var(--tr-parch);
+  font-family: var(--caslon);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.tr-stage {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+  outline: none;
+  cursor: var(--cursor-default);
+}
+.tr-stage canvas {
+  display: block;
+}
+.tr-stage.tr-pointer {
+  cursor: var(--cursor-pointer);
+}
+.tarot.tr-can-cut .tr-stage.tr-pointer {
+  cursor: var(--cursor-grab);
+}
+.tarot.tr-can-cut .tr-stage.tr-pointer:active {
+  cursor: var(--cursor-grabbing);
+}
+/* film grain over everything, the crisp card included */
+.tr-grain {
+  position: absolute;
+  inset: -8%;
+  pointer-events: none;
+  opacity: 0.09;
+  mix-blend-mode: overlay;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: tr-grain 0.5s steps(3) infinite;
+}
+@keyframes tr-grain {
+  0% {
+    transform: translate(0, 0);
+  }
+  33% {
+    transform: translate(-3%, 2%);
+  }
+  66% {
+    transform: translate(2%, -2%);
+  }
+}
+.tr-top {
+  position: absolute;
+  z-index: 8;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(10px, env(safe-area-inset-top)) 20px 0;
+  pointer-events: none;
+}
+.tr-top > * {
+  pointer-events: auto;
+}
+.tr-back {
+  font-size: 26px;
+  line-height: 1;
+  color: rgba(232, 214, 176, 0.72);
+  transition:
+    transform 0.4s var(--ease),
+    opacity 0.25s;
+}
+.tr-back:hover {
+  transform: translateX(-4px);
+}
+.tr-sound {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(232, 214, 176, 0.6);
+  padding: 8px 0;
+}
+.tr-sound[aria-pressed="false"] {
+  color: rgba(232, 214, 176, 0.35);
+}
+/* her words */
+.tr-dialogue {
+  position: absolute;
+  z-index: 7;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  width: min(760px, calc(100% - 24px));
+  min-height: 104px;
+  padding: 18px 28px 22px;
+  transform: translate(-50%, 8px);
+  background: linear-gradient(rgba(14, 6, 9, 0.9), rgba(7, 4, 7, 0.94));
+  border: 1px solid var(--tr-line);
+  box-shadow:
+    0 0 0 4px rgba(7, 4, 7, 0.85),
+    0 0 0 5px rgba(132, 27, 32, 0.45),
+    0 18px 40px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.35s,
+    transform 0.5s var(--ease);
+  cursor: var(--cursor-pointer);
+}
+.tr-dialogue.on {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+.tr-text {
+  min-height: 2.6em;
+  font-size: clamp(19px, 1.9vw, 25px);
+  line-height: 1.35;
+  color: var(--tr-parch);
+  text-shadow: 0 0 12px rgba(210, 120, 60, 0.25);
+}
+.tr-more {
+  position: absolute;
+  right: 18px;
+  bottom: 10px;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid var(--tr-gold);
+  border-bottom: 2px solid var(--tr-gold);
+  transform: rotate(45deg);
+  animation: tr-blink 1.1s steps(2) infinite;
+}
+@keyframes tr-blink {
+  50% {
+    opacity: 0.15;
+  }
+}
+/* instructions and the buttons for every action */
+.tr-prompts {
+  position: absolute;
+  z-index: 7;
+  left: 50%;
+  bottom: calc(max(16px, env(safe-area-inset-bottom)) + 124px);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 10px 16px;
+  width: min(760px, calc(100% - 24px));
+  transform: translateX(-50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+.tr-prompts.on {
+  opacity: 1;
+}
+.tr-prompts.on > button {
+  pointer-events: auto;
+}
+.tr-prompt,
+.tr-end button,
+.trs-actions button {
+  font-family: var(--caslon);
+  font-size: 17px;
+  letter-spacing: 0.06em;
+  color: var(--tr-gold);
+  padding: 10px 20px 9px;
+  background: rgba(7, 4, 7, 0.72);
+  border-top: 1px solid var(--tr-line);
+  border-bottom: 1px solid var(--tr-line);
+  transition:
+    color 0.2s,
+    background 0.2s,
+    opacity 0.2s;
+}
+.tr-prompt:hover,
+.tr-end button:hover,
+.trs-actions button:hover {
+  opacity: 1;
+  color: #f4dfae;
+  background: rgba(132, 27, 32, 0.45);
+}
+.tr-prompt.primary::before,
+.tr-prompt.primary::after,
+.tr-prompt.text::before,
+.tr-prompt.text::after {
+  content: "\2726";
+  font-size: 10px;
+  margin: 0 12px;
+  vertical-align: 3px;
+  opacity: 0.7;
+}
+.tr-prompt.primary {
+  animation: tr-glow 2.6s ease-in-out infinite;
+}
+@keyframes tr-glow {
+  50% {
+    color: #f4dfae;
+    text-shadow: 0 0 14px rgba(210, 154, 88, 0.55);
+  }
+}
+.tr-prompt.text {
+  border: 0;
+  background: none;
+  font-size: clamp(20px, 2.2vw, 26px);
+  color: #f0d9a8;
+  text-shadow: 0 0 16px rgba(210, 120, 60, 0.45);
+}
+.tr-hint {
+  flex-basis: 100%;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(232, 214, 176, 0.55);
+  text-shadow: 0 1px 6px #000;
+}
+.tr-prompt:focus-visible,
+.tr-end button:focus-visible,
+.trs-actions button:focus-visible,
+.tr-back:focus-visible,
+.tr-sound:focus-visible {
+  outline: 1px solid var(--tr-gold);
+  outline-offset: 4px;
+}
+/* a card held up close */
+.tr-caption {
+  position: absolute;
+  z-index: 7;
+  top: max(48px, calc(env(safe-area-inset-top) + 40px));
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+  pointer-events: none;
+  text-shadow: 0 2px 10px #000;
+}
+.tr-caption b {
+  font-size: clamp(26px, 3vw, 36px);
+  font-weight: 400;
+  color: #f0d9a8;
+}
+.tr-caption span,
+.tr-caption small {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tr-gold);
+}
+.tr-caption small {
+  color: rgba(232, 214, 176, 0.45);
+}
+/* after the reading */
+.tr-end {
+  position: absolute;
+  z-index: 7;
+  left: 50%;
+  bottom: calc(max(16px, env(safe-area-inset-bottom)) + 124px);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  width: min(760px, calc(100% - 24px));
+  transform: translate(-50%, 6px);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.6s,
+    transform 0.6s var(--ease);
+}
+.tr-end.on {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+/* loading: one candle in the dark */
+.tr-loading {
+  position: absolute;
+  z-index: 10;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 22px;
+  background: #070407;
+  transition:
+    opacity 1.2s,
+    visibility 1.2s;
+}
+.tr-loading.gone {
+  opacity: 0;
+  visibility: hidden;
+}
+.tr-loading p {
+  font-size: 19px;
+  color: rgba(200, 170, 122, 0.75);
+  animation: tr-glow 2.2s ease-in-out infinite;
+  text-align: center;
+  padding: 0 24px;
+}
+.tr-candle {
+  position: relative;
+  width: 10px;
+  height: 34px;
+  background: linear-gradient(#d8c6a0, #8f7a58);
+  border-radius: 2px;
+}
+.tr-candle::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 10px;
+  height: 20px;
+  margin: 0 0 2px -5px;
+  border-radius: 50% 50% 45% 45% / 65% 65% 35% 35%;
+  background: radial-gradient(circle at 50% 75%, #fff8e0, #ffc469 35%, rgba(255, 110, 30, 0.6) 65%, transparent 72%);
+  box-shadow: 0 0 30px 10px rgba(255, 150, 60, 0.25);
+  animation: tr-flicker 0.18s ease-in-out infinite alternate;
+  transform-origin: 50% 100%;
+}
+@keyframes tr-flicker {
+  to {
+    transform: scaleY(1.12) scaleX(0.92) rotate(2deg);
+    opacity: 0.85;
+  }
+}
+.tarot.tr-failed .tr-candle::before {
+  display: none;
+}
+.tr-noscript {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  padding: 24px;
+  text-align: center;
+  font-size: 20px;
+  background: #070407;
+}
+/* the reading, written down */
+.tr-summary {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: rgba(7, 4, 7, 0.95);
+  opacity: 0;
+  transition: opacity 0.3s;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.tr-summary.on {
+  opacity: 1;
+}
+.trs-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 72px 24px 96px;
+  font-family: var(--caslon);
+  color: var(--tr-parch);
+}
+.trs-head {
+  text-align: center;
+  margin-bottom: 36px;
+}
+.trs-kicker,
+.trs-pos,
+.trs-note {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tr-gold);
+}
+.trs-head h2 {
+  font-size: clamp(40px, 6vw, 60px);
+  font-weight: 400;
+  color: #f0d9a8;
+  margin: 10px 0 6px;
+}
+.trs-note {
+  color: rgba(232, 214, 176, 0.65);
+  margin-top: 12px;
+}
+.trs-cross {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.trs-card {
+  display: grid;
+  grid-template-columns: 168px 1fr;
+  gap: 30px;
+  align-items: start;
+  padding: 28px 0;
+  border-top: 1px solid rgba(210, 154, 88, 0.2);
+}
+.trs-guide {
+  grid-template-columns: 200px 1fr;
+  border-top: 0;
+}
+.trs-card img {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.7));
+}
+.trs-card h3,
+.trs-story h3 {
+  font-size: clamp(28px, 3.4vw, 36px);
+  font-weight: 400;
+  color: #f0d9a8;
+  margin: 6px 0 4px;
+}
+.trs-kw {
+  font-size: 16px;
+  font-style: italic;
+  color: rgba(200, 170, 122, 0.8);
+  margin-bottom: 14px;
+}
+.trs-card p:not(.trs-pos):not(.trs-kw),
+.trs-story p {
+  font-size: 19px;
+  line-height: 1.5;
+}
+.trs-refl {
+  margin-top: 12px;
+  color: rgba(232, 214, 176, 0.72);
+}
+.trs-story {
+  padding: 30px 0 10px;
+  border-top: 1px solid rgba(210, 154, 88, 0.2);
+}
+.trs-story p {
+  font-size: 21px;
+  line-height: 1.6;
+}
+.trs-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 36px;
+}
+.trs-actions button:disabled {
+  opacity: 0.4;
+}
+@media (max-width: 720px) {
+  .tr-dialogue {
+    min-height: 92px;
+    padding: 14px 18px 18px;
+  }
+  .tr-prompts,
+  .tr-end {
+    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 108px);
+  }
+  .tr-prompt,
+  .tr-end button {
+    font-size: 15px;
+    padding: 9px 14px 8px;
+  }
+  .trs-card,
+  .trs-guide {
+    grid-template-columns: 104px 1fr;
+    gap: 18px;
+  }
+  .trs-card p:not(.trs-pos):not(.trs-kw),
+  .trs-story p {
+    font-size: 17px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tr-grain,
+  .tr-prompt.primary,
+  .tr-loading p,
+  .tr-candle::before {
+    animation: none;
+  }
+}
+@media print {
+  html.tarot-page,
+  html.tarot-page body {
+    overflow: visible;
+    background: #fff;
+  }
+  html.tarot-page body * {
+    visibility: hidden;
+  }
+  .tr-summary,
+  .tr-summary * {
+    visibility: visible;
+  }
+  .tr-summary {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    overflow: visible;
+    background: #fff;
+    opacity: 1;
+  }
+  .trs-inner,
+  .trs-card h3,
+  .trs-story h3,
+  .trs-head h2 {
+    color: #000;
+  }
+  .trs-kicker,
+  .trs-pos,
+  .trs-kw,
+  .trs-refl,
+  .trs-note {
+    color: #444;
+  }
+  .trs-card {
+    break-inside: avoid;
+  }
+  .trs-actions {
+    display: none;
+  }
+}
+/* with no words on screen, the buttons sit lower, out of the cards' way */
+.tarot:not(:has(.tr-dialogue.on)) .tr-prompts,
+.tarot:not(:has(.tr-dialogue.on)) .tr-end {
+  bottom: calc(max(16px, env(safe-area-inset-bottom)) + 34px);
+}
