@@ -11,7 +11,7 @@
 //   · Taskbar: the "archive" button opens a start menu; each open window has a tab.
 //   · The layout (open windows, positions, icon spots, theme) is kept for the visit in sessionStorage.
 import { navigateTo } from "./menu.js";
-import { esc } from "./views.js";
+import { esc, projectsWindow } from "./views.js";
 import { mountParticleText } from "./particle-text.js";
 import { play as playSound } from "./sound.js";
 
@@ -110,8 +110,9 @@ export function bindDesktop(main) {
       return {
         title: "readme.txt",
         w: 380,
-        body: `<div class="dw-doc"><p class="dw-kicker">Archive · Nicoló Lombardi</p><h2 class="caslon">Hello, welcome in.</h2><p>This is my personal archive and playground: things I find and keep, and things I make for fun. Feel free to explore.</p><p class="dw-hint">Hover a folder to peek inside, click to open it.</p></div>`,
+        body: `<div class="dw-doc"><p class="dw-kicker">Archive · Nicoló Lombardi</p><h2 class="caslon">Hello, welcome in.</h2><p>This is my personal archive and playground: things I find and keep, and things I make for fun. Feel free to explore.</p><p class="dw-hint">${touch.matches ? "Tap a folder or an object to open it." : "Hover a folder to peek inside, click to open it."}</p></div>`,
       };
+    if (id === "projects") return { title: "projects", w: 460, body: projectsWindow() };
     if (id === "leave")
       return {
         title: "leave.exe",
@@ -258,7 +259,7 @@ export function bindDesktop(main) {
       if (moved) return;
       select(icon);
       // Collections open on a single click; files on a tap, Enter, or a double-click.
-      if (icon.dataset.href || touch.matches || e.detail === 0) openIcon(icon);
+      if (icon.dataset.href || icon.dataset.open === "projects" || touch.matches || e.detail === 0) openIcon(icon);
     });
     icon.addEventListener("dblclick", (e) => (e.preventDefault(), !icon.dataset.href && openIcon(icon)));
     icon.addEventListener("pointerdown", (e) => {
@@ -399,7 +400,7 @@ export function bindDesktop(main) {
 
   // First visit: the readme is open. Coming back: the windows as they were.
   if (state.open) state.open.forEach((o) => open(o.id, { x: o.x, y: o.y }, { quiet: true, min: o.min }));
-  else open("readme", null, { quiet: true });
+  else if (!small.matches) open("readme", null, { quiet: true }); // on a phone the desktop shows first
   desk.classList.add("ready");
 
   return () => {

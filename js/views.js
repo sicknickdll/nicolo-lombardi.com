@@ -210,14 +210,17 @@ const archiveObject = {
   },
   tarot: () => objIcon("/assets/archive/tarot/back-thumb.webp", "/assets/archive/tarot/back-thumb.webp", 0.5625),
 };
-// One folder per project of the portfolio, in the bottom right corner: hover shows its pictures.
-const projectFolders = () =>
-  work
+// One "Projects" folder, bottom right: it opens a window with every project of the portfolio.
+const projectsFolder = () =>
+  `<li><a class="desk-icon desk-coll desk-projects-folder" href="/#work" data-open="projects" data-id="projects" draggable="false"><span class="desk-glyph">${floatFolder(work.slice(0, 5).map((p) => p.cover))}</span><span class="desk-label">projects</span></a></li>`;
+// The window's content (js/archive-desktop.js shows it).
+export const projectsWindow = () =>
+  `<ul class="dw-projects">${work
     .map(
       (p) =>
-        `<li><a class="desk-icon desk-coll desk-proj" href="${projectURL(p)}" data-href="${projectURL(p)}" data-id="p-${p.id}" draggable="false"><span class="desk-glyph">${floatFolder([p.cover, ...p.images].filter(Boolean).slice(0, 3))}</span><span class="desk-label">${esc((work.filter((q) => q.brand === p.brand).length > 1 && p.title !== p.brand ? p.title : p.brand).toLowerCase())}</span></a></li>`,
+        `<li><a href="${projectURL(p)}"><span class="dw-thumb"><img src="${p.cover}" alt="" loading="lazy" decoding="async"></span><span class="dw-pname">${esc(p.brand)}</span><span class="dw-ptype">${esc(p.title === p.brand ? p.type : p.title)}</span></a></li>`,
     )
-    .join("");
+    .join("")}</ul>`;
 export function archiveMarkup() {
   const icons = [
     `<li><a class="desk-icon" href="#readme" data-open="readme" draggable="false"><span class="desk-glyph">${fileSVG("TXT")}</span><span class="desk-label">readme.txt</span></a></li>`,
@@ -239,7 +242,7 @@ export function archiveMarkup() {
 <div class="desk-wall" aria-hidden="true"><canvas class="desk-particles"></canvas></div>
 <p class="sr-only desk-phrase" aria-live="off">ARCHIVE</p>
 <ul class="desk-icons" aria-label="Archive">${icons.join("")}</ul>
-<ul class="desk-icons desk-projects" aria-label="Portfolio projects">${projectFolders()}</ul>
+<ul class="desk-icons desk-projects" aria-label="Portfolio projects">${projectsFolder()}</ul>
 <div class="desk-windows"></div>
 <footer class="desk-task"><ul class="desk-tabs" aria-label="Open windows"></ul></footer>
 </section>`.replace(/\n/g, "");
