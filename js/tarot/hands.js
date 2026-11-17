@@ -117,6 +117,8 @@ export function createHand({ side, shoulder, materials, ring = false }) {
   };
   const upper = cast(new Mesh(armGeo(0.075, 0.058), sleeve));
   const fore = cast(new Mesh(armGeo(0.058, 0.04), sleeve));
+  // the sleeves stay in the dark: only the hands are ever seen
+  upper.visible = fore.visible = false;
   root.add(upper, fore);
 
   // state

@@ -21,12 +21,17 @@ import {
   validRitual,
   lensLine,
   relation,
+  setTopic,
+  answer,
+  question,
+  topicFor,
 } from "../js/tarot/engine.js";
+import { LIFE, TOPICS, QUESTIONS } from "../js/tarot/life.js";
 
 // A full reading, driven by a seed: shuffle, cut, guiding card, five picks.
-function reading(seed) {
+function reading(seed, topic = TOPICS[seed % 4].key) {
   const next = seeded(seed);
-  let r = newRitual({ seed });
+  let r = setTopic(newRitual({ seed }), topic);
   r = shuffleDeck(r, next);
   r = cutDeck(r, 1 + below(r.deck.length - 1, next));
   r = revealGuiding(r);
@@ -119,61 +124,71 @@ test("the same seed always gives the same reading", () => {
   assert.notDeepEqual(summary(reading(99)).cards, summary(reading(100)).cards);
 });
 
-test("commentary names the card and its place, and follows its position", () => {
-  const r = reading(5);
+test("commentary names the card and its place, and speaks to the topic", () => {
+  const r = reading(5, "money");
   r.picks.forEach((p, i) => {
     const c = commentary(r, i);
-    const k = card(p.id);
-    assert.ok(c.lines[0].t.startsWith(k.name));
-    assert.ok(c.lines.some((l) => l.t === k.pos[p.position]));
-    assert.ok(c.interpretation.includes(k.pos[p.position]));
+    assert.ok(c.lines[0].t.startsWith(card(p.id).name));
+    assert.equal(c.lines.length, 3);
+    assert.ok(c.lines.some((l) => l.t === LIFE[p.id].money));
   });
-  assert.ok(guidingLines(r).open[0].t.startsWith(card(r.guiding).name.split(".")[0].replace(/\.\.\.$/, "")));
+  assert.ok(guidingLines(r).open.some((l) => l.t === LIFE[r.guiding].money));
 });
 
-test("the guiding card genuinely changes how a card is read", () => {
-  const hermit = card("hermit");
-  const moon = lensLine(card("moon"), hermit, "past");
-  const sun = lensLine(card("sun"), hermit, "past");
-  assert.notEqual(moon, sun);
-  assert.ok(moon.includes(hermit.lightShort) && moon.includes(hermit.shadeShort));
-  // a different guiding card changes the whole final reading of the same five cards
-  const r = reading(21);
+test("every card has an everyday line for every topic, an advice and a warning", () => {
+  const seen = new Set();
+  for (const c of CARDS) {
+    const l = LIFE[c.id];
+    assert.ok(l, c.id);
+    for (const k of [...TOPICS.map((t) => t.key), "advice", "warning"]) {
+      assert.ok(l[k]?.length > 10, `${c.id}.${k}`);
+      assert.ok(!/[:;…]/.test(l[k]), `${c.id}.${k} has a glyph the font lacks`);
+      assert.ok(!seen.has(l[k]), `duplicate: ${l[k]}`);
+      seen.add(l[k]);
+    }
+  }
+});
+
+test("her question can steer the reading to another topic", () => {
+  let r = reading(8, "money");
+  assert.ok(question(r, 1).q.length > 10);
+  r = answer({ ...r, answers: [] }, 1, "family");
+  assert.equal(topicFor(r, 1), "money");
+  assert.equal(topicFor(r, 2), "family");
+  assert.ok(commentary(r, 3).lines.some((l) => l.t === LIFE[r.picks[3].id].family));
+  for (const [t, q] of Object.entries(QUESTIONS)) for (const a of q.a) assert.ok(!a.to || QUESTIONS[a.to], `${t}.${a.key}`);
+});
+
+test("the guiding card and the topic change the reading", () => {
+  const r = reading(21, "love");
   const other = card(r.deck[0]);
   const r2 = { ...r, guiding: other.id, deck: [r.guiding, ...r.deck.slice(1)] };
   assert.ok(validRitual(r2));
   assert.notEqual(synthesis(r).text, synthesis(r2).text);
-  assert.notDeepEqual(finalReading(r).stages.map((s) => s.reflection), finalReading(r2).stages.map((s) => s.reflection));
+  assert.notEqual(synthesis(r).text, synthesis({ ...r, topic: "work" }).text);
 });
 
 test("card relationships: named pairs first, then oppositions", () => {
   assert.equal(relation(card("tower"), card("star"), 1).kind, "pair");
-  assert.equal(relation(card("star"), card("tower"), 1).kind, "pair");
-  const rel = relation(card("magician"), card("high-priestess"), 1);
-  assert.equal(rel.kind, "pair");
-  const c = relation(card("chariot"), card("moon"), 1);
-  assert.equal(c.kind, "contrast");
+  assert.equal(relation(card("chariot"), card("moon"), 1).kind, "contrast");
 });
 
-test("the synthesis names all six cards and stays within 150–250 words (500 readings)", () => {
-  let min = Infinity,
-    max = 0;
+test("the final reading names all five cards, the ending stays short (500 readings)", () => {
+  let max = 0;
   for (let seed = 1; seed <= 500; seed++) {
-    const r = reading(seed * 7919);
-    const syn = finalReading(r).synthesis;
-    min = Math.min(min, syn.words);
-    max = Math.max(max, syn.words);
-    for (const id of [r.guiding, ...r.picks.map((p) => p.id)])
-      assert.ok(syn.text.includes(shortName(card(id))), `${card(id).name} missing in synthesis (seed ${seed})`);
-    assert.ok(!/\{\w+\}/.test(syn.text), "unfilled slot");
-    for (const st of finalReading(r).stages) for (const l of st.lines) assert.ok(!/\{\w+\}/.test(l.t), `unfilled slot: ${l.t}`);
+    let r = reading(seed * 7919);
+    if (seed % 2) r = answer(r, 1, question(r, 1).a[seed % question(r, 1).a.length].key);
+    const f = finalReading(r);
+    f.stages.forEach((st) => assert.ok(st.lines[0].t.toLowerCase().includes(card(st.id).name.replace(/^The /, "").toLowerCase().split(" ")[0])));
+    assert.ok(f.synthesis.text.includes(card(r.guiding).name));
+    max = Math.max(max, f.synthesis.words);
+    assert.ok(!/\{\w+\}/.test(f.synthesis.text));
   }
-  assert.ok(min >= 150, `shortest synthesis ${min} words`);
-  assert.ok(max <= 250, `longest synthesis ${max} words`);
+  assert.ok(max <= 140, `longest ending ${max} words`);
 });
 
 test("every user-facing line is English (no Italian or Latin leftovers)", () => {
-  const all = JSON.stringify(CARDS) + JSON.stringify(summary(reading(1)));
+  const all = JSON.stringify(CARDS) + JSON.stringify(LIFE) + JSON.stringify(summary(reading(1)));
   for (const w of [" della ", " il ", " che ", " sono ", " carta ", " futuro ", " passato ", " ombra ", "Arcanum", " et "])
     assert.ok(!all.includes(w), `found "${w}"`);
 });

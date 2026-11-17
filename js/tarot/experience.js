@@ -20,10 +20,12 @@ import { createAudio } from "./audio.js";
 import { createDialogue } from "./dialogue.js";
 import { openSummary, keepReading } from "./summary.js";
 import { DECK_IDS, card } from "./cards.js";
+import { TOPICS } from "./life.js";
+import { PHASE_LINES } from "./lines.js";
 import * as E from "./engine.js";
-import { Vector3 } from "../vendor/three.js";
+import { Vector3, Quaternion } from "../vendor/three.js";
 
-const SAVE = "nl-tarot-v1";
+const SAVE = "nl-tarot-v2";
 const FLOW = {
   LOADING: ["INTRO"],
   INTRO: ["DECK_PRESENTED", "CARD_SELECTION", "NEXT_CARD_SELECTION", "CROSS_COMPLETE", "END"],
@@ -293,7 +295,6 @@ export function mountTarot(root) {
   function previewCut(n) {
     cutState.n = n;
     deck.cutPreview(ritual.deck, n);
-    setHint(`Cut ${n} of ${ritual.deck.length} from the top. Drag them aside, or tap.`);
   }
   function onDown(e) {
     audio.unlock();
@@ -332,13 +333,14 @@ export function mountTarot(root) {
   }
   // A click or tap that is not a pick or a cut.
   function tap(x, y) {
+    if (dying) return;
+    if (hitEyes(x, y) && eyes.state !== "disappear" && stage.fx.level > 0.5) return poke();
     if (deck.inspecting) return putBack();
     if (accepts("deck") && cardAt(x, y, (c) => c.where === "deck")) return act("deck");
     if (canInspect()) {
       const id = cardAt(x, y, (c) => revealedIds().includes(c.id) && Boolean(c.rest));
       if (id) return inspect(id);
     }
-    if (!dialogue.active && !animating && hitEyes(x, y) && eyes.state !== "disappear") return poke();
     if (dialogue.advance()) return;
     if (animating) clock.scale = reduce ? 4 : 3;
   }
@@ -382,6 +384,7 @@ export function mountTarot(root) {
       if (dialogue.advance()) return;
       if (accepts("pick") && hovered) return act("pick", hovered);
       if (accepts("cut") && cutState.n) return act("cut", { n: cutState.n, side: -1 });
+      if (accepts("deck")) return act("deck");
       if (animating) return void (clock.scale = reduce ? 4 : 3);
       prompts.querySelector("button.primary, button")?.click();
     }
@@ -394,7 +397,7 @@ export function mountTarot(root) {
     const c = card(id);
     const pos = ritual.guiding === id ? "The Guiding Card" : E.positionOf(ritual.picks.find((p) => p.id === id).position).label;
     if (!(await deck.inspect(id))) return;
-    caption.innerHTML = `<b class="caslon">${c.name}</b><span>${pos} · ${c.roman}</span><small>${touch ? "Tap" : "Click"} anywhere to put it back</small>`;
+    caption.innerHTML = `<b class="caslon">${c.name}</b><span>${pos} · ${c.roman}</span>`;
     caption.hidden = false;
     eyes.setState("watching");
   }
@@ -403,11 +406,64 @@ export function mountTarot(root) {
     await deck.uninspect();
   }
 
-  // Poking her in the eye.
-  let pokes = 0;
+  // Poking her in the eye. Four warnings; the fifth time her hand comes for you.
+  let pokes = 0,
+    dying = false;
   function poke() {
     audio.play("poke");
-    dialogue.say(E.phaseLines("poked", pokes++, "poke")).catch(() => {});
+    const line = PHASE_LINES.poked[pokes++];
+    if (!line) return kill();
+    // said aside, over whatever she was saying, without losing her place
+    eyes.setState(line[0].eyes, { hold: 1.8, then: "watching" });
+    aside.textContent = line[0].t;
+    aside.classList.add("on");
+    clearTimeout(aside.timer);
+    aside.timer = setTimeout(() => aside.classList.remove("on"), 1800);
+  }
+  const aside = document.createElement("p");
+  aside.className = "tr-aside";
+  aside.setAttribute("aria-live", "assertive");
+  root.append(aside);
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  async function kill() {
+    dying = true;
+    alive = false; // every flow in progress stops here
+    waiter = null;
+    dialogue.cancel();
+    clearPrompt();
+    endMenu?.classList.remove("on");
+    caption.hidden = true;
+    aside.classList.remove("on");
+    root.classList.add("tr-dying");
+    clock.scale = 1;
+    eyes.setState("dramatic", { hold: 60 });
+    audio.play("dread");
+    stage.push(0);
+    // her right hand rises out of the dark and comes, slowly, at your face
+    const cam = stage.camera;
+    const fwd = new Vector3(0, 0, -1).applyQuaternion(cam.quaternion),
+      down = new Vector3(0, -1, 0).applyQuaternion(cam.quaternion);
+    const reach = cam.position.clone().addScaledVector(fwd, 0.16).addScaledVector(down, 0.035);
+    const palmToYou = cam.quaternion.clone().multiply(new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -Math.PI / 2));
+    hands.left.release();
+    hands.left.set({ pos: new Vector3(0.45, 0.02, -1.1), yaw: -0.3, pose: "relaxed", speed: 2 });
+    hands.right.release();
+    hands.right.set({ pos: new Vector3(-0.15, 0.25, -0.6), quat: palmToYou, pose: "claw", speed: 1.4 });
+    await sleep(1300);
+    hands.right.set({ pos: reach, quat: palmToYou, pose: "open", speed: 1.15 });
+    await sleep(2600);
+    // it closes
+    hands.right.setPose("grip", 26);
+    await sleep(160);
+    audio.play("crack");
+    stage.snapNeck();
+    await sleep(900);
+    stage.freeze();
+    await sleep(1000);
+    try {
+      localStorage.removeItem(SAVE);
+    } catch {}
+    location.assign("/");
   }
 
   // ── sound button ──
@@ -425,9 +481,19 @@ export function mountTarot(root) {
   paintSound();
 
   // ─────────────────────────── the ritual ───────────────────────────
+  // Her questions: the answers appear as words under her line; click or tap one (or use Tab + Enter).
+  async function ask(lines, options) {
+    await say(lines, { hold: true });
+    prompt(options.map((o, i) => ({ label: o.label, action: "answer", primary: i === 0, data: () => o.key })));
+    const { data } = await waitFor(["answer"]);
+    clearPrompt();
+    dialogue.clear();
+    return data;
+  }
+
   async function run() {
     // loading: the back of the cards and the type
-    await Promise.all([deck.backReady, document.fonts?.load?.('24px "Caslon Antique"').catch(() => {}), new Promise((r) => setTimeout(r, 700))]);
+    await Promise.all([deck.backReady, document.fonts?.load?.('24px "Heavyweight"').catch(() => {}), new Promise((r) => setTimeout(r, 700))]);
     if (!alive) return;
     loading.classList.add("gone");
     go("INTRO");
@@ -453,11 +519,14 @@ export function mountTarot(root) {
     ritual = E.newRitual({ seed: seedFor() });
     await anim(deck.presentDeck(ritual.deck));
     go("DECK_PRESENTED");
-    await say(E.phaseLines("deck", ritual.seed));
-    prompt([{ label: "Begin Reading", action: "begin", primary: true }]);
-    await waitFor(["begin", "deck"]);
-    clearPrompt();
+    await chooseTopic();
     await ritualFlow();
+  }
+
+  async function chooseTopic() {
+    const topic = await ask(E.phaseLines("topic", ritual.seed), TOPICS.map((t) => ({ key: t.key, label: t.label })));
+    ritual = E.setTopic(ritual, topic);
+    await say([{ t: TOPICS.find((t) => t.key === topic).reply, eyes: "amused" }]);
   }
 
   async function ritualFlow() {
@@ -470,20 +539,10 @@ export function mountTarot(root) {
   }
 
   async function shufflePhase() {
-    await say(E.phaseLines("shuffle", ritual.seed));
+    await say(E.phaseLines("shuffle", ritual.seed), { hold: true });
+    await waitFor(["deck"]);
+    dialogue.clear();
     for (let count = 0; ; ) {
-      prompt(
-        count === 0
-          ? [{ label: "Shuffle the Deck", action: "shuffle", primary: true }]
-          : [
-              { label: "Shuffle Again", action: "shuffle" },
-              { label: "That's Enough", action: "enough", primary: true },
-            ],
-        count === 0 ? (touch ? "Or tap the deck." : "Or click the deck.") : "",
-      );
-      const { a } = await waitFor(count === 0 ? ["shuffle", "deck"] : ["shuffle", "deck", "enough"]);
-      clearPrompt();
-      if (a === "enough") break;
       go("SHUFFLING");
       eyes.setState("watching");
       ritual = E.shuffleDeck(ritual, rng);
@@ -493,22 +552,26 @@ export function mountTarot(root) {
       active = null;
       go("SHUFFLE_COMPLETE");
       count++;
-      if (count === 1) await say(E.phaseLines("shuffleMore", ritual.seed));
       if (count === 4) await say(E.phaseLines("shuffleMany", ritual.seed));
+      // touching the deck shuffles again; she also asks
+      await say(E.phaseLines("shuffleMore", ritual.seed), { hold: true });
+      prompt([
+        { label: "Again", action: "answer", data: () => "again" },
+        { label: "That's enough", action: "answer", primary: true, data: () => "enough" },
+      ]);
+      const { a, data } = await waitFor(["answer", "deck"]);
+      clearPrompt();
+      dialogue.clear();
+      if (a === "answer" && data === "enough") break;
     }
   }
 
   async function cutPhase() {
     go("WAITING_FOR_CUT");
     await anim(stage.setShot("cut", reduce ? 0 : 1200));
-    await say(E.phaseLines("cut", ritual.seed));
+    await say(E.phaseLines("cut", ritual.seed), { hold: true });
     cutState.n = 0;
-    prompt(
-      [{ label: "Cut the Deck", action: "cut", primary: true, data: () => ({ n: cutState.n || 5 + E.below(ritual.deck.length - 10, rng), side: -1 }) }],
-      touch ? "Touch the deck where you want to cut it, then drag aside." : "Point at the deck to choose where; drag the top part aside, or click.",
-    );
     const { data } = await waitFor(["cut"]);
-    clearPrompt();
     go("CUTTING");
     const before = ritual.deck;
     ritual = E.cutDeck(ritual, data.n);
@@ -522,10 +585,9 @@ export function mountTarot(root) {
   }
 
   async function guidingPhase() {
-    await say(E.phaseLines("guidingBefore", ritual.seed));
-    prompt([{ label: "Reveal the Guiding Card", action: "reveal", primary: true }]);
-    await waitFor(["reveal", "deck"]);
-    clearPrompt();
+    await say(E.phaseLines("guidingBefore", ritual.seed), { hold: true });
+    await waitFor(["deck"]);
+    dialogue.clear();
     go("GUIDING_CARD_REVEAL");
     ritual = E.revealGuiding(ritual);
     persist();
@@ -557,7 +619,6 @@ export function mountTarot(root) {
     eyes.setState("watching");
     deck.restHands();
     dialogue.say(E.pickLines(P.key, ritual.seed), { hold: true }).catch(() => {});
-    prompt([{ label: P.prompt }], touch ? "Choose a card: tap it, or slide along the fan and let go." : "Choose a card.");
     const idle = setTimeout(() => !dialogue.active && dialogue.say(E.phaseLines("idle", ritual.seed, `idle${i}`), { hold: true }).catch(() => {}), 26000);
     let id;
     try {
@@ -582,6 +643,14 @@ export function mountTarot(root) {
     await placing;
     deck.restHands();
     active = null;
+    // after the second card she checks she's reading the right thing, and may change course
+    if (i === 1 && !(ritual.answers || []).some((a) => a.after === 1)) {
+      const q = E.question(ritual, 1);
+      const key = await ask([{ t: q.q, eyes: "curious" }], q.a);
+      ritual = E.answer(ritual, 1, key);
+      persist();
+      await say([{ t: q.a.find((a) => a.key === key).reply, eyes: "amused" }]);
+    }
   }
 
   async function finalPhase() {
@@ -589,9 +658,6 @@ export function mountTarot(root) {
     persist({ stage: "final" });
     eyes.setState("watching");
     await say(E.phaseLines("crossDone", ritual.seed));
-    prompt([{ label: "Hear the Reading", action: "continue", primary: true }]);
-    await waitFor(["continue"]);
-    clearPrompt();
     go("FINAL_READING");
     const fr = E.finalReading(ritual);
     stage.darken(true);
@@ -609,8 +675,7 @@ export function mountTarot(root) {
     deck.highlight(six, 0.42, 0.03);
     deck.restHands();
     stage.push(0.25);
-    await say(E.phaseLines("synthesisBefore", ritual.seed));
-    await say(groupSentences(fr.synthesis.sentences));
+    await say(fr.synthesis.sentences.map((t) => ({ t, eyes: "soft" })));
     stage.push(0);
     persist({ stage: "done", summary: E.summary(ritual) });
   }
@@ -685,7 +750,8 @@ export function mountTarot(root) {
     await anim(stage.setShot("table", reduce ? 0 : 900));
     await anim(deck.gather(order));
     go("DECK_PRESENTED");
-    await say([{ t: "Again, then.", eyes: "idle" }, "The cards never mind. They've heard everything twice."]);
+    await say([{ t: "Again, then.", eyes: "idle" }]);
+    await chooseTopic();
     await ritualFlow();
   }
 
@@ -703,13 +769,10 @@ export function mountTarot(root) {
       deck.unhighlight();
       return endMenuLoop();
     }
-    await say(E.phaseLines("resume", ritual.seed));
-    prompt([
-      { label: "Continue", action: "resume", primary: true },
-      { label: "Begin Anew", action: "anew" },
+    const a = await ask(E.phaseLines("resume", ritual.seed), [
+      { key: "resume", label: "Finish it" },
+      { key: "anew", label: "Start over" },
     ]);
-    const { a } = await waitFor(["resume", "anew"]);
-    clearPrompt();
     if (a === "anew") return restart();
     if (!E.isComplete(ritual)) {
       await spreadPhase(ritual.picks.length);

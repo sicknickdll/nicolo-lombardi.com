@@ -113,7 +113,7 @@ function rows(n, cz) {
 const POST_VERT = `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`;
 const POST_FRAG = `
 precision highp float;
-uniform sampler2D tScene; uniform vec2 uRes; uniform float uTime, uFade, uVig, uGrain, uLevels;
+uniform sampler2D tScene; uniform vec2 uRes; uniform float uTime, uFade, uVig, uGrain, uLevels, uGlitch;
 varying vec2 vUv;
 float bayer(vec2 p){ p = mod(p, 4.0);
   float b = mod(p.x,2.0)*2.0 + mod(p.y,2.0)*3.0 - 2.0*mod(p.x,2.0)*mod(p.y,2.0);
@@ -121,8 +121,18 @@ float bayer(vec2 p){ p = mod(p, 4.0);
   return (b*4.0 + c + 0.5) / 16.0; }
 vec3 srgb(vec3 c){ return mix(c*12.92, 1.055*pow(max(c,vec3(0.0)), vec3(1.0/2.4)) - 0.055, step(0.0031308, c)); }
 void main(){
-  vec2 px = floor(vUv * uRes);
+  vec2 uv = vUv;
+  if (uGlitch > 0.0) { // torn rows, shifted colours
+    float band = floor(vUv.y * 22.0);
+    float r = fract(sin(band * 91.7 + floor(uTime * 24.0) * 3.1) * 43758.5453);
+    uv.x += (r - 0.5) * 0.18 * uGlitch * step(0.55, r);
+  }
+  vec2 px = floor(uv * uRes);
   vec3 c = srgb(texture2D(tScene, (px + 0.5) / uRes).rgb);
+  if (uGlitch > 0.0) {
+    c.r = srgb(texture2D(tScene, (px + vec2(4.0 * uGlitch, 0.0) + 0.5) / uRes).rgb).r;
+    c.b = srgb(texture2D(tScene, (px - vec2(4.0 * uGlitch, 1.0) + 0.5) / uRes).rgb).b;
+  }
   float l = dot(c, vec3(0.299, 0.587, 0.114));
   c = mix(c * vec3(1.12, 0.9, 0.92) + vec3(0.006, 0.0, 0.003), c, smoothstep(0.02, 0.4, l)); // crimson in the dark
   c = floor(c * uLevels + bayer(px) ) / uLevels;                                                // dither + few colours
@@ -163,6 +173,7 @@ export function createStage(container, { reduce = false, low = false } = {}) {
       uVig: { value: 1.25 },
       uGrain: { value: 0.055 },
       uLevels: { value: 30 },
+      uGlitch: { value: 0 },
     },
     depthTest: false,
     depthWrite: false,
@@ -308,6 +319,7 @@ export function createStage(container, { reduce = false, low = false } = {}) {
     new MeshBasicMaterial({ map: silhouetteTexture(), transparent: true, depthWrite: false, fog: false, opacity: 0.32 }),
   );
   silhouette.position.set(0, 0.2, -1.76);
+  silhouette.visible = false; // she is never seen: only her eyes and her hands
   silhouette.scale.setScalar(0.94);
   scene.add(silhouette);
   const eyes = createEyes({ reduce });
@@ -363,6 +375,7 @@ export function createStage(container, { reduce = false, low = false } = {}) {
     level: 0, // all the room's light: 0 before the candles are lit
     levelTo: 0,
     levelSpeed: 1,
+    kill: 0, // the neck snaps: the camera rolls and drops
   };
   // a low lamp out of sight above the table, so the spread is never lost in the dark
   const lamp = new PointLight(0xffb878, 0.2, 0, 1.4);
@@ -505,6 +518,7 @@ export function createStage(container, { reduce = false, low = false } = {}) {
     last = performance.now(),
     time = 0,
     running = true,
+    frozen = false,
     fadeTo = 0;
   const beforeRender = new Set();
   const look = new Vector3(),
@@ -572,7 +586,11 @@ export function createStage(container, { reduce = false, low = false } = {}) {
       camera.position.x += (Math.random() - 0.5) * s;
       camera.position.y += (Math.random() - 0.5) * s;
     }
+    camera.position.y -= fx.kill * 0.13;
+    camera.position.x += fx.kill * 0.05;
+    look.y -= fx.kill * 0.25;
     camera.lookAt(look);
+    camera.rotation.z += fx.kill * 1.35;
     camera.rotation.z += fx.tilt + Math.sin(time * 0.6) * 0.002 * breathe;
     camera.fov = shot.fov;
     camera.updateProjectionMatrix();
@@ -625,7 +643,7 @@ export function createStage(container, { reduce = false, low = false } = {}) {
     scene.fog = fog;
   }
   const onVis = () => {
-    running = !document.hidden;
+    running = !document.hidden && !frozen;
     last = performance.now();
   };
   document.addEventListener("visibilitychange", onVis);
@@ -655,6 +673,16 @@ export function createStage(container, { reduce = false, low = false } = {}) {
     setShot,
     fade(to) {
       fadeTo = to;
+    },
+    // The end of a rude visitor: the camera snaps sideways and the picture tears.
+    snapNeck() {
+      clock.tween(170, (k) => (fx.kill = k), { ease: (t) => 1 - (1 - t) ** 4 });
+      clock.tween(900, (k) => (post.uniforms.uGlitch.value = 0.4 + k * 0.8), { ease: (t) => t });
+    },
+    // Stop drawing: the last frame stays on screen.
+    freeze() {
+      running = false;
+      frozen = true;
     },
     // Light the room (the candles) up to `level` 0..1, over about `seconds`.
     lights(level, seconds = 2) {

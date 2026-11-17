@@ -2775,6 +2775,12 @@ html.desk-page .header {
   }
 }
 
+/* Heavyweight (Nerfect Typography Works & Britton Walters): the fortune teller's voice */
+@font-face {
+  font-family: "Heavyweight";
+  src: url("/assets/fonts/Heavyweight.woff2") format("woff2");
+  font-display: swap;
+}
 /* ── /archive/tarot/: the Tarot Reader (js/tarot/) ─────────────────────────
    Full screen, no scrolling. The table is a canvas rendered small and scaled up without
    smoothing; dialogue, prompts and captions are HTML on top, in Caslon Antique and the
@@ -3327,4 +3333,100 @@ html.tarot-page .header {
 .tarot:not(:has(.tr-dialogue.on)) .tr-prompts,
 .tarot:not(:has(.tr-dialogue.on)) .tr-end {
   bottom: calc(max(16px, env(safe-area-inset-bottom)) + 34px);
+}
+
+/* Her voice: no box, just words in the dark, in Heavyweight. Answers are words too. */
+.tarot {
+  --tr-voice: "Heavyweight", var(--caslon);
+}
+.tr-dialogue {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  min-height: 0;
+  padding: 0 12px;
+  text-align: center;
+}
+.tr-text {
+  font-family: var(--tr-voice);
+  font-size: clamp(22px, 2.4vw, 32px);
+  line-height: 1.25;
+  min-height: 2.5em;
+  color: #f0dcb0;
+  text-shadow:
+    0 0 2px #000,
+    0 2px 10px #000,
+    0 0 26px rgba(160, 40, 30, 0.45);
+}
+.tr-more {
+  display: none;
+}
+.tr-prompt,
+.tr-end button,
+.tr-prompt.primary {
+  font-family: var(--tr-voice);
+  font-size: clamp(19px, 2vw, 25px);
+  letter-spacing: 0.02em;
+  color: rgba(210, 154, 88, 0.85);
+  background: none;
+  border: 0;
+  padding: 6px 12px;
+  animation: none;
+  text-shadow: 0 2px 10px #000;
+}
+.tr-prompt.primary::before,
+.tr-prompt.primary::after {
+  content: none;
+}
+.tr-prompt:hover,
+.tr-end button:hover {
+  background: none;
+  color: #fff1cf;
+  text-shadow:
+    0 2px 10px #000,
+    0 0 18px rgba(232, 160, 80, 0.7);
+}
+.tr-hint {
+  display: none;
+}
+.tr-caption b {
+  font-family: var(--tr-voice);
+}
+.tarot.tr-dying .tr-top,
+.tarot.tr-dying .tr-prompts,
+.tarot.tr-dying .tr-end {
+  opacity: 0;
+  pointer-events: none;
+}
+.tarot .tr-prompts,
+.tarot:not(:has(.tr-dialogue.on)) .tr-prompts {
+  bottom: calc(max(14px, env(safe-area-inset-bottom)) + 6px);
+}
+.tarot:has(.tr-prompts.on) .tr-dialogue {
+  bottom: calc(max(16px, env(safe-area-inset-bottom)) + 58px);
+}
+.tr-aside {
+  position: absolute;
+  z-index: 8;
+  left: 50%;
+  top: 22%;
+  transform: translate(-50%, 6px);
+  margin: 0;
+  width: min(700px, calc(100% - 24px));
+  text-align: center;
+  font-family: var(--tr-voice);
+  font-size: clamp(24px, 2.8vw, 36px);
+  color: #ffb08a;
+  text-shadow:
+    0 2px 10px #000,
+    0 0 24px rgba(200, 30, 20, 0.7);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.25s,
+    transform 0.4s var(--ease);
+}
+.tr-aside.on {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }

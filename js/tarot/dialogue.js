@@ -21,7 +21,7 @@ export function createDialogue(root, { onCue = () => {}, onType = () => {}, redu
       const chars = [...full];
       let i = 0;
       const step = () => {
-        if (!typing) return;
+        if (typing !== me) return; // a newer line took over
         if (i >= chars.length) return finish();
         const ch = chars[i++];
         text.textContent += ch;
@@ -31,13 +31,14 @@ export function createDialogue(root, { onCue = () => {}, onType = () => {}, redu
         typing.timer = setTimeout(step, base + pause);
       };
       const finish = () => {
-        clearTimeout(typing?.timer);
+        if (typing !== me) return resolve();
+        clearTimeout(typing.timer);
         text.textContent = full;
         typing = null;
         more.hidden = false;
         resolve();
       };
-      typing = { full, finish, timer: 0 };
+      const me = (typing = { full, finish, timer: 0 });
       step();
     });
   }
@@ -45,6 +46,8 @@ export function createDialogue(root, { onCue = () => {}, onType = () => {}, redu
   // Shows lines one after another; resolves once the last one is acknowledged.
   async function say(lines, { hold = false } = {}) {
     const my = ++token;
+    if (typing) typing.finish(); // an older line still typing: let it end (its say() then stops)
+    if (waiting) (waiting(), (waiting = null));
     box.hidden = false;
     box.classList.add("on");
     for (const raw of lines) {
