@@ -340,6 +340,7 @@ export function bindDesktop(main) {
   async function goodbye() {
     if (gone) return;
     gone = true;
+    playReversed("archive-loading", 0.55); // the boot sound, rewinding, as soon as you say yes
     clearInterval(glitchTimer);
     clearTimeout(scrambleTimer);
     [...wins.values()].forEach(close);
@@ -365,7 +366,10 @@ export function bindDesktop(main) {
       };
       tick();
     }, reduce ? 0 : 500);
-    setTimeout(() => leave("/"), reduce ? 1200 : 3600);
+    setTimeout(() => {
+      desk.classList.add("leaving");
+      setTimeout(() => navigateTo("/"), reduce ? 0 : 260); // straight there: the sound has already played
+    }, reduce ? 1200 : 3600);
   }
   on(desk.querySelector(".desk-bar"), "click", (e) => {
     const cmd = e.target.closest("[data-cmd]");
