@@ -35,7 +35,7 @@ export function summaryMarkup(sum, { note = "" } = {}) {
 <ol class="trs-cross">${sum.cards
     .map(
       (c, i) =>
-        `<li class="trs-card">${fig(c, c.name)}<div><p class="trs-pos">${ROMAN[i]} · ${esc(c.label)}</p><h3 class="caslon">${esc(c.name)}</h3>${kw(c.keywords)}<p>${esc(c.interpretation)}</p><p class="trs-refl">${esc(c.reflection)}</p></div></li>`,
+        `<li class="trs-card">${fig(c, c.name)}<div><p class="trs-pos">${ROMAN[i]} · ${esc(c.label)}</p><h3 class="caslon">${esc(c.name)}</h3>${kw(c.keywords)}<p>${esc(c.interpretation)}</p>${c.base && c.base !== c.interpretation ? `<p class="trs-refl">On its own, the card says this. ${esc(c.base)}</p>` : ""}<p class="trs-refl">${esc(c.reflection)}</p></div></li>`,
     )
     .join("")}</ol>
 <section class="trs-story"><h3 class="caslon">The Story</h3><p>${esc(sum.synthesis)}</p></section>

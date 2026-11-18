@@ -27,6 +27,7 @@ import {
   topicFor,
 } from "../js/tarot/engine.js";
 import { LIFE, TOPICS, QUESTIONS } from "../js/tarot/life.js";
+import { TONES, TONE_OF } from "../js/tarot/tones.js";
 
 // A full reading, driven by a seed: shuffle, cut, guiding card, five picks.
 function reading(seed, topic = TOPICS[seed % 4].key) {
@@ -129,8 +130,9 @@ test("commentary names the card and its place, and speaks to the topic", () => {
   r.picks.forEach((p, i) => {
     const c = commentary(r, i);
     assert.ok(c.lines[0].t.startsWith(card(p.id).name));
-    assert.equal(c.lines.length, 3);
-    assert.ok(c.lines.some((l) => l.t === LIFE[p.id].money));
+    assert.ok(c.lines.length === 3 || c.lines.length === 5);
+    assert.ok(c.lines.some((l) => l.t === c.interpretation));
+    assert.equal(c.base, LIFE[p.id].money);
   });
   assert.ok(guidingLines(r).open.some((l) => l.t === LIFE[r.guiding].money));
 });
@@ -155,7 +157,7 @@ test("her question can steer the reading to another topic", () => {
   r = answer({ ...r, answers: [] }, 1, "family");
   assert.equal(topicFor(r, 1), "money");
   assert.equal(topicFor(r, 2), "family");
-  assert.ok(commentary(r, 3).lines.some((l) => l.t === LIFE[r.picks[3].id].family));
+  assert.equal(commentary(r, 3).base, LIFE[r.picks[3].id].family);
   for (const [t, q] of Object.entries(QUESTIONS)) for (const a of q.a) assert.ok(!a.to || QUESTIONS[a.to], `${t}.${a.key}`);
 });
 
@@ -191,4 +193,38 @@ test("every user-facing line is English (no Italian or Latin leftovers)", () => 
   const all = JSON.stringify(CARDS) + JSON.stringify(LIFE) + JSON.stringify(summary(reading(1)));
   for (const w of [" della ", " il ", " che ", " sono ", " carta ", " futuro ", " passato ", " ombra ", "Arcanum", " et "])
     assert.ok(!all.includes(w), `found "${w}"`);
+});
+
+test("every card has a careful and a restless version for every topic, and the guiding card picks", () => {
+  const seen = new Set(Object.values(LIFE).flatMap((l) => Object.values(l)));
+  for (const c of CARDS) {
+    assert.ok(TONE_OF[c.id], c.id);
+    for (const tone of ["shade", "storm"])
+      for (const t of TOPICS) {
+        const line = TONES[c.id]?.[tone]?.[t.key];
+        assert.ok(line?.length > 10, `${c.id}.${tone}.${t.key}`);
+        assert.ok(!/[:;…]/.test(line), `${c.id}.${tone}.${t.key} has a glyph the font lacks`);
+        assert.ok(!seen.has(line), `duplicate: ${line}`);
+        seen.add(line);
+      }
+  }
+  // the same card in the same place reads differently under a kind, a careful and a restless guide
+  const r = reading(12, "love");
+  const id = r.picks[0].id;
+  const under = (g) => commentary({ ...r, guiding: g }, 0).interpretation;
+  const tones = { light: "sun", shade: "moon", storm: "tower" };
+  const lines = Object.values(tones).filter((g) => g !== id).map(under);
+  assert.equal(new Set(lines).size, lines.length);
+});
+
+test("links between cards come now and then, at most twice, in her voice", () => {
+  let any = 0;
+  for (let seed = 1; seed <= 200; seed++) {
+    const r = reading(seed * 31);
+    const n = r.picks.filter((_, i) => commentary(r, i).echo).length;
+    assert.ok(n <= 2);
+    any += n > 0;
+    r.picks.forEach((_, i) => commentary(r, i).lines.forEach((l) => assert.ok(!/[:;]/.test(l.t), l.t)));
+  }
+  assert.ok(any > 50, `only ${any} readings had a link`);
 });

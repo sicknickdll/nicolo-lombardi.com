@@ -28,6 +28,16 @@ import {
   SYNTHESIS,
 } from "./lines.js";
 import { LIFE, TOPICS, QUESTIONS } from "./life.js";
+import { TONES, TONE_OF, TONE_INTRO } from "./tones.js";
+
+// The guiding card's tone (light, shade, storm) decides which version of every card she reads.
+export const toneOf = (r) => TONE_OF[r.guiding] || "light";
+export function lifeLine(r, id, topic) {
+  const tone = toneOf(r);
+  return tone === "light" ? LIFE[id][topic] : TONES[id][tone][topic];
+}
+// Link sentences come from the long-form rules (lines.js): fit them to her voice and font.
+const plain = (t) => t.replace(/: (\w)/g, (m, c) => `. ${c.toUpperCase()}`).replace(/; /g, ", ").replace(/:/g, ".");
 
 export const POSITIONS = [
   { key: "past", label: "Past", place: "left", prompt: "Look Into Your Past" },
@@ -209,7 +219,9 @@ export function echoes(r) {
       const c = card(p.id);
       for (let k = i - 1; k >= 0 && !echo; k--) {
         const rel = relation(c, card(r.picks[k].id), `${r.seed}:e${i}`, { contrastOnly: true, avoid });
-        if (rel) echo = { ...remember(avoid, rel), with: r.picks[k].id, intro: ECHO_INTROS[(hash(`${r.seed}:ei`) + count) % ECHO_INTROS.length] };
+        // named pairs always speak, plain oppositions only about half the time
+        if (rel && (rel.kind === "pair" || hash(`${r.seed}:ek${i}`) % 2 === 0))
+          echo = { ...remember(avoid, rel), with: r.picks[k].id, intro: ECHO_INTROS[(hash(`${r.seed}:ei`) + count) % ECHO_INTROS.length] };
       }
       if (echo) count++;
     }
@@ -246,13 +258,16 @@ export function commentary(r, i) {
     c = card(p.id),
     s = `${r.seed}:${i}`,
     topic = topicFor(r, i);
-  const life = LIFE[c.id][topic];
+  const life = lifeLine(r, c.id, topic);
   const lines = [
     { t: `${c.name}, ${choose(POSITION_PHRASES[p.position], s, "pp")}.`, eyes: c.react.eyes, pause: c.react.pause || 0, react: c.id },
     { t: choose(c.reveal, s, "rv") },
     { t: life, eyes: "watching" },
   ];
-  return { lines, interpretation: life, topic };
+  // now and then (a strong pair, or two cards pulling opposite ways) she links it to one on the table
+  const echo = echoes(r).list[i];
+  if (echo) lines.push({ t: plain(fill(echo.intro, { prev: mid(card(echo.with)) })), eyes: "curious" }, { t: plain(echo.text) });
+  return { lines, interpretation: life, base: LIFE[c.id][topic], echo: echo ? plain(echo.text) : null, topic };
 }
 
 // The guiding card's reveal: her first look, what it means for your topic, the hand-off.
@@ -261,7 +276,7 @@ export function guidingLines(r) {
   const topic = r.topic || "love";
   return {
     before: phaseLines("guidingSeen", r.seed),
-    open: [{ t: `${g.name}.`, eyes: g.react.eyes, pause: g.react.pause || 400, react: g.id }, { t: LIFE[g.id][topic] }],
+    open: [{ t: `${g.name}.`, eyes: g.react.eyes, pause: g.react.pause || 400, react: g.id }, { t: LIFE[g.id][topic] }, { t: TONE_INTRO[toneOf(r)], eyes: "watching" }],
     after: phaseLines("guidingAfter", r.seed),
   };
 }
@@ -290,9 +305,9 @@ export function synthesis(r) {
   const ends = (r.answers || []).map((x) => answerOf(x)?.end).filter(Boolean);
   const parts = [
     `${g.name} sat under all of it.`,
-    `${LIFE[fr[0].id][topicFor(r, 0)]}`,
-    `${LIFE[fr[1].id][topicFor(r, 1)]}`,
-    `${LIFE[fr[2].id][topicFor(r, 2)]}`,
+    lifeLine(r, fr[0].id, topicFor(r, 0)),
+    lifeLine(r, fr[1].id, topicFor(r, 1)),
+    lifeLine(r, fr[2].id, topicFor(r, 2)),
     `Careful with ${mid(fr[3])}. ${LIFE[fr[3].id].warning}`,
     LIFE[fr[4].id].advice,
     ...ends,
@@ -321,6 +336,7 @@ export function summary(r) {
         art: c.art,
         keywords: c.keywords,
         interpretation: commentary(r, i).interpretation,
+        base: commentary(r, i).base,
         reflection: final.stages[i].reflection,
       };
     }),

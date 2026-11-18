@@ -126,6 +126,8 @@ an image or printed. Everything is in English; no AI service is used: the texts 
 authored database and rules.
 
 ```
+js/tarot/tones.js       ← HOW THE GUIDING CARD CHANGES THE OTHERS: it gives the reading a tone (kind,
+                          careful or restless) and each card has a version of its line for each.
 js/tarot/life.js        ← WHAT SHE SAYS: each card's line for love, money, family and work, an advice,
                           a warning, and her questions (whose answers can switch the topic).
 js/tarot/cards.js       ← THE CARDS: 22 Major Arcana (art, keywords, every interpretation, her reactions).
