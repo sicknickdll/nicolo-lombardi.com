@@ -2,7 +2,7 @@
 // popularised). The mouse wheel and trackpad no longer jump the page: each notch moves a
 // target and the page glides toward it, easing out the same way every time.
 // Touch screens, the keyboard and reduced-motion keep the browser's own scrolling.
-const EASE = 14; // higher = arrives sooner (the reference page uses 9; this is a bit snappier)
+const EASE = 8; // higher = arrives sooner: a slow, calm glide
 
 export function smoothScroll() {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
