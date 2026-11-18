@@ -26,6 +26,17 @@ export const QUESTION_POOL = [
   { q: "Is this the right time to move?", topic: "family" },
   { q: "Should I call them first?", topic: "family" },
   { q: "Will things get better at home?", topic: "family" },
+  { q: "Will I meet someone new soon?", topic: "love" },
+  { q: "Should I give them another chance?", topic: "love" },
+  { q: "Is my ex coming back?", topic: "love" },
+  { q: "Should I lend the money?", topic: "money" },
+  { q: "Will I be able to save this year?", topic: "money" },
+  { q: "Is this investment a good idea?", topic: "money" },
+  { q: "Should I quit?", topic: "work" },
+  { q: "Will the project succeed?", topic: "work" },
+  { q: "Should I start my own thing?", topic: "work" },
+  { q: "Will we make peace?", topic: "family" },
+  { q: "Should I tell them the truth?", topic: "family" },
 ];
 
 export const VERDICT = {
@@ -67,10 +78,12 @@ const TURNED_NOTE = {
 
 export const MAX_QUESTIONS = POSITIONS.length;
 
-// Four questions to choose from, ones not asked yet.
-export function questionChoices(r, round) {
+// Four questions to choose from, ones not asked yet. `seen` holds the ones already offered this
+// round (the "Other questions" option asks for four new ones); once all have been seen, it starts over.
+export function questionChoices(r, round, seen = new Set()) {
   const asked = new Set((r.asked || []).map((a) => a.q));
-  const left = QUESTION_POOL.filter((x) => !asked.has(x.q));
+  let left = QUESTION_POOL.filter((x) => !asked.has(x.q) && !seen.has(x.q));
+  if (left.length < 4) left = QUESTION_POOL.filter((x) => !asked.has(x.q));
   return left
     .map((x) => ({ x, k: choose([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], r.seed, `yq${round}:${x.q}`) }))
     .sort((a, b) => a.k - b.k)
