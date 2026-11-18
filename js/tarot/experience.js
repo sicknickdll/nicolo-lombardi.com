@@ -20,6 +20,7 @@ import { createAudio } from "./audio.js";
 import { createDialogue } from "./dialogue.js";
 import { openSummary, keepReading } from "./summary.js";
 import { openGallery } from "./gallery.js";
+import * as YN from "./yesno.js";
 import { DECK_IDS, card } from "./cards.js";
 import { TOPICS } from "./life.js";
 import { PHASE_LINES } from "./lines.js";
@@ -37,12 +38,12 @@ const FLOW = {
   SHUFFLE_COMPLETE: ["SHUFFLING", "WAITING_FOR_CUT"],
   WAITING_FOR_CUT: ["CUTTING"],
   CUTTING: ["REASSEMBLING"],
-  REASSEMBLING: ["GUIDING_CARD_REVEAL"],
+  REASSEMBLING: ["GUIDING_CARD_REVEAL", "CARD_SELECTION"],
   GUIDING_CARD_REVEAL: ["GUIDING_CARD_DIALOGUE"],
   GUIDING_CARD_DIALOGUE: ["CARD_SELECTION"],
   CARD_SELECTION: ["CARD_FLIPPING"],
   CARD_FLIPPING: ["CARD_COMMENTARY"],
-  CARD_COMMENTARY: ["NEXT_CARD_SELECTION", "CROSS_COMPLETE"],
+  CARD_COMMENTARY: ["NEXT_CARD_SELECTION", "CROSS_COMPLETE", "END"],
   NEXT_CARD_SELECTION: ["CARD_FLIPPING"],
   CROSS_COMPLETE: ["FINAL_READING"],
   FINAL_READING: ["END"],
@@ -122,6 +123,7 @@ export function mountTarot(root) {
 
   // ── saving ──
   function persist(extra = {}) {
+    if (ritual?.mode === "yesno") return; // a yes or no sitting is not kept
     try {
       localStorage.setItem(SAVE, JSON.stringify({ ritual, at: Date.now(), ...extra }));
     } catch {}
@@ -200,6 +202,9 @@ export function mountTarot(root) {
       prompts.append(h);
     }
     prompts.classList.toggle("on", items.length > 0 || Boolean(hint));
+    // long options (questions) stack in a column; her line moves up to sit above them
+    prompts.classList.toggle("tr-stack", items.some((it) => it.label.length > 18));
+    root.style.setProperty("--prompts-h", `${items.length ? prompts.offsetHeight : 0}px`);
     // keyboard users land on the main action
     if (matchMedia("(hover: hover)").matches) prompts.querySelector("button.primary")?.focus({ preventScroll: true });
   }
@@ -736,8 +741,72 @@ export function mountTarot(root) {
     ritual = E.newRitual({ seed: seedFor() });
     await anim(deck.presentDeck(ritual.deck));
     go("DECK_PRESENTED");
+    await chooseMode();
+  }
+
+  // The first choice: a classic reading (a guiding card and a cross of five), or yes or no.
+  async function chooseMode() {
+    const mode = await ask([{ t: "A proper reading, or just a yes or no?", eyes: "curious" }], [
+      { key: "classic", label: "Classic Reading" },
+      { key: "yesno", label: "Yes or No" },
+    ]);
+    if (mode === "yesno") return yesNoFlow();
     await chooseTopic();
     await ritualFlow();
+  }
+
+  // Yes or no: shuffle, cut, the fan; then for each question one card, and its answer.
+  async function yesNoFlow() {
+    ritual = { ...ritual, mode: "yesno", asked: [], topic: "love" };
+    await say([{ t: "Yes or no. The cards are blunt, I warn you.", eyes: "amused" }]);
+    await shufflePhase();
+    await cutPhase();
+    await say([{ t: "No guiding card tonight. Each card answers on its own.", eyes: "watching" }]);
+    await anim(deck.fanOut(ritual.deck));
+    for (let round = 0; round < YN.MAX_QUESTIONS; round++) {
+      const choices = YN.questionChoices(ritual, round);
+      const q = await ask([{ t: round === 0 ? "So. What do you want to know?" : "Ask, then.", eyes: "curious" }], choices.map((x) => ({ key: x.q, label: x.q })));
+      const question = choices.find((x) => x.q === q);
+      go(round === 0 ? "CARD_SELECTION" : "NEXT_CARD_SELECTION");
+      deck.restHands();
+      dialogue.say([{ t: `${question.q} Pick one card.`, eyes: "watching" }], { hold: true }).catch(() => {});
+      const { data: id } = await waitFor(["pick"]);
+      dialogue.cancel();
+      setHover(null);
+      go("CARD_FLIPPING");
+      ritual = YN.drawAnswer(ritual, id, question);
+      active = id;
+      eyes.setState("curious");
+      await anim(deck.revealPick(id));
+      go("CARD_COMMENTARY");
+      const v = YN.verdictOf(ritual, round);
+      await say([v.lines[0]]);
+      const placing = anim(deck.placePick(id, ritual.picks[round].position));
+      await say(v.lines.slice(1));
+      await placing;
+      active = null;
+      if (round === YN.MAX_QUESTIONS - 1) {
+        await say([{ t: "That's all the cards will answer tonight.", eyes: "soft" }]);
+        break;
+      }
+      const more = await ask([{ t: "Another question?", eyes: "watching" }], [
+        { key: "more", label: "Another question" },
+        { key: "done", label: "That's all" },
+      ]);
+      if (more === "done") break;
+    }
+    go("END");
+    eyes.setState("soft");
+    await say([{ t: "Yes and no. The rest is up to you.", eyes: "soft" }], { hold: true });
+    deck.withdrawHands(1.6);
+    for (;;) {
+      showEnd(true, "yesno");
+      const { a } = await waitFor(["again", "gallery"]);
+      decided();
+      showEnd(false);
+      if (a === "again") return restart();
+      await guard(openGallery(root, { onTurn: () => audio.play("flip") }));
+    }
   }
 
   async function chooseTopic() {
@@ -937,17 +1006,21 @@ export function mountTarot(root) {
       if (how === "again") return restart();
     }
   }
-  function showEnd(on) {
+  function showEnd(on, mode = "classic") {
     if (!endMenu) {
       endMenu = document.createElement("div");
       endMenu.className = "tr-end";
-      endMenu.innerHTML = `<button type="button" data-a="review">Review Reading</button><button type="button" data-a="again">Begin Again</button><button type="button" data-a="keep">Save Reading</button><button type="button" data-a="gallery">See the Deck</button>`;
       endMenu.addEventListener("click", (e) => {
         const b = e.target.closest("[data-a]");
         if (b) (e.stopPropagation(), act(b.dataset.a));
       });
       root.append(endMenu);
     }
+    if (on)
+      endMenu.innerHTML =
+        mode === "yesno"
+          ? `<button type="button" data-a="again">Begin Again</button><button type="button" data-a="gallery">See the Deck</button>`
+          : `<button type="button" data-a="review">Review Reading</button><button type="button" data-a="again">Begin Again</button><button type="button" data-a="keep">Save Reading</button><button type="button" data-a="gallery">See the Deck</button>`;
     endMenu.classList.toggle("on", on);
     endMenu.inert = !on;
     if (on) endMenu.querySelector("button").focus({ preventScroll: true });
@@ -975,8 +1048,7 @@ export function mountTarot(root) {
     await anim(deck.gather(order));
     go("DECK_PRESENTED");
     await say([{ t: "Again, then.", eyes: "idle" }]);
-    await chooseTopic();
-    await ritualFlow();
+    await chooseMode();
   }
 
   async function resume(s) {

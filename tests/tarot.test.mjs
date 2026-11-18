@@ -277,3 +277,26 @@ test("upside down changes the card, the guide's tone, the links and the ending",
   assert.ok(!flipped || flipped.kind !== "contrast" || flipped.axis !== relation(a, b, 1).axis);
   assert.ok(validRitual(all));
 });
+
+test("yes or no: each question is answered by its card, upside down turns the answer", async () => {
+  const YN = await import("../js/tarot/yesno.js");
+  for (const c of CARDS) assert.ok(["yes", "no", "maybe"].includes(YN.VERDICT[c.id]), c.id);
+  let r = cutDeck(shuffleDeck({ ...newRitual({ seed: 5 }), mode: "yesno", asked: [] }, seeded(5)), 6);
+  const asked = new Set();
+  for (let round = 0; round < YN.MAX_QUESTIONS; round++) {
+    const choices = YN.questionChoices(r, round);
+    assert.equal(choices.length, 4);
+    choices.forEach((c) => assert.ok(!asked.has(c.q), "question offered twice"));
+    const q = choices[0];
+    asked.add(q.q);
+    const id = r.deck[round];
+    r = YN.drawAnswer(r, id, q);
+    const v = YN.verdictOf(r, round);
+    const down = r.reversed.includes(id);
+    const expected = down ? { yes: "notyet", no: "maybe", maybe: "no" }[YN.VERDICT[id]] : YN.VERDICT[id];
+    assert.equal(v.verdict, expected);
+    assert.equal(v.lines[2].t, down ? REVERSED[id][q.topic] : LIFE[id][q.topic]);
+    v.lines.forEach((l) => assert.ok(!/[:;]/.test(l.t), l.t));
+  }
+  assert.throws(() => YN.drawAnswer(r, r.deck[0], YN.QUESTION_POOL[0]));
+});
