@@ -19,6 +19,7 @@ import { createDeck } from "./deck.js";
 import { createAudio } from "./audio.js";
 import { createDialogue } from "./dialogue.js";
 import { openSummary, keepReading } from "./summary.js";
+import { openGallery } from "./gallery.js";
 import { DECK_IDS, card } from "./cards.js";
 import { TOPICS } from "./life.js";
 import { PHASE_LINES } from "./lines.js";
@@ -365,7 +366,7 @@ export function mountTarot(root) {
 
   function onKey(e) {
     if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
-    if (root.querySelector(".tr-summary")) return;
+    if (root.querySelector(".tr-summary, .tr-gallery")) return;
     const tag = document.activeElement?.tagName;
     const onButton = tag === "BUTTON" || tag === "A";
     audio.unlock();
@@ -918,10 +919,15 @@ export function mountTarot(root) {
   async function endMenuLoop() {
     for (;;) {
       showEnd(true);
-      const { a } = await waitFor(["review", "again", "keep"]);
+      const { a } = await waitFor(["review", "again", "keep", "gallery"]);
       decided();
       showEnd(false);
       if (a === "again") return restart();
+      if (a === "gallery") {
+        // the whole deck, in order, to look at
+        await guard(openGallery(root, { onTurn: () => audio.play("flip") }));
+        continue;
+      }
       go("READING_SUMMARY");
       const sum = E.summary(ritual);
       const note = a === "keep" ? (keepReading(sum) ? "Saved on this device. You can also download it as an image, or print it." : "This browser won't let me keep it here. Download it as an image instead.") : "";
@@ -934,7 +940,7 @@ export function mountTarot(root) {
     if (!endMenu) {
       endMenu = document.createElement("div");
       endMenu.className = "tr-end";
-      endMenu.innerHTML = `<button type="button" data-a="review">Review Reading</button><button type="button" data-a="again">Begin Again</button><button type="button" data-a="keep">Save Reading</button>`;
+      endMenu.innerHTML = `<button type="button" data-a="review">Review Reading</button><button type="button" data-a="again">Begin Again</button><button type="button" data-a="keep">Save Reading</button><button type="button" data-a="gallery">See the Deck</button>`;
       endMenu.addEventListener("click", (e) => {
         const b = e.target.closest("[data-a]");
         if (b) (e.stopPropagation(), act(b.dataset.a));
