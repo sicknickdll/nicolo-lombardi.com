@@ -2,7 +2,10 @@
 // Each project is a tall section holding a pinned white screen. As you scroll, the small window in
 // the middle grows (a CSS clip-path driven by --e) until the loop fills the screen. The loops play only
 // while they are near the screen.
-const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+// A gentle S-curve (smoothstep): calmer than a cubic, no sudden rush in the middle.
+const ease = (t) => t * t * (3 - 2 * t);
+// How much scrolling the window takes to fill the screen, in screen heights (it used to be 1).
+const GROW = 1.5;
 const clamp = (x) => Math.min(1, Math.max(0, x));
 
 export function bindReveal(root) {
@@ -17,8 +20,8 @@ export function bindReveal(root) {
     for (const s of sections) {
       const r = s.getBoundingClientRect();
       if (r.bottom < -H || r.top > H * 2) continue;
-      // Starts growing a quarter screen before the block is pinned; full after one more screen.
-      const e = reduce ? 1 : ease(clamp((H * 0.25 - r.top) / H));
+      // Starts growing a quarter screen before the block is pinned; full after GROW more screens.
+      const e = reduce ? 1 : ease(clamp((H * 0.25 - r.top) / (H * GROW)));
       s.style.setProperty("--e", e.toFixed(4));
       s.classList.toggle("is-full", e > 0.97);
     }
