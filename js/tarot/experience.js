@@ -437,6 +437,7 @@ export function mountTarot(root) {
   aside.className = "tr-aside";
   aside.setAttribute("aria-live", "assertive");
   root.append(aside);
+  const choose = (list, n) => list[n % list.length];
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   // A line said aside, over whatever else is happening (her place in the ritual is kept).
   let asideQueue = Promise.resolve();
@@ -764,9 +765,17 @@ export function mountTarot(root) {
     await say([{ t: "No guiding card tonight. Each card answers on its own.", eyes: "watching" }]);
     await anim(deck.fanOut(ritual.deck));
     for (let round = 0; round < YN.MAX_QUESTIONS; round++) {
-      const choices = YN.questionChoices(ritual, round);
-      const q = await ask([{ t: round === 0 ? "So. What do you want to know?" : "Ask, then.", eyes: "curious" }], choices.map((x) => ({ key: x.q, label: x.q })));
-      const question = choices.find((x) => x.q === q);
+      // four questions, and a fifth option for four different ones
+      const seen = new Set();
+      let question = null;
+      for (let page = 0; !question; page++) {
+        if (seen.size >= YN.QUESTION_POOL.length - (ritual.asked || []).length) seen.clear();
+        const choices = YN.questionChoices(ritual, round * 100 + page, seen);
+        choices.forEach((x) => seen.add(x.q));
+        const line = page === 0 ? (round === 0 ? "So. What do you want to know?" : "Ask, then.") : choose(["Other questions, then.", "Something else on your mind?", "Pick one. Any one."], page);
+        const q = await ask([{ t: line, eyes: "curious" }], [...choices.map((x) => ({ key: x.q, label: x.q })), { key: "__more", label: "Other questions" }]);
+        question = choices.find((x) => x.q === q) || null;
+      }
       go(round === 0 ? "CARD_SELECTION" : "NEXT_CARD_SELECTION");
       deck.restHands();
       dialogue.say([{ t: `${question.q} Pick one card.`, eyes: "watching" }], { hold: true }).catch(() => {});

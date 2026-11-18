@@ -158,7 +158,7 @@ js/tarot/outline.js     GENERATED card silhouette (die-cut notch) for the 3D car
   `lines.js`. Run `npm test` after editing: it checks that every card is complete, that no two
   cards share a sentence and that every card has a line for every topic.
 - **Classic or Yes / No**: the first choice. Yes or No (js/tarot/yesno.js): shuffle, cut, then for each
-  question (four offered at a time, up to five) you draw one card and it answers yes, no, maybe or
+  question (four offered at a time from 24, "Other questions" shows four more; up to five) you draw one card and it answers yes, no, maybe or
   "not yet" (`VERDICT`; upside down turns the answer), with its everyday line for that topic.
 - **Upside-down cards**: every shuffle turns about one card in four upside down (`REVERSE_CHANCE` in
   js/tarot/tones.js). A reversed card says its REVERSED line, plus a line that depends on the guide's

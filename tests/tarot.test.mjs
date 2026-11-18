@@ -286,6 +286,8 @@ test("yes or no: each question is answered by its card, upside down turns the an
   for (let round = 0; round < YN.MAX_QUESTIONS; round++) {
     const choices = YN.questionChoices(r, round);
     assert.equal(choices.length, 4);
+    const other = YN.questionChoices(r, round, new Set(choices.map((c) => c.q)));
+    assert.ok(other.every((c) => !choices.some((d) => d.q === c.q)), "Other questions repeats");
     choices.forEach((c) => assert.ok(!asked.has(c.q), "question offered twice"));
     const q = choices[0];
     asked.add(q.q);
