@@ -27,15 +27,15 @@ export function keepReading(sum) {
 }
 
 export function summaryMarkup(sum, { note = "" } = {}) {
-  const fig = (c, alt) => `<figure><img src="${c.art}" alt="${esc(alt)}" width="720" height="1280" loading="lazy" decoding="async"></figure>`;
+  const fig = (c, alt) => `<figure${c.reversed ? ' class="trs-rev"' : ""}><img src="${c.art}" alt="${esc(alt)}${c.reversed ? ", upside down" : ""}" width="720" height="1280" loading="lazy" decoding="async"></figure>`;
   const kw = (k) => `<p class="trs-kw">${k.map(esc).join(" · ")}</p>`;
   return `<div class="trs-inner">
 <button type="button" class="trs-x" data-act="close" aria-label="Close">X</button><header class="trs-head"><p class="trs-kicker">The Tarot Reader · ${esc(fmtDate(sum.savedAt || sum.at || Date.now()))}</p><h2 class="caslon" id="trs-title">Your Reading</h2>${note ? `<p class="trs-note">${esc(note)}</p>` : ""}</header>
-<section class="trs-card trs-guide">${fig(sum.guiding, sum.guiding.name)}<div><p class="trs-pos">The Guiding Card</p><h3 class="caslon">${esc(sum.guiding.name)}</h3>${kw(sum.guiding.keywords)}<p>${esc(sum.guiding.text)}</p></div></section>
+<section class="trs-card trs-guide">${fig(sum.guiding, sum.guiding.name)}<div><p class="trs-pos">The Guiding Card${sum.guiding.reversed ? " · Upside down" : ""}</p><h3 class="caslon">${esc(sum.guiding.name)}</h3>${kw(sum.guiding.keywords)}<p>${esc(sum.guiding.text)}</p></div></section>
 <ol class="trs-cross">${sum.cards
     .map(
       (c, i) =>
-        `<li class="trs-card">${fig(c, c.name)}<div><p class="trs-pos">${ROMAN[i]} · ${esc(c.label)}</p><h3 class="caslon">${esc(c.name)}</h3>${kw(c.keywords)}<p>${esc(c.interpretation)}</p>${c.base && c.base !== c.interpretation ? `<p class="trs-refl">On its own, the card says this. ${esc(c.base)}</p>` : ""}<p class="trs-refl">${esc(c.reflection)}</p></div></li>`,
+        `<li class="trs-card">${fig(c, c.name)}<div><p class="trs-pos">${ROMAN[i]} · ${esc(c.label)}${c.reversed ? " · Upside down" : ""}</p><h3 class="caslon">${esc(c.name)}</h3>${kw(c.keywords)}<p>${esc(c.interpretation)}</p>${c.base && c.base !== c.interpretation ? `<p class="trs-refl">On its own, the card says this. ${esc(c.base)}</p>` : ""}<p class="trs-refl">${esc(c.reflection)}</p></div></li>`,
     )
     .join("")}</ol>
 <section class="trs-story"><h3 class="caslon">The Story</h3><p>${esc(sum.synthesis)}</p></section>
@@ -181,10 +181,11 @@ export async function renderImage(sum) {
     shadow: [cx, cy + ch + vgap],
     potential: [cx, cy - ch - vgap],
   };
-  const drawCard = (img, x, y, label, name, below = true) => {
+  const drawCard = (img, x, y, label, name, below = true, rev = false) => {
     g.save();
     g.shadowColor = "rgba(0,0,0,0.6)";
     g.shadowBlur = 24;
+    if (rev) (g.translate(x, y), g.rotate(Math.PI), g.translate(-x, -y)); // upside down, as it was drawn
     if (img) g.drawImage(img, x - cw / 2, y - ch / 2, cw, ch);
     else (g.fillStyle = "#c8aa7a"), g.fillRect(x - cw / 2, y - ch / 2, cw, ch);
     g.restore();
@@ -201,9 +202,9 @@ export async function renderImage(sum) {
   };
   sum.cards.forEach((c, i) => {
     const [x, y] = spots[c.position];
-    drawCard(imgs[i + 1], x, y, c.label, c.name, c.position !== "shadow" && c.position !== "potential");
+    drawCard(imgs[i + 1], x, y, c.label + (c.reversed ? " (upside down)" : ""), c.name, c.position !== "shadow" && c.position !== "potential", c.reversed);
   });
-  drawCard(imgs[0], 210, cy, "The Guiding Card", sum.guiding.name);
+  drawCard(imgs[0], 210, cy, "The Guiding Card" + (sum.guiding.reversed ? " (upside down)" : ""), sum.guiding.name, true, sum.guiding.reversed);
   let y = cy + ch * 1.5 + vgap + 130;
   g.textAlign = "left";
   g.fillStyle = "#d29a58";

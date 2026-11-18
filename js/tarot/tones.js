@@ -350,3 +350,162 @@ export const TONES = {
     },
   },
 };
+
+// ── upside down ──
+// A card can come out reversed (decided at every shuffle, about one in four). Reversed, its
+// meaning turns: blocked, delayed, turned inward, or too much of itself. These are its lines.
+// A reversed guiding card flips the tone of the whole reading (kind ↔ careful; a restless guide,
+// reversed, means change that is stuck).
+export const REVERSE_CHANCE = 0.25;
+export const REVERSED_TONE = { light: "shade", shade: "light", storm: "storm" };
+export const TONE_INTRO_REVERSED = {
+  light: "Upside down, though. Even the kind cards will want something back.",
+  shade: "Upside down, though. What was hidden is ready to come out.",
+  storm: "Upside down, though. The change is coming, but it's stuck at the door.",
+};
+export const REVERSED_REACTIONS = [
+  "Upside down. That changes things.",
+  "Reversed. Of course it is.",
+  "Look, it came out on its head.",
+  "Upside down. It's saying the opposite, or saying it louder.",
+];
+export const REVERSED = {
+  fool: {
+    love: "A new start you keep postponing. Or one you jumped into blind.",
+    money: "Reckless spending, or so much caution you never spend on yourself.",
+    family: "You want to leave and can't, or you left and never looked back.",
+    work: "Stuck at the starting line. The first step is the whole problem.",
+  },
+  magician: {
+    love: "Charm without substance. Someone is playing a part.",
+    money: "Skills you aren't using, money you aren't asking for.",
+    family: "Someone at home is pulling strings. Watch the hands.",
+    work: "Lots of talk, no launch. Or a colleague who promises and vanishes.",
+  },
+  "high-priestess": {
+    love: "You ignore what your gut is shouting about them.",
+    money: "You know the deal is wrong and you're signing anyway.",
+    family: "The secret at home isn't secret anymore. Everyone knows but you.",
+    work: "Gossip where there should be discretion. Including yours.",
+  },
+  empress: {
+    love: "Too much care, not enough desire. Or the other way round.",
+    money: "Overspending to feel abundant. Or starving yourself of small joys.",
+    family: "Smothering, or being smothered. Someone needs air.",
+    work: "Creative block. Nothing grows when you dig it up every day.",
+  },
+  emperor: {
+    love: "Control dressed as love. Or no boundaries at all.",
+    money: "No budget, no plan, no idea where it went.",
+    family: "A tyrant at home, or no one in charge.",
+    work: "A bad boss, or you being one.",
+  },
+  hierophant: {
+    love: "A relationship that breaks the rules, and the guilt that comes with it.",
+    money: "The proper way isn't working. Rethink the advice you were given.",
+    family: "You break with family tradition. Expect raised eyebrows.",
+    work: "The institution lets you down. Learn on your own.",
+  },
+  lovers: {
+    love: "Out of tune. You want different things and nobody says it.",
+    money: "Spending on someone to keep them close.",
+    family: "Loyalties split at home. Someone picked the wrong side.",
+    work: "A partnership falling apart, or a choice you made for the wrong reason.",
+  },
+  chariot: {
+    love: "Pulling in two directions. The relationship goes nowhere.",
+    money: "Out of control. Hands off the wheel and the money goes too.",
+    family: "You can't leave and you can't stay. Decide which.",
+    work: "Stalled. Pushing harder won't help, steering will.",
+  },
+  strength: {
+    love: "Insecurity disguised as patience. Ask for what you need.",
+    money: "Anxiety about money is making every choice for you.",
+    family: "Someone's temper rules the house. Maybe yours.",
+    work: "You doubt yourself at work. They don't.",
+  },
+  hermit: {
+    love: "Lonely, not alone. There's a difference and you know it.",
+    money: "Hoarding. Saving is fine, hiding isn't.",
+    family: "You've cut yourself off. Pick up the phone.",
+    work: "Isolated at work. Ask for help before you burn out.",
+  },
+  "wheel-of-fortune": {
+    love: "Bad timing. The right person, the wrong moment.",
+    money: "A run of bad luck. It turns, but not today.",
+    family: "The same bad season again. Break the pattern yourself.",
+    work: "Delays and setbacks. Out of your hands, for now.",
+  },
+  justice: {
+    love: "Something unfair between you. Someone is not being honest.",
+    money: "A bill, a fine, a debt that feels unjust. Check it anyway.",
+    family: "An old wrong at home that nobody admits.",
+    work: "Bias, unfair treatment, a review that misses the point. Keep records.",
+  },
+  "hanged-man": {
+    love: "Stalling. You both know it, and you both wait.",
+    money: "Waiting too long. The good deal is going.",
+    family: "Sacrifice that no one asked for, and no one thanks.",
+    work: "Wasted time. Stop waiting for permission and move.",
+  },
+  death: {
+    love: "An ending you refuse. It's dragging both of you down.",
+    money: "Holding on to something that costs you every month.",
+    family: "A change at home everyone is resisting.",
+    work: "You won't let go of a job that's already gone.",
+  },
+  temperance: {
+    love: "Out of balance. One gives, one takes.",
+    money: "Excess. Too much out, not enough in.",
+    family: "No peacekeeper at home. Everyone shouting at once.",
+    work: "Overworking, then crashing. Find the middle.",
+  },
+  devil: {
+    love: "You're breaking free of someone who held you. Keep going.",
+    money: "You're paying off the habit. It hurts and it works.",
+    family: "You finally see the old family pattern. That's half the cure.",
+    work: "You walk out of the golden cage. Scary, right.",
+  },
+  tower: {
+    love: "You avoid the big argument. The crack gets wider.",
+    money: "A disaster narrowly avoided. Don't push your luck.",
+    family: "Everyone pretends the house is fine. It isn't.",
+    work: "Change you resist. It's coming whether you agree or not.",
+  },
+  star: {
+    love: "You've stopped hoping. Don't. It's not over.",
+    money: "Discouraged about money. It's slower than you'd like, not hopeless.",
+    family: "Faith in them is low. One small gesture would help.",
+    work: "You feel invisible at work. Make yourself seen.",
+  },
+  moon: {
+    love: "The confusion lifts. You finally see them clearly.",
+    money: "The hidden cost comes to light. Better now than later.",
+    family: "An old fear at home loses its grip.",
+    work: "The truth about what's going on at work comes out.",
+  },
+  sun: {
+    love: "The joy is there, but cloudy. A bad week, not a bad love.",
+    money: "Good, not great. Celebrate a little less.",
+    family: "Forced cheer at home. Someone isn't as fine as they look.",
+    work: "Success delayed, or credit that goes to someone else.",
+  },
+  judgement: {
+    love: "You keep judging them, or yourself, for the past.",
+    money: "Old mistakes with money you still punish yourself for.",
+    family: "A call you won't answer. You know who.",
+    work: "You ignore the calling. It keeps calling.",
+  },
+  world: {
+    love: "Almost there. One thing left unfinished between you.",
+    money: "So close to the goal. Don't stop at ninety percent.",
+    family: "Someone is missing from the table. Invite them.",
+    work: "The project won't close. Finish the last bit.",
+  },
+};
+// After a reversed card, a line that depends on the guiding card's tone.
+export const REVERSED_UNDER = {
+  light: ["Under a kind guide, upside down only means later.", "The guide is gentle. Reversed, this is a delay, not a no."],
+  shade: ["Under a careful guide, upside down is a warning. Take it.", "With this guide, reversed means look closer."],
+  storm: ["With a restless guide, upside down means it's already shaking.", "Reversed under this guide, it won't stay upside down for long."],
+};

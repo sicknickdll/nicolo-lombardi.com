@@ -22,12 +22,13 @@ import {
   lensLine,
   relation,
   setTopic,
+  toneOf,
   answer,
   question,
   topicFor,
 } from "../js/tarot/engine.js";
 import { LIFE, TOPICS, QUESTIONS } from "../js/tarot/life.js";
-import { TONES, TONE_OF } from "../js/tarot/tones.js";
+import { TONES, TONE_OF, REVERSED, REVERSED_TONE } from "../js/tarot/tones.js";
 
 // A full reading, driven by a seed: shuffle, cut, guiding card, five picks.
 function reading(seed, topic = TOPICS[seed % 4].key) {
@@ -130,7 +131,7 @@ test("commentary names the card and its place, and speaks to the topic", () => {
   r.picks.forEach((p, i) => {
     const c = commentary(r, i);
     assert.ok(c.lines[0].t.startsWith(card(p.id).name));
-    assert.ok(c.lines.length === 3 || c.lines.length === 5);
+    assert.ok(c.lines.length >= 3 && c.lines.length <= 6);
     assert.ok(c.lines.some((l) => l.t === c.interpretation));
     assert.equal(c.base, LIFE[p.id].money);
   });
@@ -209,7 +210,7 @@ test("every card has a careful and a restless version for every topic, and the g
       }
   }
   // the same card in the same place reads differently under a kind, a careful and a restless guide
-  const r = reading(12, "love");
+  const r = { ...reading(12, "love"), reversed: [] };
   const id = r.picks[0].id;
   const under = (g) => commentary({ ...r, guiding: g }, 0).interpretation;
   const tones = { light: "sun", shade: "moon", storm: "tower" };
@@ -227,4 +228,52 @@ test("links between cards come now and then, at most twice, in her voice", () =>
     r.picks.forEach((_, i) => commentary(r, i).lines.forEach((l) => assert.ok(!/[:;]/.test(l.t), l.t)));
   }
   assert.ok(any > 50, `only ${any} readings had a link`);
+});
+
+test("about one card in four comes out upside down, and the shuffle decides it", () => {
+  let n = 0,
+    total = 0;
+  for (let seed = 1; seed <= 400; seed++) {
+    const r = shuffleDeck(newRitual({ seed }), seeded(seed));
+    n += r.reversed.length;
+    total += r.deck.length;
+    assert.ok(r.reversed.every((id) => r.deck.includes(id)));
+  }
+  assert.ok(n / total > 0.2 && n / total < 0.3, `share ${n / total}`);
+});
+
+test("every card has an upside-down line for every topic", () => {
+  for (const c of CARDS)
+    for (const t of TOPICS) {
+      const l = REVERSED[c.id]?.[t.key];
+      assert.ok(l?.length > 10, `${c.id}.${t.key}`);
+      assert.ok(!/[:;…]/.test(l), l);
+    }
+});
+
+test("upside down changes the card, the guide's tone, the links and the ending", () => {
+  const r = { ...reading(33, "work"), reversed: [] };
+  const id = r.picks[2].id;
+  const up = commentary(r, 2),
+    down = commentary({ ...r, reversed: [id] }, 2);
+  assert.notEqual(up.interpretation, down.interpretation);
+  assert.equal(down.interpretation, REVERSED[id].work);
+  assert.ok(down.lines[0].t.includes("upside down"));
+  // a reversed guiding card turns the tone over
+  const g = { ...r, reversed: [r.guiding] };
+  const base = TONE_OF[r.guiding];
+  assert.equal(toneOf(g), REVERSED_TONE[base]);
+  // the ending counts the reversed cards and changes their sentences
+  const all = { ...r, reversed: r.picks.map((p) => p.id) };
+  const f = finalReading(all);
+  assert.ok(f.synthesis.text.includes("All five upside down"));
+  assert.ok(f.stages.every((st) => st.lines[0].t.includes("upside down")));
+  assert.notEqual(finalReading(r).synthesis.text, f.synthesis.text);
+  // a reversed card stands on the opposite pole, so its links with the others change
+  const a = card("chariot"),
+    b = card("moon");
+  assert.equal(relation(a, b, 1).kind, "contrast");
+  const flipped = relation(a, b, 1, { flip: new Set(["chariot"]) });
+  assert.ok(!flipped || flipped.kind !== "contrast" || flipped.axis !== relation(a, b, 1).axis);
+  assert.ok(validRitual(all));
 });

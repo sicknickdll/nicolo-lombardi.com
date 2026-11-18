@@ -77,6 +77,7 @@ export function mountTarot(root) {
     return () => html.classList.remove("tarot-page");
   }
   const { eyes, hands, clock } = stage;
+  deck.setReversed((id) => Boolean(ritual && E.isReversed(ritual, id)));
   const audio = createAudio();
   stage.sfx = (name) => audio.play(name);
 
@@ -874,7 +875,7 @@ export function mountTarot(root) {
     go("CROSS_COMPLETE");
     persist({ stage: "final" });
     eyes.setState("watching");
-    await say(E.phaseLines("crossDone", ritual.seed));
+    await say([...E.phaseLines("crossDone", ritual.seed), { t: E.countLine(ritual), eyes: E.reversedCount(ritual) > 2 ? "suspicious" : "watching" }]);
     go("FINAL_READING");
     const fr = E.finalReading(ritual);
     stage.darken(true);
