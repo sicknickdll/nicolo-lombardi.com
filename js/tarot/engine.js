@@ -28,13 +28,34 @@ import {
   SYNTHESIS,
 } from "./lines.js";
 import { LIFE, TOPICS, QUESTIONS } from "./life.js";
-import { TONES, TONE_OF, TONE_INTRO } from "./tones.js";
+import { TONES, TONE_OF, TONE_INTRO, REVERSE_CHANCE, REVERSED_TONE, TONE_INTRO_REVERSED, REVERSED_REACTIONS, REVERSED, REVERSED_UNDER } from "./tones.js";
 
-// The guiding card's tone (light, shade, storm) decides which version of every card she reads.
-export const toneOf = (r) => TONE_OF[r.guiding] || "light";
+// Upside-down cards: decided at every shuffle (about one in four), kept with the ritual.
+export const isReversed = (r, id) => Boolean(r.reversed?.includes(id));
+const flipSet = (r) => new Set(r.reversed || []);
+// The guiding card's tone (light, shade, storm) decides which version of every card she reads;
+// a reversed guiding card turns the tone over.
+export const baseTone = (r) => TONE_OF[r.guiding] || "light";
+export const toneOf = (r) => (isReversed(r, r.guiding) ? REVERSED_TONE[baseTone(r)] : baseTone(r));
 export function lifeLine(r, id, topic) {
+  if (isReversed(r, id) && id !== r.guiding) return REVERSED[id][topic];
   const tone = toneOf(r);
   return tone === "light" ? LIFE[id][topic] : TONES[id][tone][topic];
+}
+// How many of the five came out upside down, in her words.
+export function reversedCount(r) {
+  return r.picks.filter((p) => isReversed(r, p.id)).length;
+}
+export function countLine(r) {
+  const n = reversedCount(r);
+  return [
+    "All five upright. The cards are speaking plainly.",
+    "One upside down. Keep an eye on that one.",
+    "Two upside down. Something is pushing back.",
+    "Three upside down. Something is resisting you. Maybe you.",
+    "Four upside down. The table is arguing with you.",
+    "All five upside down. I've rarely seen that. Turn your whole plan around.",
+  ][n];
 }
 // Link sentences come from the long-form rules (lines.js): fit them to her voice and font.
 const plain = (t) => t.replace(/: (\w)/g, (m, c) => `. ${c.toUpperCase()}`).replace(/; /g, ", ").replace(/:/g, ".");
@@ -102,11 +123,14 @@ export const newSeed = (next = secure()) => next();
 
 // ── the ritual ──
 export function newRitual({ seed = newSeed(), deck = DECK_IDS } = {}) {
-  return { v: 1, seed: seed >>> 0, deck: deck.slice(), shuffles: 0, cutIndex: null, guiding: null, picks: [], topic: null, answers: [] };
+  return { v: 1, seed: seed >>> 0, deck: deck.slice(), shuffles: 0, cutIndex: null, guiding: null, picks: [], topic: null, answers: [], reversed: [] };
 }
 export function shuffleDeck(r, next = secure()) {
   if (r.guiding) throw new Error("The deck can't be shuffled once the guiding card is out.");
-  return { ...r, deck: fisherYates(r.deck, next), shuffles: r.shuffles + 1 };
+  const deck = fisherYates(r.deck, next);
+  // each card lands upright or upside down, at random, every time
+  const reversed = deck.filter(() => below(1000, next) < REVERSE_CHANCE * 1000);
+  return { ...r, deck, reversed, shuffles: r.shuffles + 1 };
 }
 // Cut at n: the top n cards (pile A) are lifted off, the rest (pile B) goes on top of them.
 export function cut(deck, n) {
@@ -142,6 +166,7 @@ export function validRitual(r) {
     if (r.picks.some((p, i) => p.position !== POSITIONS[i]?.key)) return false;
     if (r.picks.length && !r.guiding) return false;
     if (r.topic != null && !TOPICS.some((t) => t.key === r.topic)) return false;
+    if (r.reversed && (!Array.isArray(r.reversed) || r.reversed.some((id) => !card(id)))) return false;
     return Number.isInteger(r.seed);
   } catch {
     return false;
@@ -168,7 +193,7 @@ export const pickLines = (position, seed) => choose(PHASE_LINES.pick[position], 
 // shared pole. `contrastOnly` leaves out the shared poles (used during the spread, to keep it
 // short). `avoid` holds what was already said in this reading: the same pair of cards, or the
 // same sentence pattern, is never used twice.
-export function relation(a, b, salt, { contrastOnly = false, avoid = null } = {}) {
+export function relation(a, b, salt, { contrastOnly = false, avoid = null, flip = null } = {}) {
   if (!a || !b || a.id === b.id) return null;
   const key = [a.id, b.id].sort().join("|");
   if (avoid?.has(`pair:${key}`)) return null;
@@ -177,21 +202,22 @@ export function relation(a, b, salt, { contrastOnly = false, avoid = null } = {}
   const contrasts = [],
     shared = [];
   for (const axis of Object.keys(AXES)) {
-    const va = a.axes[axis] || 0,
-      vb = b.axes[axis] || 0;
+    const va = (a.axes[axis] || 0) * (flip?.has(a.id) ? -1 : 1),
+      vb = (b.axes[axis] || 0) * (flip?.has(b.id) ? -1 : 1);
     if (va && vb) (va !== vb ? contrasts : shared).push(axis);
   }
   const order = (list, tag) => list.slice().sort((x, y) => hash(`${salt}:${tag}:${key}:${x}`) - hash(`${salt}:${tag}:${key}:${y}`));
+  const pole = (c, axis) => (c.axes[axis] || 0) * (flip?.has(c.id) ? -1 : 1);
   for (const axis of order(contrasts, "c")) {
-    const [plus, minus] = a.axes[axis] > 0 ? [a, b] : [b, a];
+    const [plus, minus] = pole(a, axis) > 0 ? [a, b] : [b, a];
     AXES[axis].contrast.forEach((tpl, v) =>
       options.push({ kind: "contrast", axis, v, tpl: `${axis}:c:${v}`, text: fill(tpl, { a: mid(plus), b: mid(minus) }) }),
     );
   }
   if (!contrastOnly)
     for (const axis of order(shared, "s")) {
-      const pole = a.axes[axis] > 0 ? "plus" : "minus";
-      AXES[axis][pole].forEach((tpl, v) => options.push({ kind: "shared", axis, v, tpl: `${axis}:${pole}:${v}`, text: fill(tpl, { a: mid(a), b: mid(b) }) }));
+      const side = pole(a, axis) > 0 ? "plus" : "minus";
+      AXES[axis][side].forEach((tpl, v) => options.push({ kind: "shared", axis, v, tpl: `${axis}:${side}:${v}`, text: fill(tpl, { a: mid(a), b: mid(b) }) }));
     }
   // Among the variants of one axis, start from a seeded one, so readings differ.
   const shift = hash(`${salt}:v:${key}`);
@@ -218,7 +244,13 @@ export function echoes(r) {
     if (count < 2) {
       const c = card(p.id);
       for (let k = i - 1; k >= 0 && !echo; k--) {
-        const rel = relation(c, card(r.picks[k].id), `${r.seed}:e${i}`, { contrastOnly: true, avoid });
+        const other = card(r.picks[k].id);
+        let rel = relation(c, other, `${r.seed}:e${i}`, { contrastOnly: true, avoid, flip: flipSet(r) });
+        // a named pair with one card upside down works the other way round
+        if (rel?.kind === "pair" && isReversed(r, c.id) !== isReversed(r, other.id)) {
+          const down = isReversed(r, c.id) ? c : other;
+          rel = { ...rel, text: `${rel.text} But ${mid(down)} is upside down, so read it the other way round.` };
+        }
         // named pairs always speak, plain oppositions only about half the time
         if (rel && (rel.kind === "pair" || hash(`${r.seed}:ek${i}`) % 2 === 0))
           echo = { ...remember(avoid, rel), with: r.picks[k].id, intro: ECHO_INTROS[(hash(`${r.seed}:ei`) + count) % ECHO_INTROS.length] };
@@ -259,15 +291,18 @@ export function commentary(r, i) {
     s = `${r.seed}:${i}`,
     topic = topicFor(r, i);
   const life = lifeLine(r, c.id, topic);
+  const down = isReversed(r, c.id);
   const lines = [
-    { t: `${c.name}, ${choose(POSITION_PHRASES[p.position], s, "pp")}.`, eyes: c.react.eyes, pause: c.react.pause || 0, react: c.id },
-    { t: choose(c.reveal, s, "rv") },
+    { t: `${c.name}, ${down ? "upside down, " : ""}${choose(POSITION_PHRASES[p.position], s, "pp")}.`, eyes: down ? "suspicious" : c.react.eyes, pause: c.react.pause || 0, react: c.id },
+    { t: down ? choose(REVERSED_REACTIONS, s, "rr") : choose(c.reveal, s, "rv") },
     { t: life, eyes: "watching" },
   ];
+  // upside down, the guide's tone says what kind of trouble it is
+  if (down) lines.push({ t: choose(REVERSED_UNDER[toneOf(r)], s, "ru"), eyes: "serious" });
   // now and then (a strong pair, or two cards pulling opposite ways) she links it to one on the table
   const echo = echoes(r).list[i];
   if (echo) lines.push({ t: plain(fill(echo.intro, { prev: mid(card(echo.with)) })), eyes: "curious" }, { t: plain(echo.text) });
-  return { lines, interpretation: life, base: LIFE[c.id][topic], echo: echo ? plain(echo.text) : null, topic };
+  return { lines, interpretation: life, base: LIFE[c.id][topic], echo: echo ? plain(echo.text) : null, topic, reversed: down };
 }
 
 // The guiding card's reveal: her first look, what it means for your topic, the hand-off.
@@ -276,7 +311,9 @@ export function guidingLines(r) {
   const topic = r.topic || "love";
   return {
     before: phaseLines("guidingSeen", r.seed),
-    open: [{ t: `${g.name}.`, eyes: g.react.eyes, pause: g.react.pause || 400, react: g.id }, { t: LIFE[g.id][topic] }, { t: TONE_INTRO[toneOf(r)], eyes: "watching" }],
+    open: isReversed(r, g.id)
+      ? [{ t: `${g.name}. Upside down.`, eyes: "suspicious", pause: g.react.pause || 500, react: g.id }, { t: REVERSED[g.id][topic] }, { t: TONE_INTRO_REVERSED[baseTone(r)], eyes: "serious" }]
+      : [{ t: `${g.name}.`, eyes: g.react.eyes, pause: g.react.pause || 400, react: g.id }, { t: LIFE[g.id][topic] }, { t: TONE_INTRO[toneOf(r)], eyes: "watching" }],
     after: phaseLines("guidingAfter", r.seed),
   };
 }
@@ -287,12 +324,21 @@ export function finalReading(r) {
   const g = card(r.guiding),
     at = Object.fromEntries(r.picks.map((p) => [p.position, card(p.id)])),
     s = `${r.seed}:fin`;
+  const down = (c) => isReversed(r, c.id);
   const say = {
-    past: choose([`It started with ${mid(at.past)}.`, `Behind you, ${mid(at.past)}.`], s, "pa"),
-    present: choose([`Now it's ${mid(at.present)}.`, `Today, ${mid(at.present)}.`], s, "pr"),
-    future: choose([`Next comes ${mid(at.future)}, if nothing changes.`, `Then ${mid(at.future)}. Unless you change course.`], s, "fu"),
-    shadow: `Careful with ${mid(at.shadow)}. ${LIFE[at.shadow.id].warning}`,
-    potential: `${at.potential.name} says this. ${LIFE[at.potential.id].advice}`,
+    past: down(at.past)
+      ? `It started with ${mid(at.past)}, upside down. It never quite finished.`
+      : choose([`It started with ${mid(at.past)}.`, `Behind you, ${mid(at.past)}.`], s, "pa"),
+    present: down(at.present) ? `Now it's ${mid(at.present)}, upside down. Something is blocked.` : choose([`Now it's ${mid(at.present)}.`, `Today, ${mid(at.present)}.`], s, "pr"),
+    future: down(at.future)
+      ? `Next comes ${mid(at.future)}, upside down. Slower than you'd like, and not quite how you pictured it.`
+      : choose([`Next comes ${mid(at.future)}, if nothing changes.`, `Then ${mid(at.future)}. Unless you change course.`], s, "fu"),
+    shadow: down(at.shadow)
+      ? `${at.shadow.name}, upside down, underneath. What you hide is already showing. ${LIFE[at.shadow.id].warning}`
+      : `Careful with ${mid(at.shadow)}. ${LIFE[at.shadow.id].warning}`,
+    potential: down(at.potential)
+      ? `${at.potential.name} is upside down. Not yet. ${LIFE[at.potential.id].advice} Just not this week.`
+      : `${at.potential.name} says this. ${LIFE[at.potential.id].advice}`,
   };
   const stages = POSITIONS.map(({ key }) => ({ position: key, id: at[key].id, lines: [{ t: say[key], focus: true, eyes: "watching" }], reflection: say[key] }));
   return { stages, synthesis: synthesis(r) };
@@ -304,7 +350,8 @@ export function synthesis(r) {
     fr = POSITIONS.map(({ key }) => card(r.picks.find((p) => p.position === key).id));
   const ends = (r.answers || []).map((x) => answerOf(x)?.end).filter(Boolean);
   const parts = [
-    `${g.name} sat under all of it.`,
+    `${g.name}${isReversed(r, g.id) ? ", upside down," : ""} sat under all of it.`,
+    countLine(r),
     lifeLine(r, fr[0].id, topicFor(r, 0)),
     lifeLine(r, fr[1].id, topicFor(r, 1)),
     lifeLine(r, fr[2].id, topicFor(r, 2)),
@@ -314,7 +361,7 @@ export function synthesis(r) {
     g.lens.closing,
   ];
   const words = parts.join(" ").split(/\s+/).length;
-  return { text: parts.join(" "), sentences: [...ends, g.lens.closing], words };
+  return { text: parts.join(" "), sentences: [countLine(r), ...ends, g.lens.closing], words };
 }
 
 // Everything the summary (and the saved reading) shows.
@@ -324,7 +371,7 @@ export function summary(r) {
   return {
     seed: r.seed,
     topic: r.topic,
-    guiding: { id: g.id, name: g.name, roman: g.roman, art: g.art, keywords: g.keywords, text: LIFE[g.id][r.topic || "love"] },
+    guiding: { id: g.id, name: g.name, roman: g.roman, art: g.art, keywords: g.keywords, reversed: isReversed(r, g.id), text: (isReversed(r, g.id) ? REVERSED : LIFE)[g.id][r.topic || "love"] },
     cards: r.picks.map((p, i) => {
       const c = card(p.id);
       return {
@@ -337,6 +384,7 @@ export function summary(r) {
         keywords: c.keywords,
         interpretation: commentary(r, i).interpretation,
         base: commentary(r, i).base,
+        reversed: isReversed(r, p.id),
         reflection: final.stages[i].reflection,
       };
     }),

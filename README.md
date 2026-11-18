@@ -157,6 +157,10 @@ js/tarot/outline.js     GENERATED card silhouette (die-cut notch) for the 3D car
 - **Texts**: every card's texts are in `cards.js`; her phase lines and the linking rules in
   `lines.js`. Run `npm test` after editing: it checks that every card is complete, that no two
   cards share a sentence and that every card has a line for every topic.
+- **Upside-down cards**: every shuffle turns about one card in four upside down (`REVERSE_CHANCE` in
+  js/tarot/tones.js). A reversed card says its REVERSED line, plus a line that depends on the guide's
+  tone; a reversed guiding card flips the tone of the whole reading; reversed cards stand on the
+  opposite side of the links between cards; the ending counts them and changes their sentences.
 - **See the Deck**: after the reading, the end menu shows every card of the deck in order as a 3D
   card (js/tarot/gallery.js): drag to spin it, arrows, swipe or the keyboard to go through.
 - **Controls**: mouse, touch or keyboard (Enter / Space: continue, arrows: choose a card or move the

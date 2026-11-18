@@ -74,6 +74,10 @@ export function createDeck(stage, ids, { reduce = false } = {}) {
     .catch(() => {}); // a missing back keeps the plain crimson: nothing breaks
 
   const cards = new Map();
+  // which cards came out upside down (set by the experience from the ritual)
+  let isRev = () => false;
+  const Z_FLIP = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), Math.PI);
+  const heldFor = (id, h) => (isRev(id) ? { pos: h.pos, quat: h.quat.clone().multiply(Z_FLIP) } : h);
   for (const id of ids) {
     const group = new Group();
     group.userData.cardId = id;
@@ -397,7 +401,7 @@ export function createDeck(stage, ids, { reduce = false } = {}) {
     hand.release();
     restHands();
     await face;
-    const h = held(holdDist(0.55), 0.01);
+    const h = heldFor(id, held(holdDist(0.55), 0.01));
     setHero(c, true);
     stage.readLight(true, h.pos.clone().add(new Vector3(0, 0.1, 0.25)));
     await move(c, { pos: h.pos, quat: h.quat.clone().multiply(Q_FLIP), ms: 950, arc: 0.04 });
@@ -424,13 +428,14 @@ export function createDeck(stage, ids, { reduce = false } = {}) {
       )
       .finally(() => c.busy--);
   }
-  const guidePose = () => {
+  const guidePose = (id) => {
     const g = L().guide;
-    return { pos: new Vector3(g.at[0], CARD_T / 2 + 0.0005, g.at[1]), quat: flat(g.yaw, true), yaw: g.yaw };
+    const yaw = g.yaw + (id && isRev(id) ? Math.PI : 0);
+    return { pos: new Vector3(g.at[0], CARD_T / 2 + 0.0005, g.at[1]), quat: flat(yaw, true), yaw };
   };
   async function placeGuide(id) {
     const c = get(id);
-    const { pos, quat, yaw } = guidePose();
+    const { pos, quat, yaw } = guidePose(id);
     const hand = handNear(pos.x);
     c.float = null;
     stage.readLight(false);
@@ -498,7 +503,7 @@ export function createDeck(stage, ids, { reduce = false } = {}) {
     stage.sfx?.("lift");
     const p = c.group.position.clone();
     await move(c, { pos: p.clone().add(new Vector3(0, 0.12, 0.06)), quat: c.group.quaternion.clone().premultiply(new Quaternion().setFromAxisAngle(X, -0.4)), ms: reduce ? 250 : 420, ease: ease.out });
-    const h = held(holdDist(0.6), 0.0);
+    const h = heldFor(id, held(holdDist(0.6), 0.0));
     setHero(c, true);
     stage.readLight(true, h.pos.clone().add(new Vector3(0, 0.12, 0.25)));
     await Promise.all([move(c, { pos: h.pos, quat: h.quat.clone().multiply(Q_FLIP), ms: reduce ? 400 : 700, arc: 0.05 }), face]);
@@ -509,14 +514,14 @@ export function createDeck(stage, ids, { reduce = false } = {}) {
     c.where = "held";
     return h;
   }
-  const slotPose = (position) => {
+  const slotPose = (position, id) => {
     const [x, z] = L().cross[position];
-    const yaw = (Math.random() - 0.5) * 0.06;
+    const yaw = (Math.random() - 0.5) * 0.06 + (id && isRev(id) ? Math.PI : 0);
     return { pos: new Vector3(x, CARD_T / 2 + 0.0005, z), quat: flat(yaw, true), yaw };
   };
   async function placePick(id, position) {
     const c = get(id);
-    const { pos, quat, yaw } = slotPose(position);
+    const { pos, quat, yaw } = slotPose(position, id);
     const hand = handNear(pos.x === 0 ? (position === "shadow" ? 0.1 : -0.1) : pos.x);
     c.float = null;
     stage.readLight(false);
@@ -541,7 +546,7 @@ export function createDeck(stage, ids, { reduce = false } = {}) {
     if (inspecting || c.busy || !c.rest) return false;
     inspecting = { c, back: { ...c.rest } };
     c.rest = null;
-    const h = held(holdDist(0.7), 0.0);
+    const h = heldFor(id, held(holdDist(0.7), 0.0));
     setHero(c, true);
     stage.readLight(true, h.pos.clone().add(new Vector3(0, 0.12, 0.25)));
     c.glowTo = 0.24;
@@ -589,7 +594,7 @@ export function createDeck(stage, ids, { reduce = false } = {}) {
     all.forEach((id) => (get(id).rest = null));
     if (!r.guiding) return placeStack(r.deck);
     const g = get(r.guiding);
-    const gp = guidePose();
+    const gp = guidePose(r.guiding);
     loadFace(r.guiding);
     g.group.position.copy(gp.pos);
     g.group.quaternion.copy(gp.quat);
@@ -598,7 +603,7 @@ export function createDeck(stage, ids, { reduce = false } = {}) {
     g.glowTo = 0.12;
     r.picks.forEach((p) => {
       const c = get(p.id);
-      const s = slotPose(p.position);
+      const s = slotPose(p.position, p.id);
       loadFace(p.id);
       c.group.position.copy(s.pos);
       c.group.quaternion.copy(s.quat);
@@ -614,13 +619,13 @@ export function createDeck(stage, ids, { reduce = false } = {}) {
     if (!r.guiding) return placeStack(r.deck);
     const g = get(r.guiding);
     if (g.rest && g.where === "guide") {
-      const gp = guidePose();
+      const gp = guidePose(r.guiding);
       rest(g, gp.pos, gp.quat, gp.yaw);
     }
     r.picks.forEach((p) => {
       const c = get(p.id);
       if (c.rest && c.where === p.position) {
-        const s = slotPose(p.position);
+        const s = slotPose(p.position, p.id);
         rest(c, s.pos, s.quat, c.rest.yaw);
       }
     });
@@ -656,6 +661,9 @@ export function createDeck(stage, ids, { reduce = false } = {}) {
     restHands,
     withdrawHands,
     pointAt: (id) => pointAt(get(id)),
+    setReversed(fn) {
+      isRev = fn;
+    },
     highlight(idsOn, level = 0.42, others = 0.03) {
       for (const c of cards.values()) if (c.where !== "deck" && c.where !== "fan") c.glowTo = idsOn.includes(c.id) ? level : others;
     },

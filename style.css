@@ -4068,3 +4068,7 @@ html.tarot-page .header {
   opacity: 0;
   pointer-events: none;
 }
+
+.trs-rev img {
+  transform: rotate(180deg);
+}
