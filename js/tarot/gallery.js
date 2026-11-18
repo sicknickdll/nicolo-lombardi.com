@@ -1,4 +1,4 @@
-// The deck, laid out to be admired once the reading is over: every card in order (I to XXI),
+// The deck, laid out to be admired once the reading is over: every card in order (0, the Fool, to XXI),
 // one at a time, as a 3D object. Drag to turn it (it keeps spinning a little, then settles
 // back), move the pointer over it to tilt it under the light, flip it to see the back.
 // Arrows, swipes or the keyboard go through the deck; Escape or X closes.
@@ -8,7 +8,8 @@ import { esc } from "../views.js";
 
 export function openGallery(root, { onTurn = () => {} } = {}) {
   return new Promise((resolve) => {
-    const ids = DECK_IDS.slice().sort((a, b) => card(a).number - card(b).number);
+    // the whole deck in order, and the Fool too (he isn't shuffled, but he's part of the set)
+    const ids = [...new Set(["fool", ...DECK_IDS])].sort((a, b) => card(a).number - card(b).number);
     const el = document.createElement("div");
     el.className = "tr-gallery";
     el.setAttribute("role", "dialog");
