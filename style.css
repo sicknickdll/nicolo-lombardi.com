@@ -4072,3 +4072,11 @@ html.tarot-page .header {
 .trs-rev img {
   transform: rotate(180deg);
 }
+
+.tr-prompts.tr-stack {
+  flex-direction: column;
+  gap: 2px;
+}
+.tarot:has(.tr-prompts.on) .tr-dialogue {
+  bottom: calc(max(16px, env(safe-area-inset-bottom)) + var(--prompts-h, 44px) + 14px);
+}
