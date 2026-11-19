@@ -184,6 +184,12 @@ export function createAudio() {
     coin: () => {
       for (const [d, f] of [[0, 3100], [0.85, 2900], [0.95, 3300]]) tone({ t: now() + d, f0: f, dur: 0.25, gain: 0.03, send: 1 });
     },
+    // a card breaking: a crack, then pieces falling
+    shatter: () => {
+      noise({ dur: 0.08, type: "bandpass", f0: 3200, q: 1.5, gain: 0.25, a: 0.002 });
+      for (let i = 0; i < 16; i++) noise({ t: now() + 0.04 + Math.random() * 0.6, dur: 0.03, type: "bandpass", f0: 2500 + Math.random() * 3500, q: 4, gain: 0.02 + Math.random() * 0.04 });
+      tone({ f0: 160, f1: 60, dur: 0.3, gain: 0.12 });
+    },
     // a breath across the candle flames
     blow: () => {
       noise({ dur: 0.9, type: "bandpass", f0: 500, f1: 260, q: 0.6, gain: 0.16, a: 0.12 });

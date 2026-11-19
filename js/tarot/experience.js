@@ -779,10 +779,10 @@ export function mountTarot(root) {
           b.classList.add("chosen");
           audio.play("tap");
           setTimeout(() => {
-            el.classList.add("burning");
-            audio.play("blow");
+            if (!reduce) el.querySelectorAll(".tm-card").forEach((c, k) => shatter(c, k * 90));
+            audio.play("shatter");
           }, reduce ? 0 : 420);
-          setTimeout(() => (el.remove(), resolve(b.dataset.mode)), reduce ? 400 : 2000);
+          setTimeout(() => (el.remove(), resolve(b.dataset.mode)), reduce ? 400 : 2200);
         };
         el.addEventListener("click", (e) => {
           const b = e.target.closest(".tr-mode");
@@ -795,6 +795,55 @@ export function mountTarot(root) {
     );
   }
   let cleanupModes = () => {};
+  // A card breaks into pieces (a jittered grid cut into triangles), which fly apart, turn and
+  // fade away.
+  function shatter(cardEl, delay = 0) {
+    const r = cardEl.getBoundingClientRect(),
+      host = cardEl.closest(".tr-modes"),
+      hr = host.getBoundingClientRect();
+    const img = cardEl.querySelector("img").src;
+    const tilt = getComputedStyle(cardEl).rotate;
+    const layer = document.createElement("div");
+    layer.className = "tm-shards";
+    Object.assign(layer.style, { left: `${r.left - hr.left}px`, top: `${r.top - hr.top}px`, width: `${r.width}px`, height: `${r.height}px`, rotate: tilt });
+    const C = 4,
+      Rw = 7;
+    const pt = (i, j) => {
+      const edge = i === 0 || j === 0 || i === C || j === Rw;
+      const jx = edge && (i === 0 || i === C) ? 0 : (Math.random() - 0.5) * 0.7,
+        jy = edge && (j === 0 || j === Rw) ? 0 : (Math.random() - 0.5) * 0.7;
+      return [((i + jx) / C) * 100, ((j + jy) / Rw) * 100];
+    };
+    const P = Array.from({ length: C + 1 }, (_, i) => Array.from({ length: Rw + 1 }, (_, j) => pt(i, j)));
+    const tris = [];
+    for (let i = 0; i < C; i++)
+      for (let j = 0; j < Rw; j++) {
+        const [a, b, c, d] = [P[i][j], P[i + 1][j], P[i + 1][j + 1], P[i][j + 1]];
+        if (Math.random() < 0.5) tris.push([a, b, c], [a, c, d]);
+        else tris.push([a, b, d], [b, c, d]);
+      }
+    for (const t of tris) {
+      const sh = document.createElement("span");
+      sh.className = "tm-shard";
+      sh.style.backgroundImage = `url("${img}")`;
+      sh.style.clipPath = `polygon(${t.map(([x, y]) => `${x}% ${y}%`).join(",")})`;
+      layer.append(sh);
+      const cx = (t[0][0] + t[1][0] + t[2][0]) / 3 - 50,
+        cy = (t[0][1] + t[1][1] + t[2][1]) / 3 - 50;
+      const dx = cx * (2.2 + Math.random() * 2.5) + (Math.random() - 0.5) * 40,
+        dy = cy * (1.4 + Math.random() * 1.6) + 60 + Math.random() * 120;
+      sh.animate(
+        [
+          { transform: "translate(0,0) rotate(0deg)", opacity: 1, filter: "blur(0px) brightness(1)" },
+          { transform: `translate(${dx * 0.35}px, ${dy * 0.15 - 20}px) rotate(${(Math.random() - 0.5) * 90}deg)`, opacity: 1, offset: 0.3 },
+          { transform: `translate(${dx}px, ${dy}px) rotate(${(Math.random() - 0.5) * 360}deg) scale(0.6)`, opacity: 0, filter: "blur(3px) brightness(0.4)" },
+        ],
+        { duration: 1100 + Math.random() * 500, delay, easing: "cubic-bezier(0.2, 0.6, 0.4, 1)", fill: "forwards" },
+      );
+    }
+    host.append(layer);
+    cardEl.style.visibility = "hidden";
+  }
 
   // Yes or no: shuffle, cut, the fan; then for each question one card, and its answer.
   async function yesNoFlow() {
