@@ -4080,3 +4080,121 @@ html.tarot-page .header {
 .tarot:has(.tr-prompts.on) .tr-dialogue {
   bottom: calc(max(16px, env(safe-area-inset-bottom)) + var(--prompts-h, 44px) + 14px);
 }
+
+/* The first choice: two cards hanging in the air, the reading written at the bottom of each */
+.tr-modes {
+  position: absolute;
+  z-index: 8;
+  inset: 0 0 150px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(24px, 12vw, 220px);
+  pointer-events: none;
+  perspective: 1200px;
+}
+.tr-mode {
+  pointer-events: auto;
+  padding: 0;
+  opacity: 0;
+  transform: translateY(60px) rotateX(25deg);
+  transition:
+    opacity 0.7s calc(var(--i) * 0.15s),
+    transform 1s var(--ease) calc(var(--i) * 0.15s);
+}
+.tr-modes.on .tr-mode {
+  opacity: 1;
+  transform: none;
+}
+.tm-card {
+  position: relative;
+  display: block;
+  width: clamp(130px, 17vw, 230px);
+  aspect-ratio: 9 / 16;
+  animation: tm-float 4.2s ease-in-out calc(var(--i) * -2.1s) infinite;
+  transition:
+    transform 0.5s var(--ease),
+    filter 0.5s;
+  filter: drop-shadow(0 26px 30px rgba(0, 0, 0, 0.75)) brightness(0.82);
+}
+.tr-mode:nth-child(1) .tm-card {
+  rotate: -4deg;
+}
+.tr-mode:nth-child(2) .tm-card {
+  rotate: 4deg;
+}
+@keyframes tm-float {
+  50% {
+    translate: 0 -12px;
+  }
+}
+.tm-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.tm-plate {
+  position: absolute;
+  left: 9%;
+  right: 9%;
+  bottom: 6%;
+  display: grid;
+  gap: 4px;
+  padding: 8px 8px 9px;
+  text-align: center;
+  background: rgba(16, 4, 6, 0.86);
+  border-top: 1px solid rgba(210, 154, 88, 0.6);
+  border-bottom: 1px solid rgba(210, 154, 88, 0.6);
+}
+.tm-plate b {
+  font-family: var(--tr-voice);
+  font-weight: 400;
+  font-size: clamp(14px, 1.5vw, 20px);
+  color: #f0dcb0;
+  letter-spacing: 0.03em;
+}
+.tm-plate small {
+  font-family: var(--tr-voice);
+  font-size: clamp(9px, 0.85vw, 12px);
+  line-height: 1.25;
+  color: rgba(210, 154, 88, 0.9);
+}
+.tr-mode:hover .tm-card,
+.tr-mode:focus-visible .tm-card {
+  transform: translateY(-14px) scale(1.05);
+  filter: drop-shadow(0 34px 34px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 22px rgba(232, 150, 70, 0.35)) brightness(1);
+}
+.tr-mode:hover,
+.tr-mode:focus-visible {
+  opacity: 1;
+  outline: none;
+}
+.tr-mode.chosen .tm-card {
+  animation: none;
+  transform: translateY(-40px) scale(1.12) rotateY(360deg);
+  transition: transform 1s var(--ease);
+  filter: drop-shadow(0 0 40px rgba(255, 170, 80, 0.6)) brightness(1.1);
+}
+.tr-mode.dropped {
+  opacity: 0 !important;
+  transform: translateY(120px) rotate(8deg) !important;
+  transition:
+    opacity 0.5s,
+    transform 0.7s ease-in !important;
+}
+@media (max-width: 720px) {
+  .tr-modes {
+    inset: 0 0 130px;
+  }
+  .tm-card {
+    width: 38vw;
+  }
+  .tm-plate small {
+    font-size: 9.5px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tm-card {
+    animation: none;
+  }
+}
