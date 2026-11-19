@@ -4198,3 +4198,57 @@ html.tarot-page .header {
     animation: none;
   }
 }
+
+/* the choice made: a little shake, then both cards burn away from the bottom up */
+.tr-mode.chosen .tm-card {
+  animation: tm-shake 0.4s ease-in-out;
+  transform: none;
+  transition: none;
+  filter: drop-shadow(0 0 26px rgba(255, 170, 80, 0.5)) brightness(1.05);
+}
+@keyframes tm-shake {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  20% {
+    translate: -6px 1px;
+    rotate: -6deg;
+  }
+  40% {
+    translate: 5px -1px;
+    rotate: 1deg;
+  }
+  60% {
+    translate: -4px 1px;
+    rotate: -5deg;
+  }
+  80% {
+    translate: 3px 0;
+    rotate: -2deg;
+  }
+}
+.tr-modes.burning .tr-mode {
+  pointer-events: none;
+}
+.tr-modes.burning .tm-card {
+  animation: tm-burn 1.5s ease-in forwards;
+}
+.tr-modes.burning .tr-mode:nth-child(2) .tm-card {
+  animation-delay: 0.12s;
+}
+@keyframes tm-burn {
+  0% {
+    clip-path: inset(0 0 0 0);
+    filter: drop-shadow(0 0 10px rgba(255, 120, 40, 0.6)) brightness(1);
+  }
+  30% {
+    filter: sepia(1) saturate(5) hue-rotate(-30deg) brightness(1.2) drop-shadow(0 6px 14px #ff5a00);
+  }
+  100% {
+    clip-path: inset(0 0 100% 0);
+    filter: sepia(1) saturate(6) hue-rotate(-40deg) brightness(0.3) drop-shadow(0 -10px 18px #ff3000);
+    translate: 0 -24px;
+    opacity: 0;
+  }
+}

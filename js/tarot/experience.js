@@ -769,16 +769,20 @@ export function mountTarot(root) {
         el.className = "tr-modes";
         el.innerHTML = MODES.map(
           (m, i) =>
-            `<button type="button" class="tr-mode" data-mode="${m.key}" style="--i:${i}"><span class="tm-card"><img src="/assets/archive/tarot/back.webp" alt="" draggable="false"><span class="tm-plate"><b>${m.name}</b><small>${m.text}</small></span></span></button>`,
+            `<button type="button" class="tr-mode" data-mode="${m.key}" style="--i:${i}"><span class="tm-card"><img src="/assets/archive/tarot/back.webp" alt="" draggable="false"><span class="tm-plate"><b>${m.name}</b></span></span></button>`,
         ).join("");
         root.append(el);
         audio.play("lift");
         requestAnimationFrame(() => el.classList.add("on"));
+        // the chosen card gives a little shake, then both burn up and dissolve
         const done = (b) => {
-          el.querySelectorAll(".tr-mode").forEach((x) => x.classList.add(x === b ? "chosen" : "dropped"));
-          audio.play("flip");
-          setTimeout(() => el.classList.remove("on"), 650);
-          setTimeout(() => (el.remove(), resolve(b.dataset.mode)), 1100);
+          b.classList.add("chosen");
+          audio.play("tap");
+          setTimeout(() => {
+            el.classList.add("burning");
+            audio.play("blow");
+          }, reduce ? 0 : 420);
+          setTimeout(() => (el.remove(), resolve(b.dataset.mode)), reduce ? 400 : 2000);
         };
         el.addEventListener("click", (e) => {
           const b = e.target.closest(".tr-mode");
