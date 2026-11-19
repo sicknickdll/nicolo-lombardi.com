@@ -4252,3 +4252,15 @@ html.tarot-page .header {
     opacity: 0;
   }
 }
+
+/* the cards break into pieces instead (js: shatter) */
+.tm-shards {
+  position: absolute;
+  pointer-events: none;
+}
+.tm-shard {
+  position: absolute;
+  inset: 0;
+  background: center / 100% 100% no-repeat;
+  will-change: transform, opacity;
+}
