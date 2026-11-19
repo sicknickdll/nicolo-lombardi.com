@@ -747,14 +747,50 @@ export function mountTarot(root) {
 
   // The first choice: a classic reading (a guiding card and a cross of five), or yes or no.
   async function chooseMode() {
-    const mode = await ask([{ t: "A proper reading, or just a yes or no?", eyes: "curious" }], [
-      { key: "classic", label: "Classic Reading" },
-      { key: "yesno", label: "Yes or No" },
-    ]);
+    await say([{ t: "A proper reading, or just a yes or no?", eyes: "curious" }], { hold: true });
+    const mode = await chooseCard();
+    decided();
+    dialogue.clear();
     if (mode === "yesno") return yesNoFlow();
     await chooseTopic();
     await ritualFlow();
   }
+
+  // Two cards rise and hang in the air, left and right: choose one. The kind of reading is
+  // written at the bottom of each.
+  const MODES = [
+    { key: "classic", name: "Classic Reading", text: "A guiding card and a cross of five. Your past, present and future, read together." },
+    { key: "yesno", name: "Yes or No", text: "Ask a question, draw one card. It answers. Up to five questions." },
+  ];
+  function chooseCard() {
+    return guard(
+      new Promise((resolve) => {
+        const el = document.createElement("div");
+        el.className = "tr-modes";
+        el.innerHTML = MODES.map(
+          (m, i) =>
+            `<button type="button" class="tr-mode" data-mode="${m.key}" style="--i:${i}"><span class="tm-card"><img src="/assets/archive/tarot/back.webp" alt="" draggable="false"><span class="tm-plate"><b>${m.name}</b><small>${m.text}</small></span></span></button>`,
+        ).join("");
+        root.append(el);
+        audio.play("lift");
+        requestAnimationFrame(() => el.classList.add("on"));
+        const done = (b) => {
+          el.querySelectorAll(".tr-mode").forEach((x) => x.classList.add(x === b ? "chosen" : "dropped"));
+          audio.play("flip");
+          setTimeout(() => el.classList.remove("on"), 650);
+          setTimeout(() => (el.remove(), resolve(b.dataset.mode)), 1100);
+        };
+        el.addEventListener("click", (e) => {
+          const b = e.target.closest(".tr-mode");
+          if (b && !el.querySelector(".chosen")) (e.stopPropagation(), audio.unlock(), done(b));
+        });
+        el.querySelectorAll(".tr-mode").forEach((b) => b.addEventListener("pointerenter", () => audio.play("hover")));
+        if (matchMedia("(hover: hover)").matches) el.querySelector(".tr-mode").focus({ preventScroll: true });
+        cleanupModes = () => el.remove();
+      }),
+    );
+  }
+  let cleanupModes = () => {};
 
   // Yes or no: shuffle, cut, the fan; then for each question one card, and its answer.
   async function yesNoFlow() {
@@ -1125,6 +1161,7 @@ export function mountTarot(root) {
 
   return () => {
     alive = false;
+    cleanupModes();
     stopAmbience(0.3);
     waiter = null;
     dialogue.cancel();
