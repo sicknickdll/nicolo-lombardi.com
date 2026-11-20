@@ -17,8 +17,7 @@ js/particle-text.js the Archive wallpaper: text drawn in dots, glitching into ot
 js/archive.js       archive collection page: infinite pannable grid, search bar, 3D viewer
 js/card3d.js        the 3D card (tilt + glare, drag to turn it over)
 js/tarot/           /archive/tarot/: THE TAROT READER, an interactive reading (see "Tarot Reader" below)
-js/strange-chess/   /archive/strange-chess/: STRANGE CHESS, an ASCII boss-run chess game (see "Strange Chess" below)
-tests/              npm test: the tarot's and Strange Chess's rules engines
+tests/              npm test: the tarot rules and reading engine
 js/head.js          About page: 3D head (follows the cursor, rotates on drag / two-finger scroll, reacts to taps)
 js/vendor/three.js  the parts of three.js the head needs   (npm install && npm run vendor:three)
 js/intro.js         landing intro: name on a light screen, a black panel sweeps up, the screen lifts away
@@ -51,7 +50,6 @@ Pages and addresses:
 | `/archive/` | the archive as a desktop: one folder per collection, draggable windows, taskbar |
 | `/archive/la-barra/` | LA BARRA: diagonal infinite pannable grid of the cut-outs on black, search bar, 3D viewer (editorial layout) (`#<piece id>` opens one) |
 | `/archive/tarot/` | THE TAROT READER: a candlelit table, a fortune teller in the dark, a guided five-card reading (the "tarot" folder on the Archive desktop) |
-| `/archive/strange-chess/` | STRANGE CHESS: chess with broken physics in an ASCII night meadow, a run of four bosses (the knight on the Archive desktop) |
 
 Old links from the previous site (`/#film`, `/#project/lexus`) and the old `/film/` and
 `/visuals/` pages redirect to the new addresses.
@@ -245,63 +243,3 @@ Same folder, no changes needed:
   moving the domain's nameservers from OVH to Cloudflare (Cloudflare copies the existing records).
 - **Netlify**: drag-and-drop this folder at app.netlify.com/drop, then add the domain and point
   an `A` record to the IP Netlify shows.
-
-## Strange Chess (`/archive/strange-chess/`)
-
-A small game in the Archive: chess on a 6 × 6 clearing in a night meadow, everything drawn in
-characters on one canvas (grass flow field, ASCII sculptures, mist, sparkles). It is played as a
-run: the Trapper, the Angler, the Prospector, then the Woodcarver, with two candles (lives) and a
-campfire between fights where one piece takes a sigil (Pusher, Rooted, Ghost; a second sigil
-burns the piece one time in two). You win a fight by tipping the scale five points your way
-(pawn 1, knight 3, bishop 3, rook 4, queen and king 5), or by dropping the enemy king into a hole
-or off the board.
-
-```
-js/strange-chess/rules.js      THE RULES. Pure and deterministic: (state, move) → new state, with
-                               state.events saying what happened. Seeded randomness (state.rng).
-                               Tested in tests/strange-chess.test.mjs (every rule of the brief).
-js/strange-chess/bosses.js     ← WHAT THE BOSSES SAY: names, lines, the hue each gives the grass
-js/strange-chess/ai.js         the boss's mind: minimax + alpha–beta (depth 2–3) over rules.js, an
-                               evaluation (scale, material, holes, the coming wind, king safety)
-                               and a bias per boss; runs in ai-worker.js (a Web Worker)
-js/strange-chess/game.js       the run: title, fights, candles, campfire, phase changes, the
-                               Trader's offer, win and loss; input (mouse, touch, keyboard); the
-                               win screen's links are CONTACT_URL and REEL_URL at the top (placeholders)
-js/strange-chess/art/meadow.js the meadow: ground, ~35,000 grass strokes (flow field + per-blade
-                               scatter + eddies + wind lean), scenery, mist, sparkles, streaks
-js/strange-chess/art/sculpt.js ASCII sculptures: a vector silhouette sampled into characters with
-                               cylindrical shading, a dark backing, a melting base
-js/strange-chess/art/pieces.js piece sizes (in board rows) and the cache of baked sprites
-js/strange-chess/art/figures.js the bosses as dithered grayscale figures
-js/strange-chess/art/view.js   the board in the meadow: animates state.events (moves, pushes,
-                               drift, dissolves, holes, traps, the line, gold, the Moon), hints, UI
-js/strange-chess/audio.js      optional sound, muted by default (M or the pause menu): wind, clicks
-assets/archive/strange-chess/  the desktop icon and folder pictures, rendered from the sculptures
-```
-
-- **The build**: `node tools/build.mjs` bundles the AI worker as its own file
-  (`dist/sc-worker-<hash>.js`) and gives its address to the game through esbuild's `define`
-  (`__SC_WORKER__`); from the sources the game loads `js/strange-chess/ai-worker.js` directly.
-- **Controls**: tap or click a piece, then a square (faint dots: moves; `x`: captures; arrows:
-  pushes, with ghosts showing where the pushed pieces land; on touch a push is confirmed by a
-  second tap). Keyboard: arrows move over the board, Enter / Space select and move, R restarts
-  the fight, Esc pauses, M sound. Reduced motion stops the sway and particles and keeps the look.
-- **Development**: `?seed=123` fixes the run; `?hotseat` plays both sides by hand (no boss);
-  `?debug` exposes `window.__strangeChess` (`state`, `fight(i)`, `phase2()`, `trade()`,
-  `moonWarn()`, `campfire()`, `win()`, `lose()`, `result()`, `title()`) to reach any screen.
-- **Where the rules differ from the original brief** (each is commented at the top of rules.js):
-  1. *Layout*: the brief's R N B Q K R on both sides put the player's Glitch knight (b1) on the
-     mirror square of the enemy king, so the first move won. Both sides are R N Q B K R, the
-     boss's rotated 180°: the knights mirror onto each other, each guarded by its queen.
-  2. *Phase 2* is checked at the end of the round (after the boss's reply and the round's
-     events), so an opening knight trade (+3 then back to 0) doesn't skip phase 1.
-  3. *Wind*: the board's edge holds pieces by default (blowing them off emptied whole back ranks,
-     kings included, on the first gust). `config.windOffEdge = true` in `newFight` restores the
-     literal rule. Holes downwind still swallow pieces; nobody scores for the wind.
-  4. *The Moon*: its row attack is announced a round ahead (the rows burn crimson, the pieces it
-     will strike are marked) and the Moon can't move while it charges, so the warned rows are the
-     rows hit. In the Woodcarver's fight the scale can't win (+5 only raises the Moon if it hasn't
-     risen); only the Moon's fall wins. The boss still wins at −5, and at round 40.
-  5. Smaller choices: the rook must cross at least one empty square before pushing; pushing your
-     own piece into a hole scores nothing; the Trader gives back the most valuable piece you have
-     lost; the Trapper's traps score for him.

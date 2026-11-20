@@ -199,8 +199,7 @@ const floatFolder = (thumbs) => {
 };
 const sunSVG = `<svg viewBox="0 0 24 24" aria-hidden="true" class="i-sun"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>`;
 const moonSVG = `<svg viewBox="0 0 24 24" aria-hidden="true" class="i-moon"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>`;
-// LA BARRA, the Tarot Reader and Strange Chess are shown as objects (a napkin, a card back, a
-// knight) instead of folders;
+// LA BARRA and the Tarot Reader are shown as objects (a napkin, a card back) instead of folders;
 // on hover they turn slowly, like a 3D model. Both faces are real: the napkin's back is its scan.
 const objIcon = (front, back, ratio) =>
   `<span class="dobj" style="--r:${ratio}" aria-hidden="true"><span class="dobj-spin"><img class="dobj-f" src="${front}" alt="" draggable="false"><img class="dobj-b" src="${back}" alt="" draggable="false"></span></span>`;
@@ -210,8 +209,6 @@ const archiveObject = {
     return objIcon(it.front, it.back, it.ratio);
   },
   tarot: () => objIcon("/assets/archive/tarot/back-thumb.webp", "/assets/archive/tarot/back-thumb.webp", 0.5625),
-  // Strange Chess: its ASCII knight; turned round, the Moon
-  "strange-chess": () => objIcon("/assets/archive/strange-chess/knight-thumb.webp", "/assets/archive/strange-chess/moon-thumb.webp", 0.75),
 };
 // One "Projects" folder, bottom right: it opens a window with every project of the portfolio.
 const projectsFolder = () =>
@@ -286,18 +283,4 @@ export function tarotMarkup() {
 <p class="sr-only tr-live" aria-live="polite"></p>
 <div class="tr-loading" aria-hidden="true"><span class="tr-leyes"></span><p></p></div>
 <noscript><p class="tr-noscript caslon">The fortune teller only reads by candlelight, and the candles need JavaScript.</p></noscript></section>`.replace(/\n/g, "");
-}
-
-// /archive/strange-chess/: Strange Chess (js/strange-chess/game.js). The meadow, the board and
-// the bosses are drawn on a canvas by the script; this markup holds the panels' slot, the live
-// region and, for search engines and screen readers, what the game is and how it plays.
-export function strangeChessMarkup() {
-  const x = experiences.find((e) => e.id === "strange-chess");
-  return `<section class="strange-chess" aria-labelledby="sc-title"><header class="sr-only"><nav aria-label="Breadcrumb"><a href="/archive/">Archive</a></nav><h1 id="sc-title">Strange Chess</h1><p>${esc(x.blurb)}</p><p>A 6 by 6 board. The Knight (Glitch) teleports to the square mirrored through the centre of the board, or steps one square. The Bishop (Light ray) bounces once off an edge. The Rook (Bulldozer) never captures: it pushes every piece in its way one square on, and pieces pushed off the board or into a hole are destroyed. Every three rounds the wind blows and every piece drifts a square. Squares wear away as pieces leave them, until they become holes. Destroying pieces tips a scale: five in your favour wins the fight. Four bosses: the Trapper, the Angler, the Prospector and the Woodcarver, whose Moon must be pushed into a hole. Play with the mouse, touch or the keyboard: arrow keys to move over the board, Enter or Space to select and move, R to restart a fight, Escape to pause, M for sound.</p></header>
-<div class="sc-stage" role="application" aria-label="The meadow and the board"></div>
-<div class="sc-grain" aria-hidden="true"></div>
-<nav class="sc-top" aria-label="Strange Chess"><a class="sc-back" href="/archive/" aria-label="Leave the game, back to the Archive">X</a></nav>
-<div class="sc-panel" hidden></div>
-<p class="sr-only sc-live" aria-live="polite"></p>
-<noscript><p class="sc-noscript">The meadow only grows with JavaScript.</p></noscript></section>`.replace(/\n/g, "");
 }

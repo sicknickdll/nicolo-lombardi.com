@@ -1,4 +1,4 @@
-import{A as mt,C as yt,L as xt,Q as Mt,f as E,j as ut,k as vt,s as W,u as ht,v as ft,x as _,z as Y}from"./chunk-HWQQQTY2.js";import"./chunk-WOT6VMZA.js";var B=1.5,wt=.012,Et=.95,Ct=3.3,St=.9,kt=`
+import{A as mt,C as yt,L as xt,Q as Mt,f as E,j as ut,k as vt,s as W,u as ht,v as ft,x as _,z as Y}from"./chunk-HWQQQTY2.js";var B=1.5,wt=.012,Et=.95,Ct=3.3,St=.9,kt=`
 uniform float uBulge;
 uniform float uFold;   // 0 flat \u2026 1 folded in half
 uniform float uSide;   // +1 on the front face of the card, -1 on the back face
