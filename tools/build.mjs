@@ -23,6 +23,7 @@ import {
   archiveCollections,
   archiveExperiences,
   tarotMarkup,
+  strangeChessMarkup,
   projectImages,
   projectMarkup,
 } from "../js/views.js";
@@ -36,7 +37,22 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 // sources in js/ and style.css are what you edit; dist/ is generated (and committed: the site is
 // served as it is).
 rmSync(join(root, "dist"), { recursive: true, force: true });
+// Strange Chess thinks in a Web Worker: one self-contained script, its address handed to the game.
+const aiBuilt = await bundle({
+  entryPoints: { "chess-ai": join(root, "js/strange-chess/ai.worker.js") },
+  bundle: true,
+  format: "iife",
+  target: "es2022",
+  minify: true,
+  legalComments: "none",
+  outdir: join(root, "dist"),
+  entryNames: "[name]-[hash]",
+  metafile: true,
+  logLevel: "warning",
+});
+const aiFile = Object.keys(aiBuilt.metafile.outputs).find((f) => f.endsWith(".js"));
 const built = await bundle({
+  define: { __CHESS_WORKER__: JSON.stringify("/dist/" + aiFile.split("/").pop()) },
   entryPoints: { app: join(root, "js/app.js") },
   bundle: true,
   splitting: true,
@@ -50,7 +66,7 @@ const built = await bundle({
   metafile: true,
   logLevel: "warning",
 });
-const appFile = Object.keys(built.metafile.outputs).find((f) => f.endsWith(".js") && built.metafile.outputs[f].entryPoint);
+const appFile = Object.keys(built.metafile.outputs).find((f) => f.endsWith(".js") && built.metafile.outputs[f].entryPoint?.endsWith("js/app.js"));
 const css = (await transform(readFileSync(join(root, "style.css"), "utf8"), { loader: "css", minify: true })).code;
 const cssName = `style-${createHash("sha256").update(css).digest("hex").slice(0, 8).toUpperCase()}.css`;
 writeFileSync(join(root, "dist", cssName), css);
@@ -286,6 +302,38 @@ write(
   tarotMarkup(),
 );
 
+// Strange Chess: an ASCII boss-run chess game (js/strange-chess/). Drawn by the script on a canvas.
+const chess = archiveExperiences.find((x) => x.id === "strange-chess");
+write(
+  "archive/strange-chess",
+  head({
+    title: `Strange Chess — Archive, ${NAME}`,
+    description: chess.blurb,
+    path: "/archive/strange-chess/",
+    image: existsSync(join(root, "assets/og/strange-chess.jpg")) ? "/assets/og/strange-chess.jpg" : "/assets/og-image.jpg",
+    imageAlt: "Strange Chess: ASCII chess pieces in a night meadow of grass strokes",
+    schema: [
+      {
+        "@type": "VideoGame",
+        url: `${SITE}/archive/strange-chess/`,
+        name: "Strange Chess",
+        description: chess.blurb,
+        genre: "Interactive experience",
+        inLanguage: "en",
+        playMode: "SinglePlayer",
+        author: { "@id": person["@id"] },
+      },
+      breadcrumbs([
+        [NAME, "/"],
+        ["Archive", "/archive/"],
+        ["Strange Chess", "/archive/strange-chess/"],
+      ]),
+      person,
+    ],
+  }),
+  strangeChessMarkup(),
+);
+
 // The Film and Visuals lists now live on the landing page: their old addresses forward there.
 for (const slug of ["film", "visuals"]) {
   const file = join(root, slug, "index.html");
@@ -393,6 +441,7 @@ const pages = [
   ["/about/", []],
   ["/archive/", []],
   ...archiveCollections.map((c) => [`/archive/${c.id}/`, c.items.map((i) => i.front)]),
+  ["/archive/strange-chess/", existsSync(join(root, "assets/og/strange-chess.jpg")) ? ["/assets/og/strange-chess.jpg"] : []],
   ["/archive/tarot/", CARDS.filter((c) => DECK_IDS.includes(c.id)).map((c) => c.art)],
   ["/privacy/", []],
   ...projects.map((p) => [`/work/${p.id}/`, [p.cover, ...projectImages(p)]]),

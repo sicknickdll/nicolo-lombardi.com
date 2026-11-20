@@ -28,6 +28,14 @@ export const experiences = [
       "An interactive tarot reading by candlelight: a fortune teller in the dark, twenty-one Major Arcana illustrated for this archive, a guiding card and a cross of five.",
     icon: ["death", "star", "moon", "magician", "sun"].map((id) => `/assets/archive/tarot/${id}-thumb.webp`),
   },
+  {
+    id: "strange-chess",
+    title: "STRANGE CHESS",
+    label: "strange chess",
+    blurb:
+      "Chess with broken physics, played as a run against four bosses on a night meadow made of grass strokes and ASCII: a teleporting knight, a bouncing bishop, a bulldozer rook, wind, and ground that crumbles into holes.",
+    icon: [],
+  },
 ];
 
 // Projects named on the Archive landing that have no page yet: their links lead to the 404 page.

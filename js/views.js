@@ -209,6 +209,7 @@ const archiveObject = {
     return objIcon(it.front, it.back, it.ratio);
   },
   tarot: () => objIcon("/assets/archive/tarot/back-thumb.webp", "/assets/archive/tarot/back-thumb.webp", 0.5625),
+  "strange-chess": () => objIcon("/assets/archive/strange-chess/icon.webp", "/assets/archive/strange-chess/icon.webp", 1.0),
 };
 // One "Projects" folder, bottom right: it opens a window with every project of the portfolio.
 const projectsFolder = () =>
@@ -283,4 +284,22 @@ export function tarotMarkup() {
 <p class="sr-only tr-live" aria-live="polite"></p>
 <div class="tr-loading" aria-hidden="true"><span class="tr-leyes"></span><p></p></div>
 <noscript><p class="tr-noscript caslon">The fortune teller only reads by candlelight, and the candles need JavaScript.</p></noscript></section>`.replace(/\n/g, "");
+}
+
+// /archive/strange-chess/: Strange Chess (js/strange-chess/game.js). Everything on screen is a canvas;
+// this markup holds the text layers (boss name, dialogue, wind, round), the overlay for choices, and,
+// for search engines and screen readers, what the piece is and how to play it.
+export function strangeChessMarkup() {
+  const x = experiences.find((e) => e.id === "strange-chess");
+  return `<section class="schess" aria-labelledby="sc-title"><header class="sr-only"><nav aria-label="Breadcrumb"><a href="/archive/">Archive</a></nav><h1 id="sc-title">Strange Chess</h1><p>${esc(x.blurb)}</p><p>A 6×6 board. The Knight teleports through the centre of the board, the Bishop bounces once off an edge, the Rook is a bulldozer that pushes whatever it moves into. Every third round the wind drifts every piece one square, and every square crumbles each time a piece leaves it. Tip the scale by five to win a fight. Select a piece with the pointer or a tap, then a square. R restarts the fight, Escape opens the menu, P toggles push mode for pieces with the pusher sigil, M toggles sound.</p></header>
+<canvas class="sc-canvas" role="img" aria-label="A night meadow with a chess board drawn as a clearing in the grass"></canvas>
+<nav class="sc-top" aria-label="Strange Chess"><a class="sc-back" href="/archive/" aria-label="Leave the game, back to the Archive">X</a><button class="sc-menu-btn" type="button">menu</button></nav>
+<p class="sc-name" aria-hidden="true"></p>
+<p class="sc-say" aria-hidden="true"></p>
+<p class="sc-wind" aria-hidden="true"></p>
+<p class="sc-tip" aria-hidden="true"></p>
+<div class="sc-hud"><span class="sc-round"></span></div>
+<div class="sc-overlay" hidden></div>
+<p class="sr-only sc-live" aria-live="polite"></p>
+<noscript><p class="sc-noscript">The meadow needs JavaScript.</p></noscript></section>`.replace(/\n/g, "");
 }

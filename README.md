@@ -17,7 +17,8 @@ js/particle-text.js the Archive wallpaper: text drawn in dots, glitching into ot
 js/archive.js       archive collection page: infinite pannable grid, search bar, 3D viewer
 js/card3d.js        the 3D card (tilt + glare, drag to turn it over)
 js/tarot/           /archive/tarot/: THE TAROT READER, an interactive reading (see "Tarot Reader" below)
-tests/              npm test: the tarot rules and reading engine
+js/strange-chess/   /archive/strange-chess/: STRANGE CHESS, an ASCII boss-run chess game (see "Strange Chess" below)
+tests/              npm test: the tarot rules and reading engine, and the Strange Chess rules engine and AI
 js/head.js          About page: 3D head (follows the cursor, rotates on drag / two-finger scroll, reacts to taps)
 js/vendor/three.js  the parts of three.js the head needs   (npm install && npm run vendor:three)
 js/intro.js         landing intro: name on a light screen, a black panel sweeps up, the screen lifts away
@@ -49,6 +50,7 @@ Pages and addresses:
 | `/work/<id>/` | one page per project, e.g. `/work/lexus/` |
 | `/archive/` | the archive as a desktop: one folder per collection, draggable windows, taskbar |
 | `/archive/la-barra/` | LA BARRA: diagonal infinite pannable grid of the cut-outs on black, search bar, 3D viewer (editorial layout) (`#<piece id>` opens one) |
+| `/archive/strange-chess/` | STRANGE CHESS: chess with broken physics, a run against four bosses on a night meadow of grass strokes and ASCII (the "strange chess" icon on the Archive desktop) |
 | `/archive/tarot/` | THE TAROT READER: a candlelit table, a fortune teller in the dark, a guided five-card reading (the "tarot" folder on the Archive desktop) |
 
 Old links from the previous site (`/#film`, `/#project/lexus`) and the old `/film/` and
@@ -175,9 +177,63 @@ js/tarot/outline.js     GENERATED card silhouette (die-cut notch) for the 3D car
 - **Missing pieces never block it**: a missing image shows a plain card, no sound file is needed,
   and without WebGL the page says so instead of breaking.
 
+## Strange Chess (`/archive/strange-chess/`)
+
+Chess on a 6×6 board with broken physics, played as a run against **The Trapper, The Angler, The
+Prospector and The Woodcarver**, with two candles (lives), a campfire between fights (sigils) and a
+scale instead of checkmate. Everything is one canvas: a night meadow of ~30 000 grass strokes steered
+by a noise flow field (which leans the way the wind is about to blow), ASCII sculptures for every
+piece and tree, mist, sparkles, grain, and dithered grayscale figures for the bosses.
+
+```
+js/strange-chess/rules.js    THE RULES: pure, deterministic engine (no DOM, no Math.random). State is a plain
+                             object, every move returns a new one and an `events` list for the renderer.
+js/strange-chess/rng.js      seeded random numbers (mulberry32), the state lives inside the game state
+js/strange-chess/ai.js       minimax + alpha-beta over the same move generator, per-boss weights (STYLE)
+js/strange-chess/ai.worker.js  runs ai.js in a Web Worker (built to its own file by tools/build.mjs); aiClient.js asks it
+js/strange-chess/bosses.js   ← TEXT: names, dialogue, sigil texts, CONTACT_URL and REEL_URL (win screen links)
+js/strange-chess/game.js     the run: title, fights, phases, trade, campfire, win/lose, input, pause menu, keys
+js/strange-chess/stage.js    draws the objects: board clearing, pieces, particles, the scale, candles, fire, effects
+js/strange-chess/scene.js    the meadow: grass flow field, scenery, mist, sparkles, grain (THEMES = grass tint per boss)
+js/strange-chess/glyphs.js   character atlas, and the silhouette → shaded ASCII baker (PALETTES, RAMP)
+js/strange-chess/art.js      the vector silhouettes (pieces, trunks, rocks, gravestones, pillar, the Moon)
+js/strange-chess/figures.js  the dithered boss figures
+js/strange-chess/audio.js    optional synthesised wind and clicks (muted by default; M or the menu)
+```
+
+- **Rules as built:** Knight "Glitch" teleports to (5−x, 5−y) or steps like a king. Bishop bounces once. Rook
+  never captures by landing and pushes the chain it runs into (needs one square of travel first). Pushing
+  an enemy off the board or into a hole scores for the pusher; pushing your own piece scores for the boss.
+  Wind every 3rd round, warned a round before; each departure from a square costs it 1 of 4 integrity.
+  Scale ±5 wins, so does a fallen king; round limit 40, tie goes to the boss.
+- **Where the brief was ambiguous or unfun, and what was done (all are constants/rules in `rules.js` with tests):**
+  1. *Opening kills.* With R N B Q K R on both sides the Glitch on b mirrors onto the enemy **king**: the first
+     move wins. The player's rank is **R N Q B K R** and the boss's the same turned 180° (**R K B Q N R**), so the
+     knights face each other, each guarded by its queen: a trade offer instead of a free kill.
+  2. *Phase 2 at +3* is checked at the **end of the round**, after the boss has replied, so a guarded trade
+     does not skip phase 1.
+  3. *Wind at the edge.* Taken literally ("off the edge is lost") a gust south deletes a whole back rank, king
+     included. By default a piece against the edge just stays; holes still swallow. `windEdgeKills: true` (in
+     `DEFAULTS`) restores the literal rule.
+  4. *Phase 1 rules persist in phase 2* (traps stay, the hook keeps coming); the Prospector cracks his blocks once.
+  5. *The Moon:* attacks both rows it covers every 2nd round (the round before, the rows glow), light stops at
+     holes, it cannot step onto pieces, the squares it leaves erode, and while it is on the board **the scale no
+     longer decides the fight** (only the Moon falling, your king falling, or 60 rounds do).
+  6. *Trader:* the piece you give counts for the boss on the scale; the one you get back appears on its square.
+  7. *Pieces are ~1 row tall*, not the 40–60 px of the brief: at 8 px characters that is 5–7 rows and no piece is
+     recognisable. Pieces use ~5 px characters, scenery ~8 px.
+- **Controls:** pointer or tap: select a piece, then a square (on touch a push shows its preview on the first
+  tap). `P` toggles push mode for pieces with the *pusher* sigil, `R` restarts the fight, `Esc` pauses, `M` sound.
+- **Development:** `?seed=123` makes the run reproducible, `?boss=2` starts at that boss, `?debug` adds `window.__sc`.
+  Edit the bosses' lines in `bosses.js`, their grass tint in `scene.js` (`THEMES`), how they think in `ai.js` (`STYLE`).
+  The AI worker is bundled by `tools/build.mjs` (`dist/chess-ai-*.js`); without a worker it thinks on the main thread.
+- **Performance:** grass is redrawn at ~22 fps into its own layer, everything else at the display rate; if frames
+  run long the game lowers its resolution. Reduced motion stops sway, particles, mist drift and grain.
+
 ## Tests
 
-`npm test` runs the tarot engine tests (`tests/tarot.test.mjs`, Node's built-in test runner).
+`npm test` runs the tarot engine tests (`tests/tarot.test.mjs`) and the Strange Chess rules and AI tests
+(`tests/strange-chess.test.mjs`) with Node's built-in test runner.
 
 ## SEO checklist (after the site is live)
 

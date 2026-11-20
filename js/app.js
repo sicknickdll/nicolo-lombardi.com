@@ -10,7 +10,7 @@ import { eyeTracking } from "./eye.js";
 import { isMenuOpen, setNavigator } from "./menu.js";
 import { smoothScroll } from "./smooth.js";
 import { bindReveal } from "./reveal.js";
-import { work, homeMarkup, projectMarkup, projectURL, aboutMarkup, archiveMarkup, collectionMarkup, archiveCollections, archiveExperiences, tarotMarkup } from "./views.js";
+import { work, homeMarkup, projectMarkup, projectURL, aboutMarkup, archiveMarkup, collectionMarkup, archiveCollections, archiveExperiences, tarotMarkup, strangeChessMarkup } from "./views.js";
 const main = document.querySelector("#main");
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
 let cleanup = () => {};
@@ -117,6 +117,24 @@ function showTarot() {
     off();
   };
 }
+// /archive/strange-chess/: the game. Its scripts load only here.
+function showStrangeChess() {
+  main.innerHTML = strangeChessMarkup();
+  let off = () => {},
+    gone = false;
+  import("./strange-chess/game.js")
+    .then((m) => {
+      if (!gone) off = m.mountStrangeChess(main.querySelector(".schess"));
+    })
+    .catch((e) => {
+      console.error(e);
+      main.querySelector(".sc-say").textContent = "The meadow could not be reached. Reload to try again.";
+    });
+  cleanup = () => {
+    gone = true;
+    off();
+  };
+}
 function showAbout() {
   main.innerHTML = aboutMarkup();
   const stage = main.querySelector(".about-head");
@@ -149,6 +167,7 @@ function render() {
   if (path === "/about/") showAbout();
   else if (path === "/archive/") showArchive();
   else if (path === "/archive/tarot/" || path === "/archive/tarot") showTarot();
+  else if (path === "/archive/strange-chess/" || path === "/archive/strange-chess") showStrangeChess();
   else if (collection) showCollection(collection[1]);
   else if (project) showProject(project[1]);
   else showHome();

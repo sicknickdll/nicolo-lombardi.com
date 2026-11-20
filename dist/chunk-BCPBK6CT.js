@@ -1,0 +1,1 @@
+function l(r){r=r+1831565813>>>0;let t=r;return t=Math.imul(t^t>>>15,t|1),t^=t+Math.imul(t^t>>>7,t|61),[((t^t>>>14)>>>0)/4294967296,r]}function u(r){let t=r>>>0,e=()=>{let[n,o]=l(t);return t=o,n};return e.int=n=>Math.floor(e()*n),e.pick=n=>n[Math.floor(e()*n.length)],e.range=(n,o)=>n+e()*(o-n),e.get=()=>t,e}export{l as a,u as b};

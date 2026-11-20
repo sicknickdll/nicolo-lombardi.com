@@ -4264,3 +4264,323 @@ html.tarot-page .header {
   background: center / 100% 100% no-repeat;
   will-change: transform, opacity;
 }
+
+/* ── /archive/strange-chess/: Strange Chess (js/strange-chess/) ─────────────────────────────
+   Full screen, no scrolling. Everything you see is one canvas (a night meadow of grass strokes
+   and ASCII); the text layers are plain monospace on top of it, no panels, no borders: dialogue
+   under the boss's name, choices as bare words, a thin white crosshair for a cursor. */
+html.chess-page {
+  --chess-cross: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='21' height='21'><path d='M10.5 2v17M2 10.5h17' stroke='black' stroke-opacity='.55' stroke-width='3'/><path d='M10.5 3v15M3 10.5h15' stroke='white' stroke-width='1'/></svg>") 10 10, crosshair;
+  --cursor-default: var(--chess-cross);
+  --cursor-pointer: var(--chess-cross);
+  --cursor-click: var(--chess-cross);
+  --cursor-grab: var(--chess-cross);
+  --cursor-grabbing: var(--chess-cross);
+}
+html.chess-page,
+html.chess-page body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #05070d;
+}
+html.chess-page .header {
+  display: none;
+}
+html.chess-page a,
+html.chess-page button,
+html.chess-page canvas {
+  cursor: var(--chess-cross);
+}
+.schess {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #05070d;
+  color: #c3c8ec;
+  font-family: var(--mono);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  opacity: 0;
+  transition: opacity 1.6s;
+}
+.schess.ready {
+  opacity: 1;
+}
+.sc-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  touch-action: none;
+}
+.sc-top {
+  position: absolute;
+  z-index: 8;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(10px, env(safe-area-inset-top)) 20px 0;
+  pointer-events: none;
+}
+.sc-top > * {
+  pointer-events: auto;
+}
+.sc-back {
+  font-size: 26px;
+  line-height: 1;
+  color: rgba(223, 227, 248, 0.7);
+  transition: transform 0.4s var(--ease);
+}
+.sc-back:hover {
+  transform: translateX(-4px);
+  color: #fff;
+}
+.sc-menu-btn {
+  font: inherit;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(195, 200, 236, 0.55);
+  background: none;
+  border: 0;
+  padding: 8px 0;
+}
+.sc-menu-btn:hover {
+  color: #fff;
+}
+.sc-name,
+.sc-say,
+.sc-wind,
+.sc-tip,
+.sc-hud {
+  position: absolute;
+  z-index: 5;
+  margin: 0;
+  text-shadow:
+    0 1px 2px #000,
+    0 0 8px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+}
+.sc-name {
+  transform: translateX(-50%);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: #fff;
+  white-space: nowrap;
+}
+.sc-say {
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.45;
+  min-height: 2.9em;
+  color: #dfe3f8;
+  transition: opacity 1.2s;
+}
+.sc-say.sc-fade {
+  opacity: 0.45;
+}
+.sc-hud {
+  top: var(--hud-top, 80%);
+  right: var(--hud-right, 16px);
+  text-align: right;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: rgba(195, 200, 236, 0.7);
+}
+.sc-round.think::after {
+  content: " · · ·";
+  animation: sc-think 1.1s steps(4) infinite;
+}
+@keyframes sc-think {
+  0% {
+    opacity: 0.2;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.sc-wind {
+  top: calc(var(--hud-top, 80%) + 18px);
+  right: var(--hud-right, 16px);
+  font-size: 10.5px;
+  color: #cfe0ff;
+  opacity: 0;
+  transition: opacity 0.8s;
+  text-align: right;
+}
+.sc-wind.on {
+  opacity: 0.9;
+}
+.sc-tip {
+  left: 50%;
+  bottom: max(70px, calc(env(safe-area-inset-bottom) + 70px));
+  transform: translateX(-50%);
+  font-size: 12px;
+  font-style: italic;
+  color: #e8ecf5;
+  opacity: 0;
+  transition: opacity 0.8s;
+  white-space: nowrap;
+  pointer-events: auto;
+}
+.sc-tip.on {
+  opacity: 0.95;
+}
+.sc-overlay {
+  position: absolute;
+  z-index: 7;
+  left: 50%;
+  top: var(--band-top, 40%);
+  transform: translateX(-50%);
+  width: var(--band-w, 420px);
+  text-align: center;
+  text-shadow:
+    0 1px 2px #000,
+    0 0 10px #000,
+    0 0 22px rgba(0, 0, 0, 0.9);
+}
+.sc-overlay[hidden] {
+  display: none;
+}
+.sc-overlay.sc-aside {
+  top: auto;
+  left: auto;
+  right: 16px;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  transform: none;
+  width: min(300px, 60vw);
+  text-align: right;
+}
+.sc-overlay.sc-title {
+  top: calc(var(--band-top, 40%) - 54px);
+}
+.sc-logo {
+  margin: 0 0 6px;
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: clamp(26px, 6.4vw, 52px);
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  color: #eef0ff;
+  text-shadow:
+    0 0 24px rgba(143, 151, 201, 0.55),
+    0 2px 3px #000;
+}
+.sc-logo.small {
+  font-size: 22px;
+}
+.sc-sub {
+  margin: 0 0 18px;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: rgba(195, 200, 236, 0.78);
+}
+.sc-prompt {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #dfe3f8;
+}
+.sc-prompt b {
+  font-weight: 500;
+  color: #e5707f;
+}
+.sc-choices {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.sc-aside .sc-choices {
+  align-items: flex-end;
+}
+.sc-choices button,
+.sc-choices a {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  color: #c3c8ec;
+  background: none;
+  border: 0;
+  padding: 7px 14px;
+  transition:
+    color 0.25s,
+    letter-spacing 0.4s var(--ease);
+}
+.sc-choices button span {
+  margin-top: 2px;
+  max-width: 34ch;
+  font-size: 10.5px;
+  letter-spacing: 0;
+  color: rgba(195, 200, 236, 0.55);
+}
+.sc-choices button:hover,
+.sc-choices a:hover,
+.sc-choices button:focus-visible,
+.sc-choices a:focus-visible {
+  color: #fff;
+  letter-spacing: 0.12em;
+  outline: none;
+}
+.sc-choices button:hover::before,
+.sc-choices button:focus-visible::before {
+  content: "›";
+  position: absolute;
+  margin-left: -1.2em;
+  color: #d9b84a;
+}
+.sc-choices button[disabled] {
+  opacity: 0.35;
+}
+.sc-end .sc-prompt {
+  font-size: 14px;
+  margin-bottom: 18px;
+}
+.sc-noscript {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+}
+@media (max-width: 720px) {
+  .sc-name {
+    font-size: 10px;
+  }
+  .sc-say {
+    font-size: 11.5px;
+  }
+  .sc-hud,
+  .sc-wind {
+    font-size: 9.5px;
+    max-width: 46vw;
+  }
+  .sc-tip {
+    white-space: normal;
+    width: 80vw;
+    text-align: center;
+  }
+  .sc-choices button,
+  .sc-choices a {
+    font-size: 14px;
+    padding: 9px 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .schess {
+    transition: none;
+  }
+  .sc-round.think::after {
+    animation: none;
+  }
+}
