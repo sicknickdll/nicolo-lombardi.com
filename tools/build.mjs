@@ -23,6 +23,7 @@ import {
   archiveCollections,
   archiveExperiences,
   tarotMarkup,
+  strangeChessMarkup,
   projectImages,
   projectMarkup,
 } from "../js/views.js";
@@ -36,6 +37,22 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 // sources in js/ and style.css are what you edit; dist/ is generated (and committed: the site is
 // served as it is).
 rmSync(join(root, "dist"), { recursive: true, force: true });
+// Strange Chess thinks in a Web Worker: it is bundled first, as a file of its own, and its
+// address is handed to js/strange-chess/game.js through `define` (from the sources, the game
+// loads js/strange-chess/ai-worker.js directly).
+const workerBuilt = await bundle({
+  entryPoints: { "sc-worker": join(root, "js/strange-chess/ai-worker.js") },
+  bundle: true,
+  format: "esm",
+  target: "es2022",
+  minify: true,
+  legalComments: "none",
+  outdir: join(root, "dist"),
+  entryNames: "[name]-[hash]",
+  metafile: true,
+  logLevel: "warning",
+});
+const workerFile = Object.keys(workerBuilt.metafile.outputs).find((f) => f.endsWith(".js"));
 const built = await bundle({
   entryPoints: { app: join(root, "js/app.js") },
   bundle: true,
@@ -47,10 +64,14 @@ const built = await bundle({
   outdir: join(root, "dist"),
   entryNames: "[name]-[hash]",
   chunkNames: "[name]-[hash]",
+  define: { __SC_WORKER__: JSON.stringify(`/dist/${workerFile.split("/").pop()}`) },
   metafile: true,
   logLevel: "warning",
 });
-const appFile = Object.keys(built.metafile.outputs).find((f) => f.endsWith(".js") && built.metafile.outputs[f].entryPoint);
+// The page script is the output whose entry point is js/app.js itself: the lazily imported
+// pieces (the tarot, Strange Chess, …) also report an entryPoint, so match it by name.
+const appFile = Object.keys(built.metafile.outputs).find((f) => f.endsWith(".js") && built.metafile.outputs[f].entryPoint === "js/app.js");
+if (!appFile) throw new Error("build: no output for js/app.js");
 const css = (await transform(readFileSync(join(root, "style.css"), "utf8"), { loader: "css", minify: true })).code;
 const cssName = `style-${createHash("sha256").update(css).digest("hex").slice(0, 8).toUpperCase()}.css`;
 writeFileSync(join(root, "dist", cssName), css);
@@ -286,6 +307,41 @@ write(
   tarotMarkup(),
 );
 
+// Strange Chess: a game (js/strange-chess/). The page holds its description and rules; the
+// meadow itself is drawn by the script.
+const strangeChess = archiveExperiences.find((x) => x.id === "strange-chess");
+write(
+  "archive/strange-chess",
+  head({
+    title: `Strange Chess — Archive, ${NAME}`,
+    description: strangeChess.blurb,
+    path: "/archive/strange-chess/",
+    image: existsSync(join(root, "assets/og/strange-chess.jpg")) ? "/assets/og/strange-chess.jpg" : "/assets/og-image.jpg",
+    imageAlt: "Strange Chess: ASCII chess pieces in a night meadow, the Woodcarver watching",
+    schema: [
+      {
+        "@type": "VideoGame",
+        url: `${SITE}/archive/strange-chess/`,
+        name: "Strange Chess",
+        description: strangeChess.blurb,
+        genre: ["Strategy", "Chess variant"],
+        gamePlatform: "Web browser",
+        playMode: "SinglePlayer",
+        applicationCategory: "Game",
+        inLanguage: "en",
+        author: { "@id": person["@id"] },
+      },
+      breadcrumbs([
+        [NAME, "/"],
+        ["Archive", "/archive/"],
+        ["Strange Chess", "/archive/strange-chess/"],
+      ]),
+      person,
+    ],
+  }),
+  strangeChessMarkup(),
+);
+
 // The Film and Visuals lists now live on the landing page: their old addresses forward there.
 for (const slug of ["film", "visuals"]) {
   const file = join(root, slug, "index.html");
@@ -394,6 +450,7 @@ const pages = [
   ["/archive/", []],
   ...archiveCollections.map((c) => [`/archive/${c.id}/`, c.items.map((i) => i.front)]),
   ["/archive/tarot/", CARDS.filter((c) => DECK_IDS.includes(c.id)).map((c) => c.art)],
+  ["/archive/strange-chess/", ["/assets/og/strange-chess.jpg", ...strangeChess.icon.map((i) => i.replace("-thumb", ""))]],
   ["/privacy/", []],
   ...projects.map((p) => [`/work/${p.id}/`, [p.cover, ...projectImages(p)]]),
 ];
