@@ -319,6 +319,7 @@ export function iseeMarkup() {
 <div class="is-stage" role="application" aria-label="Hold the cursor still"><img class="is-img" alt="" draggable="false" decoding="async"></div>
 <div class="is-empty" aria-hidden="true"><p class="is-hint"></p></div>
 <canvas class="is-intro" aria-hidden="true"></canvas>
+<a class="is-x" href="/archive/" aria-label="Close, back to the Archive"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg></a>
 <span class="is-load" aria-hidden="true"></span><span class="is-dot" aria-hidden="true"></span>
 <aside class="is-cite" aria-label="About this painting" hidden><h2 class="is-title"></h2><p class="is-artist"></p><dl class="is-facts"><div class="is-f-date"><dt>Date</dt><dd></dd></div><div class="is-f-medium"><dt>Medium</dt><dd></dd></div><div class="is-f-museum"><dt>Collection</dt><dd></dd></div><div class="is-f-acc"><dt>No.</dt><dd></dd></div></dl><a class="is-link" target="_blank" rel="noopener noreferrer">View at the museum</a></aside>
 <p class="is-credit">Credits to <a href="https://pointerpointer.com/" target="_blank" rel="noopener noreferrer">pointerpointer.com</a>, Pluto <a href="https://twitter.com/growpluto" target="_blank" rel="noopener noreferrer">@growpluto</a> on Twitter</p>

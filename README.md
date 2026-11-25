@@ -299,8 +299,10 @@ go out; a click, tap or key skips it. Then a single line in Helvetica Light ("Ho
 still" on a computer, "Tap anywhere" on a phone). Hold the cursor still and a painting fills the
 screen, its sitter looking at the cursor; move and it's gone. The label bottom right, in Montserrat
 (`assets/fonts/`, SIL Open Font License) on a Swiss grid, gives title, painter, date, medium,
-collection and inventory number, with a link to the museum's page. Bottom left, in grey, the
-credit: Pointer Pointer (pointerpointer.com) by Pluto, @growpluto on Twitter.
+collection and inventory number, with a link to the museum's page. At the bottom, small and grey,
+the credit: Pointer Pointer (pointerpointer.com) by Pluto, @growpluto on Twitter. The X top left
+goes back to the Archive: white closes in on the eyes of the painting on screen (or the last one
+seen), the eyes turn white too, and the Archive appears as the white lifts.
 
 - **The paintings**: public-domain works from The Cleveland Museum of Art (CC0) and The Metropolitan
   Museum of Art (Open Access), scanned whole: every painting with an image (about 6,900 from Cleveland's
