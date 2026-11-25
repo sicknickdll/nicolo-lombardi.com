@@ -217,7 +217,7 @@ write(
   "archive",
   head({
     title: `Archive — ${NAME}`,
-    description: `Collections found and kept by ${NAME}, and things made for fun: ${[...archiveCollections, ...archiveExperiences].map((c) => c.title).join(", ")}.`,
+    description: `Collections found and kept by ${NAME}, and things made for fun: ${[...archiveCollections, ...archiveExperiences.filter((x) => !x.hidden)].map((c) => c.title).join(", ")}.`,
     path: "/archive/",
     image: "/assets/og-image.jpg",
     imageAlt: NAME,
@@ -467,7 +467,6 @@ const pages = [
   ["/archive/", []],
   ...archiveCollections.map((c) => [`/archive/${c.id}/`, c.items.map((i) => i.front)]),
   ["/archive/tarot/", CARDS.filter((c) => DECK_IDS.includes(c.id)).map((c) => c.art)],
-  ["/archive/aquarium/", existsSync(join(root, "assets/og/aquarium.jpg")) ? ["/assets/og/aquarium.jpg"] : []],
   ["/archive/i-see-u/", existsSync(join(root, "assets/og/i-see-u.jpg")) ? ["/assets/og/i-see-u.jpg"] : []],
   ["/privacy/", []],
   ...projects.map((p) => [`/work/${p.id}/`, [p.cover, ...projectImages(p)]]),

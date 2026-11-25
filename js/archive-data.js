@@ -34,6 +34,7 @@ export const experiences = [
     label: "aquarium",
     blurb: "Draw a fish, drop it in, feed it. An ASCII tank where drawn fish swim, eat, grow, quarrel, fall in love and lay eggs.",
     icon: [],
+    hidden: true, // off the Archive desktop and the sitemap; the page still works at its address
   },
   {
     id: "i-see-u",

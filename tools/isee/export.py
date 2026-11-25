@@ -115,7 +115,7 @@ for r, size in zip(rows, sizes):
         "link": r["link"],
     })
 out.sort(key=lambda p: p["id"])
-keep = {p["id"] + ".webp" for p in out} | {"icon.webp", "icon-look.webp"}
+keep = {p["id"] + ".webp" for p in out} | {"icon.webp", "icon-look.webp", "eyes.webp"}
 for name in os.listdir(OUT):
     if name not in keep:
         os.remove(os.path.join(OUT, name))
