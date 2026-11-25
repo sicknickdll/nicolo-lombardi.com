@@ -134,23 +134,6 @@ const allProjects = [
     videoRatios: [16 / 9],
   },
   {
-    id: "schweppes",
-    year: "2026",
-    brand: "Schweppes",
-    title: "Schweppes",
-    type: "AI Film · Advertising",
-    description:
-      "A fully AI-generated project for Schweppes. Guided by Clive, the film invites viewers into the iconic Schweppes mansion to celebrate New Year’s Eve in a world where elegance, fantasy, and generative AI come together to create a unique festive experience.\n\nI contributed to the storyboarding and frame generation, and made the final VO and voice design of Clive.\n\nProperty of WPP Production / WPP Holding. Featured here to showcase my contribution as part of the production and creative team.",
-    cover: "/assets/schweppes-header.webp",
-    images: [],
-    stills: [1, 2, 3, 4, 5, 6].map((n) => img(`/assets/schweppes-still-0${n}.webp`, 1920, 1080)),
-    videos: ["/assets/schweppes-hero.webm"],
-    youtube: null,
-    videoPosters: ["/assets/schweppes-hero-poster.webp"],
-    videoThumbnails: ["/assets/schweppes-hero-thumb.webp"],
-    videoRatios: [16 / 9],
-  },
-  {
     id: "elaguila",
     year: "2025",
     brand: "El Águila",
@@ -373,7 +356,6 @@ export const projects = allProjects.filter((p) => !p.hidden);
 export const workOrder = [
   "elaguila",
   "wppproduction",
-  "schweppes",
   "lexus",
   "toyota",
   "uncommonsense",
