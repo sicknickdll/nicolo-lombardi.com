@@ -4264,3 +4264,573 @@ html.tarot-page .header {
   background: center / 100% 100% no-repeat;
   will-change: transform, opacity;
 }
+
+/* ── /archive/aquarium/: the ASCII aquarium (js/aquarium/) ─────────────────
+   After DEVAULT's ASCII generator: near-black, glyphs from white to lavender, Geist Mono,
+   1px hairlines, square corners, small uppercase mono labels, one white button. */
+html.aquarium-page,
+html.aquarium-page body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #07070a;
+}
+html.aquarium-page .header {
+  display: none;
+}
+.aquarium {
+  --aq-bg: #07070a;
+  --aq-panel: #0d0d12;
+  --aq-ink: #f4f4f7;
+  --aq-ink2: #c4c4ce;
+  --aq-mute: #80808c;
+  --aq-line: rgba(255, 255, 255, 0.08);
+  --aq-line2: rgba(255, 255, 255, 0.14);
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--aq-bg);
+  color: var(--aq-ink);
+  font: 400 13px/1.45 var(--sans);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.aquarium button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: var(--cursor-pointer);
+}
+.aquarium pre {
+  margin: 0;
+  font: inherit;
+}
+.aq-stage {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+  cursor: crosshair;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.aquarium.ready .aq-stage {
+  opacity: 1;
+}
+.aq-stage.aq-hand {
+  cursor: var(--cursor-grab);
+}
+.aquarium.aq-dragging .aq-stage {
+  cursor: var(--cursor-grabbing);
+}
+.aquarium.aq-placing .aq-stage {
+  cursor: copy;
+}
+.aq-stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.aq-glow {
+  pointer-events: none;
+  filter: blur(7px) brightness(1.5);
+  opacity: 0.5;
+  mix-blend-mode: screen;
+}
+/* dot grid, vignette; scanlines for the monitor lights */
+.aq-fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(0, 0, 0, 0.55)),
+    radial-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1.2px) 0 0 / 22px 22px;
+}
+.aquarium.aq-scan .aq-fx {
+  background:
+    repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.28) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at 50% 45%, transparent 50%, rgba(0, 0, 0, 0.7));
+}
+/* the bar */
+.aq-bar {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 16px;
+  padding-top: env(safe-area-inset-top);
+  background: rgba(13, 13, 18, 0.7);
+  border-bottom: 1px solid var(--aq-line);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-size: 14px;
+  letter-spacing: -0.01em;
+}
+.aq-crumb {
+  color: var(--aq-ink);
+  transition: opacity 0.2s;
+}
+.aq-crumb:hover {
+  opacity: 0.6;
+}
+.aq-sl {
+  color: var(--aq-mute);
+}
+.aq-chip,
+.aq-sec h3,
+.aq-tag {
+  font: 400 10.5px/1 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--aq-ink2);
+}
+.aq-chip {
+  padding: 4px 6px;
+  border: 1px solid var(--aq-line2);
+}
+.aq-acts {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+.aq-acts button {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 12.5px;
+  background: var(--aq-panel);
+  border: 1px solid var(--aq-line2);
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    color 0.2s;
+}
+.aq-acts button:hover,
+.aq-acts button.on {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.aquarium .aq-pri {
+  background: var(--aq-ink);
+  color: #0b0820;
+  border-color: var(--aq-ink);
+}
+.aquarium .aq-pri:hover,
+.aquarium .aq-pri.on {
+  background: #fff;
+  border-color: #fff;
+}
+.aq-acts .aq-snd {
+  width: 32px;
+  padding: 0;
+  font-family: var(--mono);
+}
+.aq-snd[aria-pressed="false"] {
+  color: var(--aq-mute);
+  text-decoration: line-through;
+}
+.aq-scales {
+  font-family: var(--mono);
+  color: #f3cf6b;
+}
+.aq-scales b {
+  display: inline-block;
+  font-weight: 400;
+  color: var(--aq-ink);
+}
+.aq-scales.bump b {
+  animation: aq-bump 0.35s var(--ease);
+}
+.aq-scales.no {
+  animation: aq-shake 0.35s;
+}
+@keyframes aq-bump {
+  40% {
+    transform: translateY(-4px) scale(1.25);
+  }
+}
+@keyframes aq-shake {
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+/* the side panel */
+.aq-panel {
+  position: absolute;
+  z-index: 4;
+  top: 52px;
+  right: 0;
+  bottom: 0;
+  width: 344px;
+  overflow-y: auto;
+  background: var(--aq-panel);
+  border-left: 1px solid var(--aq-line);
+  animation: aq-in 0.35s var(--ease);
+}
+@keyframes aq-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+.aq-sec {
+  padding: 16px;
+  border-bottom: 1px solid var(--aq-line);
+}
+.aq-sec h3 {
+  margin: 0 0 12px;
+  font-weight: 400;
+}
+.aq-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+.aq-tiles button,
+.aq-presets button {
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  min-height: 54px;
+  padding: 6px 4px;
+  border: 1px solid var(--aq-line2);
+  color: var(--aq-ink2);
+  font: 400 6.5px/1.15 var(--mono);
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+.aq-tiles button:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+.aq-tiles button.on {
+  background: var(--aq-ink);
+  color: #0e0e13;
+  border-color: var(--aq-ink);
+}
+.aq-brush button {
+  font-size: 15px;
+  min-height: 40px;
+}
+.aq-brush {
+  grid-template-columns: repeat(4, 1fr);
+}
+.aq-decor button {
+  font-size: 5.5px;
+  min-height: 70px;
+}
+.aq-tiles i,
+.aq-presets i,
+.aq-seg i {
+  font: normal 10px/1 var(--mono);
+  color: #f3cf6b;
+}
+.aquarium .dim {
+  opacity: 0.4;
+}
+.aq-seg {
+  display: flex;
+  border: 1px solid var(--aq-line2);
+}
+.aq-seg button {
+  flex: 1;
+  height: 34px;
+  color: var(--aq-ink2);
+  text-transform: capitalize;
+}
+.aq-seg button.on {
+  background: var(--aq-ink);
+  color: #0e0e13;
+}
+.aq-range {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  margin-top: 14px;
+  color: var(--aq-ink2);
+}
+.aq-range output {
+  font: 11.5px var(--mono);
+  color: var(--aq-mute);
+}
+.aq-range input {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 16px;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background: linear-gradient(var(--aq-line2), var(--aq-line2)) center / 100% 1px no-repeat;
+  cursor: var(--cursor-pointer);
+}
+.aq-range input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 9px;
+  height: 16px;
+  background: var(--aq-ink);
+  border: 0;
+  border-radius: 0;
+}
+.aq-range input::-moz-range-thumb {
+  width: 9px;
+  height: 16px;
+  background: var(--aq-ink);
+  border: 0;
+  border-radius: 0;
+}
+.aq-swatches {
+  display: flex;
+  gap: 6px;
+}
+.aq-swatches button {
+  width: 28px;
+  height: 28px;
+  background: var(--c);
+  outline: 1px solid var(--aq-line2);
+  outline-offset: 2px;
+}
+.aq-swatches button.on {
+  outline-color: var(--aq-ink);
+}
+.aq-presets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+.aq-presets button {
+  background: var(--b);
+  font-size: 12px;
+  min-height: 70px;
+}
+.aq-presets pre {
+  color: var(--i);
+  text-shadow: 0 0 8px var(--m);
+}
+.aq-presets span {
+  font: 9.5px/1 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--aq-ink2);
+}
+.aq-presets button.on {
+  border-color: var(--aq-ink);
+}
+.aq-foot {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.4fr;
+  gap: 8px;
+  padding: 14px 16px;
+  background: var(--aq-panel);
+  border-top: 1px solid var(--aq-line);
+}
+.aq-foot button {
+  height: 44px;
+  border: 1px solid var(--aq-line2);
+  font-size: 13px;
+}
+.aq-foot button:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+/* the drawing pad: framed like DEVAULT's preview */
+.aq-pad {
+  position: absolute;
+  z-index: 3;
+  top: calc(52px + 50%);
+  left: calc((100% - 344px) / 2);
+  width: min(720px, calc(100% - 344px - 64px));
+  transform: translate(-50%, calc(-50% - 26px));
+  aspect-ratio: 160 / 96;
+  background: rgba(7, 7, 10, 0.88);
+  border: 1px solid var(--aq-line2);
+  box-shadow: 0 0 0 100vmax rgba(7, 7, 10, 0.45);
+}
+.aq-pad canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+.aq-tag {
+  position: absolute;
+  left: -1px;
+  bottom: 100%;
+  margin-bottom: 8px;
+  padding: 5px 8px;
+  background: var(--aq-bg);
+  border: 1px solid var(--aq-line2);
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+.aq-pad.no {
+  animation: aq-shake 0.35s;
+}
+/* drop here to remove */
+.aq-bin {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: 24px;
+  transform: translate(-50%, 20px);
+  padding: 10px 18px;
+  font: 14px/1 var(--mono);
+  color: var(--aq-ink2);
+  background: var(--aq-panel);
+  border: 1px solid var(--aq-line2);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.2s,
+    transform 0.3s var(--ease);
+}
+.aquarium.aq-dragging .aq-bin {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.aq-bin.on {
+  color: #0e0e13;
+  background: #ff9b8e;
+  border-color: #ff9b8e;
+}
+.aq-tip {
+  position: fixed;
+  z-index: 6;
+  top: 0;
+  left: 0;
+  display: flex;
+  gap: 8px;
+  padding: 5px 7px;
+  font: 10.5px/1 var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(7, 7, 10, 0.82);
+  border: 1px solid var(--aq-line2);
+  pointer-events: none;
+}
+.aq-tip b {
+  font-weight: 400;
+  color: var(--aq-ink);
+}
+.aq-tip span {
+  color: var(--aq-mute);
+  letter-spacing: 0;
+}
+.aq-noscript {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 12px var(--mono);
+  color: var(--aq-mute);
+}
+@media (max-width: 720px) {
+  .aq-bar {
+    gap: 6px;
+    padding: 0 10px;
+  }
+  .aq-chip,
+  .aq-sl,
+  .aq-name {
+    display: none;
+  }
+  .aq-acts {
+    gap: 4px;
+  }
+  .aq-acts button {
+    padding: 0 10px;
+  }
+  .aq-panel {
+    top: auto;
+    left: 0;
+    width: auto;
+    max-height: 50%;
+    border-left: 0;
+    border-top: 1px solid var(--aq-line);
+  }
+  .aq-pad {
+    top: calc(52px + 25% - 13px);
+    left: 50%;
+    width: calc(100% - 24px);
+    transform: translate(-50%, -50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aq-panel {
+    animation: none;
+  }
+}
+
+/* the aquarium on the Archive desktop: a tiny ASCII tank */
+.daq {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  width: 60px;
+  height: 46px;
+  padding: 3px 4px;
+  overflow: hidden;
+  background: #07070a;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font: 7px/1.25 var(--mono);
+  color: #cbbcff;
+  white-space: pre;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+.daq-w {
+  color: #8f7ad6;
+}
+.daq-s {
+  color: #5b4d8f;
+}
+.daq-f {
+  align-self: center;
+  color: #f4f0ff;
+  text-shadow: 0 0 6px #8f7ad6;
+  animation: daq-bob 2.4s ease-in-out infinite;
+}
+.daq-b {
+  position: absolute;
+  left: 44px;
+  bottom: 8px;
+  color: #8f7ad6;
+  animation: daq-bubble 2.6s linear infinite;
+}
+.desk-obj:hover .daq-f,
+.desk-obj:focus-visible .daq-f {
+  animation: daq-swim 2.2s linear infinite;
+}
+@keyframes daq-bob {
+  50% {
+    transform: translateY(2px);
+  }
+}
+@keyframes daq-swim {
+  from {
+    transform: translateX(-64px);
+  }
+  to {
+    transform: translateX(64px);
+  }
+}
+@keyframes daq-bubble {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+}

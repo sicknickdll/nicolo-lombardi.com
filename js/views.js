@@ -199,7 +199,8 @@ const floatFolder = (thumbs) => {
 };
 const sunSVG = `<svg viewBox="0 0 24 24" aria-hidden="true" class="i-sun"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>`;
 const moonSVG = `<svg viewBox="0 0 24 24" aria-hidden="true" class="i-moon"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>`;
-// LA BARRA and the Tarot Reader are shown as objects (a napkin, a card back) instead of folders;
+// LA BARRA, the Tarot Reader and the aquarium are shown as objects (a napkin, a card back, a tank)
+// instead of folders;
 // on hover they turn slowly, like a 3D model. Both faces are real: the napkin's back is its scan.
 const objIcon = (front, back, ratio) =>
   `<span class="dobj" style="--r:${ratio}" aria-hidden="true"><span class="dobj-spin"><img class="dobj-f" src="${front}" alt="" draggable="false"><img class="dobj-b" src="${back}" alt="" draggable="false"></span></span>`;
@@ -209,6 +210,9 @@ const archiveObject = {
     return objIcon(it.front, it.back, it.ratio);
   },
   tarot: () => objIcon("/assets/archive/tarot/back-thumb.webp", "/assets/archive/tarot/back-thumb.webp", 0.5625),
+  // the aquarium: a tiny ASCII tank; on hover its fish swims across
+  aquarium: () =>
+    `<span class="daq" aria-hidden="true"><span class="daq-w">~-~~-~~-~</span><span class="daq-f">&gt;&lt;(((°&gt;</span><span class="daq-b">°</span><span class="daq-s">.:,.:.,:</span></span>`,
 };
 // One "Projects" folder, bottom right: it opens a window with every project of the portfolio.
 const projectsFolder = () =>
@@ -283,4 +287,22 @@ export function tarotMarkup() {
 <p class="sr-only tr-live" aria-live="polite"></p>
 <div class="tr-loading" aria-hidden="true"><span class="tr-leyes"></span><p></p></div>
 <noscript><p class="tr-noscript caslon">The fortune teller only reads by candlelight, and the candles need JavaScript.</p></noscript></section>`.replace(/\n/g, "");
+}
+
+// /archive/aquarium/: the ASCII aquarium (js/aquarium/tank.js). The tank is a canvas of glyphs;
+// this markup holds the bar, the side panel, the drawing pad and, for search engines and screen
+// readers, what it is.
+export function aquariumMarkup() {
+  const x = experiences.find((e) => e.id === "aquarium");
+  return `<section class="aquarium" aria-labelledby="aq-title"><header class="sr-only"><nav aria-label="Breadcrumb"><a href="/archive/">Archive</a></nav><h1 id="aq-title">ASCII Aquarium</h1><p>${esc(x.blurb)}</p><p>Click the water to drop food. Click a fish to poke it, drag it to move it. Hold the cursor still and fish come to look. Golden scales buy decor and lights. Keys: D draw, F feed, M sound, Escape close.</p></header>
+<div class="aq-stage" role="application" aria-label="The tank"><canvas class="aq-c"></canvas><canvas class="aq-glow" aria-hidden="true"></canvas></div>
+<div class="aq-fx" aria-hidden="true"></div>
+<nav class="aq-bar" aria-label="Aquarium"><a class="aq-crumb" href="/archive/">Archive</a><span class="aq-sl" aria-hidden="true">/</span><span class="aq-name">Aquarium</span><span class="aq-chip aq-count">0 fish</span>
+<div class="aq-acts"><button type="button" class="aq-snd" data-act="sound" aria-label="Sound" aria-pressed="true">♪</button><button type="button" class="aq-scales" data-act="decor" aria-label="Golden scales"><span aria-hidden="true">◊</span> <b>0</b></button><button type="button" data-act="decor">Decor</button><button type="button" class="aq-pri" data-act="draw">Draw</button></div></nav>
+<aside class="aq-panel" hidden></aside>
+<div class="aq-pad" hidden><span class="aq-tag"></span><canvas aria-label="Drawing pad"></canvas></div>
+<div class="aq-bin" aria-hidden="true">[ × ]</div>
+<div class="aq-tip" hidden></div>
+<p class="sr-only aq-live" aria-live="polite"></p>
+<noscript><p class="aq-noscript">The water needs JavaScript.</p></noscript></section>`.replace(/\n/g, "");
 }
