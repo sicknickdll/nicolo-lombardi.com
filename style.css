@@ -1600,13 +1600,13 @@ html.light .client-logos img {
 }
 @font-face {
   font-family: "Jost";
-  src: url("/assets/fonts/Jost-400.ttf") format("truetype");
+  src: url("/assets/fonts/Jost-400.woff2") format("woff2");
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: "Jost";
-  src: url("/assets/fonts/Jost-500.ttf") format("truetype");
+  src: url("/assets/fonts/Jost-500.woff2") format("woff2");
   font-weight: 500;
   font-display: swap;
 }

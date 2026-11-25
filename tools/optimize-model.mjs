@@ -22,7 +22,7 @@ await doc.transform(
   simplify({ simplifier: MeshoptSimplifier, ratio: +ratio, error: 0.0005 }),
   prune(),
   textureCompress({ encoder: sharp, targetFormat: "webp", resize: [2048, 2048], quality: 82 }),
-  meshopt({ encoder: MeshoptEncoder, level: "medium" }),
+  meshopt({ encoder: MeshoptEncoder, level: "high" }),
 );
 await io.write(output, doc);
 console.log(`Wrote ${output}`);
