@@ -24,6 +24,7 @@ import {
   archiveExperiences,
   tarotMarkup,
   aquariumMarkup,
+  iseeMarkup,
   projectImages,
   projectMarkup,
 } from "../js/views.js";
@@ -326,6 +327,38 @@ write(
   "aquarium-page",
 );
 
+// I see u: paintings that look at the cursor (js/isee/). The page holds its description; the
+// paintings are placed by the script.
+const isee = archiveExperiences.find((x) => x.id === "i-see-u");
+write(
+  "archive/i-see-u",
+  head({
+    title: `I see u — Archive, ${NAME}`,
+    description: isee.blurb,
+    path: "/archive/i-see-u/",
+    image: existsSync(join(root, "assets/og/i-see-u.jpg")) ? "/assets/og/i-see-u.jpg" : "/assets/og-image.jpg",
+    imageAlt: "I see u: a portrait from the history of painting looking at the cursor",
+    schema: [
+      {
+        "@type": "CreativeWork",
+        url: `${SITE}/archive/i-see-u/`,
+        name: "I see u",
+        description: isee.blurb,
+        genre: "Interactive experience",
+        inLanguage: "en",
+        author: { "@id": person["@id"] },
+      },
+      breadcrumbs([
+        [NAME, "/"],
+        ["Archive", "/archive/"],
+        ["I see u", "/archive/i-see-u/"],
+      ]),
+      person,
+    ],
+  }),
+  iseeMarkup(),
+);
+
 // The Film and Visuals lists now live on the landing page: their old addresses forward there.
 for (const slug of ["film", "visuals"]) {
   const file = join(root, slug, "index.html");
@@ -435,6 +468,7 @@ const pages = [
   ...archiveCollections.map((c) => [`/archive/${c.id}/`, c.items.map((i) => i.front)]),
   ["/archive/tarot/", CARDS.filter((c) => DECK_IDS.includes(c.id)).map((c) => c.art)],
   ["/archive/aquarium/", existsSync(join(root, "assets/og/aquarium.jpg")) ? ["/assets/og/aquarium.jpg"] : []],
+  ["/archive/i-see-u/", existsSync(join(root, "assets/og/i-see-u.jpg")) ? ["/assets/og/i-see-u.jpg"] : []],
   ["/privacy/", []],
   ...projects.map((p) => [`/work/${p.id}/`, [p.cover, ...projectImages(p)]]),
 ];

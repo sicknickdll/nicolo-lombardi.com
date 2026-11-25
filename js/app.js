@@ -10,7 +10,7 @@ import { eyeTracking } from "./eye.js";
 import { isMenuOpen, setNavigator } from "./menu.js";
 import { smoothScroll } from "./smooth.js";
 import { bindReveal } from "./reveal.js";
-import { work, homeMarkup, projectMarkup, projectURL, aboutMarkup, archiveMarkup, collectionMarkup, archiveCollections, archiveExperiences, tarotMarkup, aquariumMarkup } from "./views.js";
+import { work, homeMarkup, projectMarkup, projectURL, aboutMarkup, archiveMarkup, collectionMarkup, archiveCollections, archiveExperiences, tarotMarkup, aquariumMarkup, iseeMarkup } from "./views.js";
 const main = document.querySelector("#main");
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
 let cleanup = () => {};
@@ -132,6 +132,21 @@ function showAquarium() {
     off();
   };
 }
+// /archive/i-see-u/: I SEE U. Its scripts and the list of paintings load only here.
+function showIsee() {
+  main.innerHTML = iseeMarkup();
+  let off = () => {},
+    gone = false;
+  import("./isee/isee.js")
+    .then((m) => {
+      if (!gone) off = m.mountIsee(main.querySelector(".isee"));
+    })
+    .catch(() => main.querySelector(".isee")?.classList.add("is-failed"));
+  cleanup = () => {
+    gone = true;
+    off();
+  };
+}
 function showAbout() {
   main.innerHTML = aboutMarkup();
   const stage = main.querySelector(".about-head");
@@ -165,6 +180,7 @@ function render() {
   else if (path === "/archive/") showArchive();
   else if (path === "/archive/tarot/" || path === "/archive/tarot") showTarot();
   else if (path === "/archive/aquarium/" || path === "/archive/aquarium") showAquarium();
+  else if (path === "/archive/i-see-u/" || path === "/archive/i-see-u") showIsee();
   else if (collection) showCollection(collection[1]);
   else if (project) showProject(project[1]);
   else showHome();

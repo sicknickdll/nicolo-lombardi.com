@@ -213,6 +213,9 @@ const archiveObject = {
   // the aquarium: a tiny ASCII tank; on hover its fish swims across
   aquarium: () =>
     `<span class="daq" aria-hidden="true"><span class="daq-w">~-~~-~~-~</span><span class="daq-f">&gt;&lt;(((°&gt;</span><span class="daq-b">°</span><span class="daq-s">.:,.:.,:</span></span>`,
+  // I see u: a small framed portrait whose sitter glances at you on hover
+  "i-see-u": () =>
+    `<span class="dsee" aria-hidden="true"><img src="/assets/archive/isee/icon.webp" alt="" draggable="false"><img class="dsee-b" src="/assets/archive/isee/icon-look.webp" alt="" draggable="false"></span>`,
 };
 // One "Projects" folder, bottom right: it opens a window with every project of the portfolio.
 const projectsFolder = () =>
@@ -305,4 +308,19 @@ export function aquariumMarkup() {
 <div class="aq-tip" hidden></div>
 <p class="sr-only aq-live" aria-live="polite"></p>
 <noscript><p class="aq-noscript">The water needs JavaScript.</p></noscript></section>`.replace(/\n/g, "");
+}
+
+// /archive/i-see-u/: I SEE U (js/isee/isee.js). A white page; hold the cursor still and a painting
+// covers it, its sitter looking at the cursor; the caption (bottom right) says what it is and
+// where it hangs. The list below is for search engines and screen readers.
+export function iseeMarkup() {
+  const x = experiences.find((e) => e.id === "i-see-u");
+  return `<section class="isee" aria-labelledby="is-h1"><header class="sr-only"><nav aria-label="Breadcrumb"><a href="/archive/">Archive</a></nav><h1 id="is-h1">I see u</h1><p>${esc(x.blurb)}</p><p>Hold the mouse still, or tap the screen, and a painting appears whose sitter looks at that spot. Move to make it go away. Enter or Space asks for one with the keyboard, Escape clears it.</p></header>
+<div class="is-stage" role="application" aria-label="Hold the cursor still"><img class="is-img" alt="" draggable="false" decoding="async"></div>
+<div class="is-empty" aria-hidden="true"><p class="is-name caslon">I see u</p><p class="is-hint">Hold the cursor still.</p></div>
+<span class="is-load" aria-hidden="true"></span><span class="is-dot" aria-hidden="true"></span>
+<nav class="is-top" aria-label="I see u"><a class="is-back" href="/archive/">Archive</a><span aria-hidden="true">/</span><span>I see u</span></nav>
+<aside class="is-cite" aria-label="About this painting" hidden><p class="is-title caslon"></p><p class="is-artist"></p><p class="is-meta"></p><p class="is-museum"></p><a class="is-link" target="_blank" rel="noopener noreferrer">See it at the museum ↗</a></aside>
+<p class="sr-only is-live" aria-live="polite"></p>
+<noscript><p class="is-noscript">The paintings only turn their heads with JavaScript.</p></noscript></section>`.replace(/\n/g, "");
 }
