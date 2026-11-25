@@ -58,3 +58,19 @@ test("a baby has ink from both parents", () => {
   const kid = blend(a, b, () => 0.5);
   assert.ok(kid.d.some((v, i) => v && i % kid.w < 20) && kid.d.some((v, i) => v && i % kid.w >= 20));
 });
+
+test("shading: detailed glyphs, the lit top brighter than the bottom", async () => {
+  const { DETAIL } = await import("../js/aquarium/ascii.js");
+  const bm = paint(blank(), (x, y) => (x - 80) ** 2 / 60 ** 2 + (y - 48) ** 2 / 36 ** 2 < 1);
+  const r = rasterize(bm, 30, 1.9, { detail: true });
+  const all = DETAIL.join("") + "-|/\\_";
+  assert.ok(r.chars.every((c) => c === " " || all.includes(c)));
+  const rowLum = (row) => {
+    let s = 0,
+      n = 0;
+    for (let c = 0; c < r.cols; c++) if (r.chars[row * r.cols + c] !== " ") (s += r.lum[row * r.cols + c]), n++;
+    return s / n;
+  };
+  const filled = [...Array(r.rows).keys()].filter((row) => rowLum(row) > 0);
+  assert.ok(rowLum(filled[1]) > rowLum(filled.at(-2)));
+});

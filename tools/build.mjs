@@ -51,7 +51,10 @@ const built = await bundle({
   metafile: true,
   logLevel: "warning",
 });
-const appFile = Object.keys(built.metafile.outputs).find((f) => f.endsWith(".js") && built.metafile.outputs[f].entryPoint);
+// The page script is the output whose entry point is js/app.js itself: lazily imported pieces
+// (the tarot, the aquarium, …) also report an entryPoint, so match it by name.
+const appFile = Object.keys(built.metafile.outputs).find((f) => f.endsWith(".js") && built.metafile.outputs[f].entryPoint === "js/app.js");
+if (!appFile) throw new Error("build: no output for js/app.js");
 const css = (await transform(readFileSync(join(root, "style.css"), "utf8"), { loader: "css", minify: true })).code;
 const cssName = `style-${createHash("sha256").update(css).digest("hex").slice(0, 8).toUpperCase()}.css`;
 writeFileSync(join(root, "dist", cssName), css);

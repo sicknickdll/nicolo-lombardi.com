@@ -3,6 +3,62 @@
 // Pure: no DOM. Used for the pad, the fish, the plants, the babies.
 
 export const RAMP = " .:-=+*#%@";
+// Detailed ramp (after DEVAULT's "Detailed" style): density groups, letters included; the glyph in a
+// group is picked by a stable hash so bodies read as text-like texture.
+export const DETAIL = [".'`,", ":;~-", "+=<>!i", "*?7tjc", "ovxzrnu", "aeCLJYU", "dbpqhkZX", "O0QmwG", "#%AHKN", "&8B$", "MW@"];
+const hash = (x, y, z = 0) => {
+  const s = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719) * 43758.5453;
+  return s - Math.floor(s);
+};
+export const detailGlyph = (l, x, y, z = 0) => {
+  const g = DETAIL[Math.max(0, Math.min(DETAIL.length - 1, Math.floor(l * DETAIL.length)))];
+  return g[(hash(x, y, z) * g.length) | 0];
+};
+
+// Light on the drawing as if it were a soft relief: blur the ink into a dome, light it from the
+// top left, keep the drawn tones. Cached on the bitmap.
+export function shadeField(bm) {
+  if (bm.shade) return bm.shade;
+  const { w, h, d } = bm,
+    n = w * h,
+    r = Math.max(2, Math.round(Math.min(w, h) * 0.08));
+  let a = Float32Array.from(d, (v) => (v > 20 ? 1 : 0)),
+    b = new Float32Array(n);
+  for (let pass = 0; pass < 3; pass++) {
+    for (let y = 0; y < h; y++) {
+      let acc = 0;
+      for (let x = -r; x < w; x++) {
+        if (x + r < w) acc += a[y * w + x + r];
+        if (x - r - 1 >= 0) acc -= a[y * w + x - r - 1];
+        if (x >= 0) b[y * w + x] = acc / (2 * r + 1);
+      }
+    }
+    for (let x = 0; x < w; x++) {
+      let acc = 0;
+      for (let y = -r; y < h; y++) {
+        if (y + r < h) acc += b[(y + r) * w + x];
+        if (y - r - 1 >= 0) acc -= b[(y - r - 1) * w + x];
+        if (y >= 0) a[y * w + x] = acc / (2 * r + 1);
+      }
+    }
+  }
+  const out = new Float32Array(n),
+    k = r * 1.6,
+    L = [-0.42, -0.72, 0.55],
+    ln = Math.hypot(...L);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      if (d[i] <= 20) continue;
+      const gx = (a[i + (x < w - 1 ? 1 : 0)] - a[i - (x > 0 ? 1 : 0)]) * k,
+        gy = (a[i + (y < h - 1 ? w : 0)] - a[i - (y > 0 ? w : 0)]) * k,
+        nl = Math.hypot(gx, gy, 1),
+        dot = Math.max(0, (-gx * L[0] - gy * L[1] + L[2]) / (nl * ln));
+      const v = (0.18 + 0.5 * dot + 0.42 * a[i] + 0.35 * dot ** 14) * (0.45 + 0.55 * (d[i] / 255));
+      out[i] = v > 1 ? 1 : v;
+    }
+  return (bm.shade = out);
+}
 export const PAD_W = 160;
 export const PAD_H = 96;
 const SX = 4,
@@ -10,9 +66,10 @@ const SX = 4,
 
 export const blank = (w = PAD_W, h = PAD_H) => ({ w, h, d: new Uint8Array(w * h) });
 
-// opts: flip (mirror), wag (tail swing, px), lean (rows shear for plants: unused here)
+// opts: flip (mirror), wag (tail swing, px), detail (shaded, letter glyphs), seed (glyph choice)
 export function rasterize(bm, cols, aspect = 1.9, opts = {}) {
-  const { flip = false, wag = 0 } = opts;
+  const { flip = false, wag = 0, detail = false, seed = 0 } = opts;
+  const sh = detail ? shadeField(bm) : null;
   const cw = bm.w / cols,
     chh = cw * aspect,
     rows = Math.max(1, Math.ceil(bm.h / chh));
@@ -26,7 +83,8 @@ export function rasterize(bm, cols, aspect = 1.9, opts = {}) {
         my = 0,
         mxx = 0,
         myy = 0,
-        mxy = 0;
+        mxy = 0,
+        lit = 0;
       for (let j = 0; j < SY; j++)
         for (let i = 0; i < SX; i++) {
           const u = (i + 0.5) / SX,
@@ -43,6 +101,7 @@ export function rasterize(bm, cols, aspect = 1.9, opts = {}) {
             py = sy | 0;
           const val = px >= 0 && py >= 0 && px < bm.w && py < bm.h ? bm.d[py * bm.w + px] / 255 : 0;
           if (!val) continue;
+          if (sh) lit += sh[py * bm.w + px];
           m += val;
           mx += val * u;
           my += val * v;
@@ -52,7 +111,7 @@ export function rasterize(bm, cols, aspect = 1.9, opts = {}) {
         }
       const k = r * cols + c,
         cov = m / n;
-      lum[k] = cov;
+      lum[k] = sh ? Math.min(1, lit / n + 0.05) : cov;
       if (cov < 0.07) {
         chars[k] = " ";
         continue;
@@ -69,7 +128,8 @@ export function rasterize(bm, cols, aspect = 1.9, opts = {}) {
         const deg = (Math.atan2(2 * cxy, cxx - cyy) * 90) / Math.PI; // principal axis, y down
         const a = Math.abs(deg);
         chars[k] = a < 24 ? (ay > aspect * 0.62 ? "_" : "-") : a > 66 ? "|" : deg > 0 ? "\\" : "/";
-      } else chars[k] = RAMP[Math.min(RAMP.length - 1, 1 + Math.floor(cov * (RAMP.length - 1)))];
+      } else if (sh) chars[k] = detailGlyph(Math.min(1, lum[k] ** 1.3 * 1.05), c, r, seed);
+      else chars[k] = RAMP[Math.min(RAMP.length - 1, 1 + Math.floor(cov * (RAMP.length - 1)))];
     }
   return { cols, rows, chars, lum };
 }

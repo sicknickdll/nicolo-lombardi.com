@@ -252,6 +252,14 @@ export function bindDesktop(main) {
     setTimeout(() => go(href), reduce ? 0 : 260);
   };
   const openIcon = (icon) => {
+    // the aquarium: the page floods with ASCII water first (js/aquarium/flood.js)
+    if (icon.dataset.id === "aquarium" && !reduce) {
+      const r = icon.querySelector(".desk-glyph").getBoundingClientRect(),
+        href = icon.dataset.href;
+      return import("./aquarium/flood.js")
+        .then((m) => m.flood(r.left + r.width / 2, r.top + r.height / 2, () => go(href)))
+        .catch(() => leave(href));
+    }
     if (icon.dataset.href) return leave(icon.dataset.href); // a collection: straight to its page
     if (icon.dataset.open === "mail" && touch.matches) return (location.href = icon.href); // the phone's mail app
     open(icon.dataset.open);
