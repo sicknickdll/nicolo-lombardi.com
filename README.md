@@ -18,6 +18,8 @@ js/archive.js       archive collection page: infinite pannable grid, search bar,
 js/card3d.js        the 3D card (tilt + glare, drag to turn it over)
 js/tarot/           /archive/tarot/: THE TAROT READER, an interactive reading (see "Tarot Reader" below)
 js/aquarium/        /archive/aquarium/: the ASCII AQUARIUM (see "ASCII Aquarium" below)
+js/isee/            /archive/i-see-u/: I SEE U, paintings that look at the cursor (see "I see u" below)
+tools/isee/         collects the I see u paintings from the museums and finds where each one looks
 tests/              npm test: the tarot rules and reading engine
 js/head.js          About page: 3D head (follows the cursor, rotates on drag / two-finger scroll, reacts to taps)
 js/vendor/three.js  the parts of three.js the head needs   (npm install && npm run vendor:three)
@@ -52,6 +54,7 @@ Pages and addresses:
 | `/archive/la-barra/` | LA BARRA: diagonal infinite pannable grid of the cut-outs on black, search bar, 3D viewer (editorial layout) (`#<piece id>` opens one) |
 | `/archive/tarot/` | THE TAROT READER: a candlelit table, a fortune teller in the dark, a guided five-card reading (the "tarot" folder on the Archive desktop) |
 | `/archive/aquarium/` | ASCII AQUARIUM: draw a fish, release it, feed it (the tiny tank on the Archive desktop) |
+| `/archive/i-see-u/` | I SEE U: hold the cursor still and a painting looks at it (the little framed portrait on the Archive desktop) |
 
 Old links from the previous site (`/#film`, `/#project/lexus`) and the old `/film/` and
 `/visuals/` pages redirect to the new addresses.
@@ -179,7 +182,9 @@ js/tarot/outline.js     GENERATED card silhouette (die-cut notch) for the 3D car
 
 ## Tests
 
-`npm test` runs the tarot engine tests (`tests/tarot.test.mjs`, Node's built-in test runner).
+`npm test` runs the tarot engine tests (`tests/tarot.test.mjs`), the aquarium's and I see u's
+(`tests/isee.test.mjs`: the chosen painting covers the screen and its gaze hits the cursor, and the
+collection has a good match almost everywhere on a laptop and a phone), with Node's built-in test runner.
 
 ## SEO checklist (after the site is live)
 
@@ -284,3 +289,38 @@ js/aquarium/flood.js  the Archive → aquarium transition
 js/aquarium/art.js    ← TEMPLATES, DECOR, LIGHTS, TINTS, prices
 js/aquarium/audio.js  synthesised sounds
 ```
+
+## I see u (`/archive/i-see-u/`)
+
+After Pointer Pointer (pointerpointer.com), with paintings instead of photos and gazes instead of
+fingers. A white page; hold the cursor still and a painting fills the screen, its sitter looking at
+the cursor; move and it's gone. On a phone, tap. The label bottom right says what it is (title,
+painter, date, medium, museum and inventory number) with a link to the museum's page.
+
+- **The paintings**: public-domain works from The Cleveland Museum of Art (CC0) and The Metropolitan
+  Museum of Art (Open Access), scanned whole: every painting with an image (about 5,000 in Cleveland's
+  painting collection and the Met's European paintings and American Wing), a face finder run on each,
+  and the clear looks kept after checking them by eye.
+- **Where they look**: MediaPipe's face landmarks give the eyes and the head's pose; the gaze on the
+  picture is where the head faces plus how far the irises sit off the middle of the eyes.
+- **Matching** (`js/isee/match.js`): anywhere along the gaze is "looked at", so each painting is tried
+  at cover size and a little larger, slid within what still covers the screen, to put its line of
+  sight through the cursor with the face on screen. The best few (by how many degrees off they are)
+  are drawn at random, skipping the latest shown.
+
+To add paintings or redo the selection (Python with `pip install mediapipe pillow numpy requests`;
+`work/` is any scratch folder, it is not committed):
+
+```
+python3 tools/isee/fetch_meta.py work/meta.json             # 1. list the museums' paintings
+python3 tools/isee/detect.py work/meta.json work/faces.json face_landmarker.task   # 2. faces and gazes
+python3 tools/isee/select.py work/faces.json work/candidates.json 0.42           # 3. the clear looks
+python3 tools/isee/sheet.py work/candidates.json work/sheets                       #    contact sheets to check
+python3 tools/isee/export.py work/candidates.json            # 4. images + js/isee/paintings.js
+node tools/build.mjs
+```
+
+`tools/isee/review.json` is the check by eye: `keep` lists the paintings whose look is right (when
+it is there, only those are kept) and `angle` corrects a direction in degrees (0 = right, 90 = down).
+The face model is at storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task.
+`tools/isee/icon.py` makes the desktop icon: a sitter looking away, and on hover one looking at you.

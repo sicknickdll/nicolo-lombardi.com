@@ -35,6 +35,14 @@ export const experiences = [
     blurb: "Draw a fish, drop it in, feed it. An ASCII tank where drawn fish swim, eat, grow, quarrel, fall in love and lay eggs.",
     icon: [],
   },
+  {
+    id: "i-see-u",
+    title: "I SEE U",
+    label: "i see u",
+    blurb:
+      "Hold your cursor still and someone from the history of painting turns to look at it. Hundreds of public-domain portraits whose sitters look away, each with its title, painter and museum.",
+    icon: [],
+  },
 ];
 
 // Projects named on the Archive landing that have no page yet: their links lead to the 404 page.
