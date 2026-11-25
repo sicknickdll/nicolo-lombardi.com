@@ -298,15 +298,18 @@ the cursor; move and it's gone. On a phone, tap. The label bottom right says wha
 painter, date, medium, museum and inventory number) with a link to the museum's page.
 
 - **The paintings**: public-domain works from The Cleveland Museum of Art (CC0) and The Metropolitan
-  Museum of Art (Open Access), scanned whole: every painting with an image (about 5,000 in Cleveland's
+  Museum of Art (Open Access), scanned whole: every painting with an image (about 6,900 from Cleveland's
   painting collection and the Met's European paintings and American Wing), a face finder run on each,
   and the clear looks kept after checking them by eye.
 - **Where they look**: MediaPipe's face landmarks give the eyes and the head's pose; the gaze on the
   picture is where the head faces plus how far the irises sit off the middle of the eyes.
-- **Matching** (`js/isee/match.js`): anywhere along the gaze is "looked at", so each painting is tried
-  at cover size and a little larger, slid within what still covers the screen, to put its line of
-  sight through the cursor with the face on screen. The best few (by how many degrees off they are)
-  are drawn at random, skipping the latest shown.
+- **Matching** (`js/isee/match.js`): anywhere along the gaze is "looked at", but a gaze is only ever
+  a few degrees exact, so the eyes are kept close to the cursor (about 2½ to 8 eye-widths, ideally
+  4½). Each painting is slid within what still covers the screen to put its line of sight through
+  the cursor; when the cursor is too far from where its eyes can sit, the painting is enlarged
+  (cropped) until they come close, but never past 1.5 screen px per image px (`MAX_UP`), so the paint
+  stays sharp. The best few are drawn at random, skipping the latest shown.
+- **Images**: 2400 px on the long side (WebP, quality 62), so there is room to enlarge.
 
 To add paintings or redo the selection (Python with `pip install mediapipe pillow numpy requests`;
 `work/` is any scratch folder, it is not committed):
@@ -320,7 +323,8 @@ python3 tools/isee/export.py work/candidates.json            # 4. images + js/is
 node tools/build.mjs
 ```
 
-`tools/isee/review.json` is the check by eye: `keep` lists the paintings whose look is right (when
+`tools/isee/review.json` is the check by eye, made on close-ups of each face (the detector tends to
+read downward looks too flat): `keep` lists the paintings whose look is right (when
 it is there, only those are kept) and `angle` corrects a direction in degrees (0 = right, 90 = down).
 The face model is at storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task.
 `tools/isee/icon.py` makes the desktop icon: a sitter looking away, and on hover one looking at you.
