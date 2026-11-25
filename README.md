@@ -254,13 +254,16 @@ white-to-lavender glyphs, Geist Mono, hairlines, square corners). Inspired by Dr
 - **Depth**: blocky rock terraces at three distances (far, mid, near) fade into haze, with coral
   domes and seaweed on the ledges and marine snow under the surface; the cursor slides them
   (parallax). Far fish are smaller, dimmer and swim behind the mid rocks.
-- **Glyphs**: each drawing is shaded like a soft relief lit from the top left, then written with a
-  wide ramp of letters (after DEVAULT's "Detailed" style); rocks use plain strokes so fish stand out.
+- **Fish**: DEVAULT's letter tiles: each cell a colour tile with a darker glyph, thin seams, a few
+  bright glyphs sprinkled. The tile grid stays put; each fish is drawn smoothly underneath (a wave
+  along the body that grows toward the tail, slow turns through edge-on, a lean into climbs and
+  dives, burst-and-glide), so it glides through the grid. Drawings are shaded as a soft relief lit
+  from the top left. Plants are written in letters; rocks in plain strokes.
 - **Arriving**: clicking the aquarium on the Archive desktop floods the page with glyph water from
   the icon; the tank then decodes out of scrambled characters. Slow machines drop the glow.
 
-- **Draw**: paint on the pad (fish face right, plants grow up); it turns into ASCII as you draw.
-  Start from a template or a blank pad. Release: fish splash in; plants go where you click on the sand.
+- **Draw**: paint in colour on the pad (fish face right, plants grow up); it turns into tiles as
+  you draw. Start from a template (the goldfish is after DEVAULT's tile goldfish) or a blank pad. Release: fish splash in; plants go where you click on the sand.
 - **Feed**: click the water. Fish chase flakes, eat, grow; hungry fish slow down and dim.
 - **Touch**: click a fish = poke; drag a fish, plant or decor = move it; drop on `[ × ]` = remove.
   Hold the cursor still and fish come to look; sweep it fast and they scatter. Plants bend away.
@@ -272,9 +275,10 @@ white-to-lavender glyphs, Geist Mono, hairlines, square corners). Inspired by Dr
 - Keys: D draw, F feed, M sound, Esc close. The tank is kept on the device (localStorage `nl-aquarium`).
 
 ```
-js/aquarium/ascii.js  drawing → ASCII (stroke glyphs by direction, shaded letter ramp), crop, blend, storage. Pure, tested.
+js/aquarium/ascii.js  drawing → ASCII (stroke glyphs, shaded letter ramp); colour drawings: palette, crop, blend, 4-bit storage. Pure, tested.
 js/aquarium/sim.js    the life: swimming, food, bonds, quarrels, eggs, scales, bubbles
 js/aquarium/tank.js   the glyph renderer (layers + parallax), input, the draw pad, the decor panel, saving
+js/aquarium/tiles.js  the fish: shaded look, body wave / turn / tilt, letter tiles, hit test
 js/aquarium/scene.js  the backdrop: rock terraces, coral, seaweed, sand floor, painted once per size / light
 js/aquarium/flood.js  the Archive → aquarium transition
 js/aquarium/art.js    ← TEMPLATES, DECOR, LIGHTS, TINTS, prices

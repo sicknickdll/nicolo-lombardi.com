@@ -199,3 +199,118 @@ export function decode({ w, h, b }) {
   for (let i = 0; i < w * h; i++) bm.d[i] = Math.round((((s.charCodeAt(i >> 2) >> ((i & 3) * 2)) & 3) / 3) * 255);
   return bm;
 }
+
+// ── colour drawings ──
+// The pad paints in a fixed palette; a drawing is RGBA. Saved as 4 bits per pixel: 0 = empty,
+// 1… = PAL index (the shading is added when the fish is drawn, not stored).
+export const PAL = ["#f6f3ee", "#ffd9b0", "#ff7a1a", "#ff9b8e", "#f2c27c", "#cbbcff", "#8f6ff0", "#9fe8c8", "#6fb6ff", "#e8486b", "#7a7f8c", "#141016"];
+const PALRGB = PAL.map((h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)));
+export const blankImg = (w = PAD_W, h = PAD_H) => ({ w, h, px: new Uint8ClampedArray(w * h * 4) });
+const ON = 110; // alpha that counts as ink
+
+export function nearestPal(r, g, b) {
+  let best = 0,
+    bd = Infinity;
+  PALRGB.forEach(([R, G, B], i) => {
+    const d = (r - R) ** 2 + (g - G) ** 2 + (b - B) ** 2;
+    if (d < bd) (bd = d), (best = i);
+  });
+  return best;
+}
+// Ink as intensity (for crop, plants, shading): solid where drawn, the tone from its brightness.
+export function imgToBm(img) {
+  const bm = blank(img.w, img.h);
+  for (let i = 0; i < bm.d.length; i++) {
+    const p = img.px,
+      a = p[i * 4 + 3];
+    if (a < ON) continue;
+    const l = (p[i * 4] * 0.3 + p[i * 4 + 1] * 0.59 + p[i * 4 + 2] * 0.11) / 255;
+    bm.d[i] = Math.round(255 * (0.45 + 0.55 * l));
+  }
+  return bm;
+}
+export function cropImg(img, pad = 2) {
+  let x0 = img.w,
+    y0 = img.h,
+    x1 = -1,
+    y1 = -1;
+  for (let y = 0; y < img.h; y++)
+    for (let x = 0; x < img.w; x++)
+      if (img.px[(y * img.w + x) * 4 + 3] >= ON) {
+        if (x < x0) x0 = x;
+        if (x > x1) x1 = x;
+        if (y < y0) y0 = y;
+        if (y > y1) y1 = y;
+      }
+  if (x1 < 0) return null;
+  x0 = Math.max(0, x0 - pad);
+  y0 = Math.max(0, y0 - pad);
+  x1 = Math.min(img.w - 1, x1 + pad);
+  y1 = Math.min(img.h - 1, y1 + pad);
+  const out = blankImg(x1 - x0 + 1, y1 - y0 + 1);
+  for (let y = 0; y < out.h; y++) out.px.set(img.px.subarray(((y + y0) * img.w + x0) * 4, ((y + y0) * img.w + x0 + out.w) * 4), y * out.w * 4);
+  return out;
+}
+export function resizeImg(img, w, h) {
+  const out = blankImg(w, h);
+  for (let y = 0; y < h; y++) {
+    const sy = Math.min(img.h - 1, Math.floor(((y + 0.5) * img.h) / h));
+    for (let x = 0; x < w; x++) {
+      const sx = Math.min(img.w - 1, Math.floor(((x + 0.5) * img.w) / w)),
+        s = (sy * img.w + sx) * 4,
+        d = (y * w + x) * 4;
+      for (let k = 0; k < 4; k++) out.px[d + k] = img.px[s + k];
+    }
+  }
+  return out;
+}
+// Baby: the front of one parent, the tail of the other; where only one has ink, it shows.
+export function blendImg(a, b, rnd = Math.random) {
+  const w = Math.round((a.w + b.w) / 2),
+    h = Math.round((a.h + b.h) / 2),
+    A = resizeImg(a, w, h),
+    B = resizeImg(b, w, h),
+    out = blankImg(w, h),
+    split = 0.35 + rnd() * 0.3;
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4,
+        [P, Q] = x / w < split ? [A, B] : [B, A],
+        src = P.px[i + 3] >= ON ? P : Q.px[i + 3] >= ON ? Q : null;
+      if (src) for (let k = 0; k < 4; k++) out.px[i + k] = src.px[i + k];
+    }
+  return out;
+}
+export function encodeImg(img) {
+  const bytes = new Uint8Array(Math.ceil((img.w * img.h) / 2));
+  for (let i = 0; i < img.w * img.h; i++) {
+    const p = img.px,
+      v = p[i * 4 + 3] >= ON ? 1 + nearestPal(p[i * 4], p[i * 4 + 1], p[i * 4 + 2]) : 0;
+    bytes[i >> 1] |= v << ((i & 1) * 4);
+  }
+  let s = "";
+  for (const b of bytes) s += String.fromCharCode(b);
+  return { w: img.w, h: img.h, c: btoa(s) };
+}
+export function decodeImg({ w, h, c }) {
+  const s = atob(c),
+    img = blankImg(w, h);
+  for (let i = 0; i < w * h; i++) {
+    const v = (s.charCodeAt(i >> 1) >> ((i & 1) * 4)) & 15;
+    if (!v) continue;
+    const [r, g, b] = PALRGB[v - 1];
+    img.px.set([r, g, b, 255], i * 4);
+  }
+  return img;
+}
+// An old grey drawing (2-bit tones + one tint) in colour.
+export function bmToImg(bm, tint) {
+  const img = blankImg(bm.w, bm.h),
+    t = [1, 3, 5].map((i) => parseInt(tint.slice(i, i + 2), 16));
+  for (let i = 0; i < bm.d.length; i++) {
+    const v = bm.d[i] / 255;
+    if (v < 0.2) continue;
+    img.px.set([t[0] * (0.4 + 0.6 * v), t[1] * (0.4 + 0.6 * v), t[2] * (0.4 + 0.6 * v), 255], i * 4);
+  }
+  return img;
+}

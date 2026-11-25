@@ -74,3 +74,21 @@ test("shading: detailed glyphs, the lit top brighter than the bottom", async () 
   const filled = [...Array(r.rows).keys()].filter((row) => rowLum(row) > 0);
   assert.ok(rowLum(filled[1]) > rowLum(filled.at(-2)));
 });
+
+test("colour drawings: crop, blend, and storage to the palette", async () => {
+  const { blankImg, cropImg, encodeImg, decodeImg, blendImg, imgToBm, PAL } = await import("../js/aquarium/ascii.js");
+  const rgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const img = blankImg(20, 10);
+  for (let y = 2; y < 6; y++) for (let x = 4; x < 12; x++) img.px.set([...rgb(x < 8 ? PAL[2] : PAL[11]), 255], (y * 20 + x) * 4);
+  const c = cropImg(img, 0);
+  assert.equal(c.w, 8);
+  assert.equal(c.h, 4);
+  const back = decodeImg(JSON.parse(JSON.stringify(encodeImg(c))));
+  assert.deepEqual([...back.px], [...c.px]);
+  assert.ok(imgToBm(c).d.every((v) => v > 0));
+  const other = blankImg(8, 4);
+  other.px.set([...rgb(PAL[7]), 255], 0);
+  const kid = blendImg(c, other, () => 0.5);
+  assert.equal(kid.w, 8);
+  assert.ok(kid.px[3] === 255);
+});
