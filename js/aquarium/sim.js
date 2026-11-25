@@ -24,7 +24,7 @@ export function makeFish(src, o = {}) {
     size: o.size ?? 1,
     hunger: o.hunger ?? 0.35,
     p: o.p ?? Math.random(),
-    z: o.z ?? rand(0.72, 1),
+    z: o.z ?? rand(0.45, 1),
     x: o.x ?? 0,
     y: o.y ?? 0,
     vx: 0,
@@ -45,14 +45,15 @@ export function makeFish(src, o = {}) {
 }
 
 export function fishSprite(f, cw, chh, k) {
-  const cols = Math.max(5, Math.round(((f.src.w / 160) * 300 * f.size * k) / cw));
+  // farther fish are smaller (z: 0.45 far … 1 near)
+  const cols = Math.max(8, Math.round(((f.src.w / 160) * 260 * f.size * (0.55 + 0.45 * f.z) * k) / cw));
   if (f.spr && f.spr.cols === cols && f.spr.cw === cw && f.spr.chh === chh) return f.spr;
   const aspect = chh / cw,
     amp = f.src.h * 0.07,
     frames = [];
   for (let i = 0; i < 4; i++) {
     const wag = amp * Math.sin((i * Math.PI) / 2);
-    frames.push([rasterize(f.bm, cols, aspect, { wag }), rasterize(f.bm, cols, aspect, { wag, flip: true })]);
+    frames.push([rasterize(f.bm, cols, aspect, { wag, detail: true, seed: f.p * 97 }), rasterize(f.bm, cols, aspect, { wag, flip: true, detail: true, seed: f.p * 97 })]);
   }
   return (f.spr = { cols, rows: frames[0][0].rows, frames, cw, chh, w: cols * cw, h: frames[0][0].rows * chh });
 }
@@ -60,7 +61,7 @@ export function fishSprite(f, cw, chh, k) {
 export function staticSprite(o, cw, chh, k, width = 150) {
   const cols = Math.max(3, Math.round(((o.src.w / 160) * width * k) / cw));
   if (o.spr && o.spr.cols === cols && o.spr.cw === cw && o.spr.chh === chh) return o.spr;
-  const r = rasterize(o.src, cols, chh / cw);
+  const r = rasterize(o.src, cols, chh / cw, { detail: true, seed: 3 });
   return (o.spr = { ...r, cw, chh, w: cols * cw, h: r.rows * chh });
 }
 
@@ -246,11 +247,12 @@ export function step(w, dt, ptr) {
       p.done?.();
     }
   }
-  while (w.snow.length < Math.min(90, (w.W * w.H) / 14000)) w.snow.push({ x: rand(0, w.W), y: rand(w.surf, w.H), vy: rand(3, 9), ph: rand(0, 6) });
+  // marine snow, thickest under the surface
+  while (w.snow.length < Math.min(260, (w.W * w.H) / 5000)) w.snow.push({ x: rand(0, w.W), y: w.surf + (w.H - w.surf) * Math.random() ** 1.8, vy: rand(3, 9), ph: rand(0, 6) });
   for (const s of w.snow) {
     s.y += s.vy * dt;
     s.x += Math.sin(w.t * 0.4 + s.ph) * 4 * dt;
-    if (s.y > w.sandY(s.x)) (s.y = w.surf + w.ch), (s.x = rand(0, w.W));
+    if (s.y > w.sandY(s.x) || (s.y > w.surf + (w.H - w.surf) * 0.55 && Math.random() < dt * 0.15)) (s.y = w.surf + w.ch * rand(1, 8)), (s.x = rand(0, w.W));
   }
   // ── plants and decor sway away from the cursor and passing fish ──
   for (const p of w.plants) {

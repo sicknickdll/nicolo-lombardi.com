@@ -251,6 +251,14 @@ Same folder, no changes needed:
 A tank drawn in glyphs, after the "Devault" preset of DEVAULT's ASCII generator (near-black,
 white-to-lavender glyphs, Geist Mono, hairlines, square corners). Inspired by Drawquarium.
 
+- **Depth**: blocky rock terraces at three distances (far, mid, near) fade into haze, with coral
+  domes and seaweed on the ledges and marine snow under the surface; the cursor slides them
+  (parallax). Far fish are smaller, dimmer and swim behind the mid rocks.
+- **Glyphs**: each drawing is shaded like a soft relief lit from the top left, then written with a
+  wide ramp of letters (after DEVAULT's "Detailed" style); rocks use plain strokes so fish stand out.
+- **Arriving**: clicking the aquarium on the Archive desktop floods the page with glyph water from
+  the icon; the tank then decodes out of scrambled characters. Slow machines drop the glow.
+
 - **Draw**: paint on the pad (fish face right, plants grow up); it turns into ASCII as you draw.
   Start from a template or a blank pad. Release: fish splash in; plants go where you click on the sand.
 - **Feed**: click the water. Fish chase flakes, eat, grow; hungry fish slow down and dim.
@@ -264,9 +272,11 @@ white-to-lavender glyphs, Geist Mono, hairlines, square corners). Inspired by Dr
 - Keys: D draw, F feed, M sound, Esc close. The tank is kept on the device (localStorage `nl-aquarium`).
 
 ```
-js/aquarium/ascii.js  drawing → ASCII (stroke glyphs by direction, density ramp), crop, blend, storage. Pure, tested.
+js/aquarium/ascii.js  drawing → ASCII (stroke glyphs by direction, shaded letter ramp), crop, blend, storage. Pure, tested.
 js/aquarium/sim.js    the life: swimming, food, bonds, quarrels, eggs, scales, bubbles
-js/aquarium/tank.js   the glyph renderer, input, the draw pad, the decor panel, saving
+js/aquarium/tank.js   the glyph renderer (layers + parallax), input, the draw pad, the decor panel, saving
+js/aquarium/scene.js  the backdrop: rock terraces, coral, seaweed, sand floor, painted once per size / light
+js/aquarium/flood.js  the Archive → aquarium transition
 js/aquarium/art.js    ← TEMPLATES, DECOR, LIGHTS, TINTS, prices
 js/aquarium/audio.js  synthesised sounds
 ```

@@ -115,7 +115,7 @@ export function bindDesktop(main) {
       return {
         title: "readme.txt",
         w: 380,
-        body: `<div class="dw-doc"><p class="dw-kicker">Archive · Nicoló Lombardi</p><h2 class="caslon">Hello, welcome in.</h2><p>This is my personal archive and playground: things I find and keep, and things I make for fun. Feel free to explore.</p><p class="dw-hint">${touch.matches ? "Tap a folder or an object to open it." : "Hover a folder to peek inside, click to open it."}</p></div>`,
+        body: `<div class="dw-doc"><h2 class="caslon">Hello, welcome in.</h2><p>This is my personal archive and playground: things I find and keep, and things I make for fun. Feel free to explore.</p>${touch.matches ? `<p class="dw-hint">Tap a folder or an object to open it.</p>` : ""}</div>`,
       };
     if (id === "projects") return { title: "projects", w: 460, body: projectsWindow() };
     if (id === "leave")
@@ -252,6 +252,14 @@ export function bindDesktop(main) {
     setTimeout(() => go(href), reduce ? 0 : 260);
   };
   const openIcon = (icon) => {
+    // the aquarium: the page floods with ASCII water first (js/aquarium/flood.js)
+    if (icon.dataset.id === "aquarium" && !reduce) {
+      const r = icon.querySelector(".desk-glyph").getBoundingClientRect(),
+        href = icon.dataset.href;
+      return import("./aquarium/flood.js")
+        .then((m) => m.flood(r.left + r.width / 2, r.top + r.height / 2, () => go(href)))
+        .catch(() => leave(href));
+    }
     if (icon.dataset.href) return leave(icon.dataset.href); // a collection: straight to its page
     if (icon.dataset.open === "mail" && touch.matches) return (location.href = icon.href); // the phone's mail app
     open(icon.dataset.open);

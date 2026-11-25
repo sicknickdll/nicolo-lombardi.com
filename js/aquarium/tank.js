@@ -2,10 +2,12 @@
 // Everything in the water is glyphs on one canvas; panels are HTML in DEVAULT's style.
 import { rasterize, crop, blank, encode, decode, PAD_W, PAD_H } from "./ascii.js";
 import { TINTS, GOLD, HEART, FOOD, LIGHTS, SANDS, DECOR, STARTERS } from "./art.js";
+import { buildScene, grid, paint } from "./scene.js";
 import { createWorld, makeFish, fishSprite, staticSprite, step, dropFood, poke, startle, burst, fx, MAX_FISH } from "./sim.js";
 import { createAudio } from "./audio.js";
 
 const KEY = "nl-aquarium";
+const PLANT = 170; // plant width on a wide screen, px
 const FONT = '"Geist Mono", ui-monospace, Menlo, monospace';
 const rand = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -59,6 +61,7 @@ export function mountAquarium(root) {
     dpr = 1,
     surfRow = 4,
     sandH = [],
+    B = grid(1, 1),
     chars,
     lvls,
     slots;
@@ -68,20 +71,21 @@ export function mountAquarium(root) {
     const oldW = laid ? W.W : 0,
       oldH = W.H;
     laid = true;
-    fs = w < 700 ? 10.5 : w < 1200 ? 12 : 13;
-    lh = Math.round(fs * 1.2);
+    fs = w < 700 ? 7.5 : w < 1200 ? 8.5 : 9;
+    lh = Math.round(fs * 1.22);
     g.font = `${fs}px ${FONT}`;
     cw = g.measureText("M").width || fs * 0.6;
-    dpr = Math.min(2, devicePixelRatio || 1);
+    dpr = lite ? 1 : Math.min(2, devicePixelRatio || 1);
     cv.width = Math.round(w * dpr);
     cv.height = Math.round(h * dpr);
-    glow.width = Math.round(w / 3);
-    glow.height = Math.round(h / 3);
+    glow.width = Math.round(w / 4);
+    glow.height = Math.round(h / 4);
     cols = Math.ceil(w / cw);
     rows = Math.ceil(h / lh);
-    chars = new Uint16Array(cols * rows);
-    lvls = new Uint8Array(cols * rows);
-    slots = new Uint8Array(cols * rows);
+    B = grid(cols, rows);
+    chars = B.ch;
+    lvls = B.lv;
+    slots = B.sl;
     const bar = $(".aq-bar").getBoundingClientRect().height;
     surfRow = Math.ceil((bar + 10) / lh);
     sandH = Array.from({ length: cols }, (_, c) => {
@@ -91,6 +95,7 @@ export function mountAquarium(root) {
     Object.assign(W, { W: w, H: h, cw, ch: lh, k: clamp(w / 1500, 0.5, 1), surf: (surfRow + 0.5) * lh });
     W.sandY = (x) => (rows - sandH[clamp(Math.floor(x / cw), 0, cols - 1)]) * lh;
     if (oldW) for (const o of [...W.fish, ...W.plants, ...W.decor, ...W.eggs]) (o.x *= w / oldW), o.y != null && (o.y *= h / oldH);
+    rebuildScene();
   }
   function setLight(name) {
     const L = LIGHTS[name] || LIGHTS.devault;
@@ -103,7 +108,7 @@ export function mountAquarium(root) {
     const stops = L.stops.map(hex),
       base = (l) => (l < 0.5 ? mix(hex(L.bg), stops[0], l * 2) : l < 0.75 ? mix(stops[0], stops[1], (l - 0.5) * 4) : mix(stops[1], stops[2], (l - 0.75) * 4));
     // 10 levels: 0 faint … 9 brightest
-    const lvl = (i) => 0.42 + (i / 9) * 0.58;
+    const lvl = (i) => 0.12 + (i / 9) * 0.88;
     const tints = [null, hex("#c9b38a"), ...TINTS.map(hex), hex(GOLD), hex(HEART), hex(FOOD)];
     palette = tints.map((t, s) =>
       Array.from({ length: 10 }, (_, i) => {
@@ -111,9 +116,18 @@ export function mountAquarium(root) {
         if (s === 0) return rgb(b);
         if (s === 1) return rgb(mix(b, mix(hex(L.bg), t, lvl(i)), 0.35));
         const k = s >= 8 ? Math.max(0.65, L.tint) : L.tint;
-        return rgb(mix(b, mix(hex(L.bg), t, 0.25 + 0.75 * (i / 9)), k));
+        return rgb(mix(b, mix(hex(L.bg), t, 0.12 + 0.88 * (i / 9)), k));
       }),
     );
+    // haze: darker under the surface and on the floor, lighter in the middle distance
+    const mk = (u) => rgb(mix(hex(L.bg), stops[0], u));
+    haze = [
+      [0, mk(0.05)],
+      [0.45, mk(0.4)],
+      [0.75, mk(0.16)],
+      [1, mk(0.04)],
+    ];
+    rebuildScene();
   }
 
   // ── buffer ──
@@ -140,40 +154,56 @@ export function mountAquarium(root) {
   };
 
   // ── draw a frame ──
-  const buckets = Array.from({ length: 11 * 10 }, () => []);
+  // Back to front: haze, far rocks, [rays, snow, far fish], mid rocks, floor, [surface, plants,
+  // decor, food, near fish], near rocks, [bubbles, sparks, words]. The cursor slides the rocks.
+  let scene = null,
+    par = 0,
+    haze = null;
+  const flush = () => (paint(g, B, { cw, lh, fs, font: FONT, palette }), B.ch.fill(0));
+  // whole device pixels: a plain copy, no resampling
+  const layerAt = (img, x) => img && g.drawImage(img, Math.round((scene.x0 + x) * dpr) / dpr, img.y0, img.width / dpr, img.height / dpr);
+  let glowTick = 0;
+  function rebuildScene() {
+    if (!laid || !palette.length) return;
+    scene = buildScene({ cols, rows, cw, lh, fs, font: FONT, palette, dpr, surfRow, sandH, margin: 48, sand: S.sand, haze });
+  }
+  function drawFish(f) {
+    const sp = fishSprite(f, cw, lh, W.k),
+      fr = sp.frames[Math.floor(f.phase) & 3][f.dir > 0 ? 0 : 1],
+      far = f.z < 0.62,
+      dim = f.state === "held" || f === hover ? 1.15 : (0.3 + 0.7 * f.z) * (1 - f.hunger * 0.18);
+    sprite(fr, f.x - sp.w / 2, f.y - sp.h / 2, (l) => (1.5 + l * 8) * dim, far ? 0 : 2 + f.tint);
+  }
   function render() {
-    chars.fill(0);
     const t = W.t,
       sandTop = rows - Math.max(...sandH);
-    // light falling through the water, in bands
+    par += ((ptr.in && !reduce ? (ptr.x / W.W - 0.5) * -46 : 0) - par) * 0.06;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (!scene) return;
+    layerAt(scene.far, par * 0.3); // haze included: opaque
+    // light falling through the water, in bands; snow
     for (let r = surfRow + 1; r < sandTop + 1; r++) {
       const depth = 1 - (r - surfRow) / (rows - surfRow);
       for (let c = 0; c < cols; c++) {
-        if (r >= rows - sandH[c]) continue;
-        const u = (c + r * 0.55) * 0.045,
+        const u = (c + r * 0.55) * 0.04,
           v = Math.max(0, Math.sin(u + t * 0.12) * Math.sin(u * 0.37 - t * 0.07 + 1.7)) ** 3 * depth;
-        if (hash(c, r) < v * 0.5) put(c, r, v > 0.5 && hash(r, c) < 0.3 ? ":" : ".", 1 + v * 3);
+        if (v > 0.08 && hash(c, r) < v * 0.3) put(c, r, v > 0.5 && hash(r, c) < 0.3 ? ":" : ".", 1 + v * 4);
       }
     }
-    for (const s of W.snow) put(Math.floor(s.x / cw), Math.floor(s.y / lh), ".", 2);
+    for (const s of W.snow) {
+      const tw = Math.sin(t * 2 + s.ph * 5);
+      put(Math.floor(s.x / cw), Math.floor(s.y / lh), tw > 0.85 ? "*" : s.ph > 4 ? "'" : ".", 2 + (1 - s.y / W.H) * 4 + tw * 1.5);
+    }
+    for (const f of W.fish) if (f.z < 0.62) drawFish(f);
+    flush();
+    layerAt(scene?.mid, par * 0.6);
+    layerAt(scene?.floor, par);
     // surface
     for (let c = 0; c < cols; c++) {
       let h = Math.sin(c * 0.19 + t * 1.4) * 0.6 + Math.sin(c * 0.053 - t * 0.8) * 0.5;
       if (ptr.in && ptr.y < W.surf + lh * 4) h += Math.max(0, 1 - Math.abs(c * cw - ptr.x) / 90) * Math.sin(t * 8) * 1.2;
       put(c, surfRow, h > -0.5 ? "~" : "-", 6 + h * 2.5);
-      if (hash(c, Math.floor(t * 2)) < 0.03) put(c, surfRow + 1 + ((hash(t | 0, c) * 3) | 0), "'", 2);
-    }
-    // sand
-    for (let c = 0; c < cols; c++) {
-      const top = rows - sandH[c];
-      for (let r = top; r < rows; r++) {
-        const d = r - top,
-          hv = hash(c, r);
-        let ch = d === 0 ? (sandH[c - 1] > sandH[c] ? "\\" : sandH[c + 1] > sandH[c] ? "/" : "_") : hv < 0.35 ? "." : hv < 0.55 ? ":" : hv < 0.68 ? "," : hv < 0.75 ? ";" : " ";
-        if (S.sand === "ripple" && d > 0 && Math.sin(c * 0.5 + r * 2.4) > 0.75) ch = "~";
-        if (S.sand === "pebble" && d > 0 && hv > 0.93) ch = hv > 0.975 ? "O" : "o";
-        if (ch !== " ") put(c, r, ch, d === 0 ? 7 : 6 - d * 0.6, 1);
-      }
+      if (hash(c, Math.floor(t * 2)) < 0.03) put(c, surfRow + 1 + ((hash(t | 0, c) * 3) | 0), "'", 3);
     }
     // ripples from clicks
     if (!reduce)
@@ -182,7 +212,7 @@ export function mountAquarium(root) {
           n = Math.ceil((rad * 6.3) / cw);
         for (let i = 0; i < n; i++) {
           const a = (i / n) * Math.PI * 2;
-          putIfEmpty(Math.floor((rp.x + Math.cos(a) * rad) / cw), Math.floor((rp.y + Math.sin(a) * rad * 0.7) / lh), rp.t < 0.4 ? "o" : ".", 6 * (1 - rp.t));
+          putIfEmpty(Math.floor((rp.x + Math.cos(a) * rad) / cw), Math.floor((rp.y + Math.sin(a) * rad * 0.7) / lh), rp.t < 0.4 ? "o" : ".", 7 * (1 - rp.t));
         }
       }
     // decor, plants
@@ -191,18 +221,18 @@ export function mountAquarium(root) {
         w = Math.max(...art.map((l) => l.length)),
         r0 = Math.floor(W.sandY(d.x) / lh) - art.length + 1,
         c0 = Math.round(d.x / cw - w / 2);
-      art.forEach((l, i) => text(c0, r0 + i, l, d === drag?.obj ? 9 : 5 + (i / art.length) * 2, 0));
+      art.forEach((l, i) => text(c0, r0 + i, l, d === drag?.obj ? 9 : 5 + (i / art.length) * 3, 0));
     }
     for (const p of W.plants) {
-      const sp = staticSprite(p, cw, lh, W.k, 240),
+      const sp = staticSprite(p, cw, lh, W.k, PLANT),
         c0 = Math.round(p.x / cw - sp.cols / 2),
         r0 = Math.floor(W.sandY(p.x) / lh) - sp.rows + 1;
       for (let r = 0; r < sp.rows; r++) {
         const hf = (sp.rows - 1 - r) / Math.max(1, sp.rows - 1),
-          sh = Math.round((reduce ? 0.4 : 1.1) * Math.sin(t * 1.1 + p.ph + r * 0.3) * hf ** 1.2 + (p.push ?? 0) * hf ** 1.5);
+          sh = Math.round((reduce ? 0.4 : 1.4) * Math.sin(t * 1.1 + p.ph + r * 0.22) * hf ** 1.2 + (p.push ?? 0) * hf ** 1.5);
         for (let c = 0; c < sp.cols; c++) {
           const k = r * sp.cols + c;
-          if (sp.chars[k] !== " ") put(c0 + c + sh, r0 + r, sp.chars[k], 3 + sp.lum[k] * 5, 2 + p.tint);
+          if (sp.chars[k] !== " ") put(c0 + c + sh, r0 + r, sp.chars[k], 1.5 + sp.lum[k] * 8, 2 + p.tint);
         }
       }
     }
@@ -216,21 +246,18 @@ export function mountAquarium(root) {
       if (s.land && s.t > 80 && Math.floor(s.t * 6) % 2) continue;
       put(Math.floor(s.x / cw), Math.floor(s.y / lh), Math.floor(W.t * 3 + s.x) % 5 === 0 ? "*" : "◊", 9, SLOT.gold);
     }
-    // fish, back to front
-    for (const f of W.fish) {
-      const sp = fishSprite(f, cw, lh, W.k),
-        fr = sp.frames[Math.floor(f.phase) & 3][f.dir > 0 ? 0 : 1],
-        dim = f.state === "held" || f === hover ? 1.15 : f.z * (1 - f.hunger * 0.18);
-      sprite(fr, f.x - sp.w / 2, f.y - sp.h / 2, (l) => (3.5 + l * 6) * dim, 2 + f.tint);
-      if (f.emote) {
-        const e = f.emote.txt;
-        text(Math.round(f.x / cw - e.length / 2), Math.round((f.y - sp.h / 2) / lh) - 1, e, 9, slotOf(f.emote.tint ?? "water"));
-      }
-    }
-    // bubbles over everything in the water
+    for (const f of W.fish) if (f.z >= 0.62) drawFish(f);
+    flush();
+    layerAt(scene?.near, par * 1.6);
+    // over everything
     for (const b of W.bubbles) put(Math.floor(b.x / cw), Math.floor(b.y / lh), "°oO"[b.size], 7);
     for (const p of W.fx) put(Math.floor(p.x / cw), Math.floor(p.y / lh), p.ch, p.lv * (1 - (p.to ? 0 : p.t / p.life) * 0.6), slotOf(p.tint));
-    // something being placed
+    for (const f of W.fish)
+      if (f.emote) {
+        const sp = f.spr,
+          e = f.emote.txt;
+        text(Math.round(f.x / cw - e.length / 2), Math.round((f.y - sp.h / 2) / lh) - 1, e, 9, slotOf(f.emote.tint ?? "water"));
+      }
     if (placing && ptr.in) {
       if (placing.decor) {
         const art = DECOR[placing.decor].art,
@@ -238,27 +265,48 @@ export function mountAquarium(root) {
           r0 = Math.floor(W.sandY(ptr.x) / lh) - art.length + 1;
         art.forEach((l, i) => text(Math.round(ptr.x / cw - w / 2), r0 + i, l, Math.floor(t * 4) % 2 ? 9 : 6, 0));
       } else {
-        const sp = staticSprite(placing.plant, cw, lh, W.k, 240);
+        const sp = staticSprite(placing.plant, cw, lh, W.k, PLANT);
         sprite(sp, ptr.x - sp.w / 2, W.sandY(ptr.x) - (sp.rows - 1) * lh, (l) => (Math.floor(t * 4) % 2 ? 4 : 7) + l * 2, 2 + placing.plant.tint);
       }
     }
+    flush();
+    if (intro) drawIntro();
+    if (!lite && glowTick++ % 2 === 0) {
+      gg.imageSmoothingEnabled = false;
+      gg.clearRect(0, 0, glow.width, glow.height);
+      gg.drawImage(cv, 0, 0, glow.width, glow.height);
+    }
+  }
 
-    // paint, one colour at a time
-    for (const b of buckets) b.length = 0;
-    for (let i = 0; i < chars.length; i++) if (chars[i]) buckets[slots[i] * 10 + lvls[i]].push(i);
-    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // ── arriving: the tank decodes out of scrambled glyphs, from where the Archive was clicked ──
+  let intro = null;
+  const SCRAMBLE = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/|()1{}[]?-_+~<>i!lI;:,^.";
+  function drawIntro() {
+    const e = (performance.now() - intro.t0) / 1000,
+      ox = intro.x * W.W,
+      oy = intro.y * W.H,
+      maxD = Math.max(Math.hypot(ox, oy), Math.hypot(W.W - ox, oy), Math.hypot(ox, W.H - oy), Math.hypot(W.W - ox, W.H - oy)),
+      span = 1.25;
+    if (e > span + 0.5) return (intro = null);
     g.fillStyle = bg;
-    g.fillRect(0, 0, W.W, W.H);
-    g.font = `${fs}px ${FONT}`;
-    g.textBaseline = "top";
-    const oy = (lh - fs) / 2;
-    buckets.forEach((b, k) => {
-      if (!b.length) return;
-      g.fillStyle = palette[(k / 10) | 0][k % 10];
-      for (const i of b) g.fillText(String.fromCharCode(chars[i]), (i % cols) * cw, ((i / cols) | 0) * lh + oy);
-    });
-    gg.clearRect(0, 0, glow.width, glow.height);
-    gg.drawImage(cv, 0, 0, glow.width, glow.height);
+    for (let r = 0; r < rows; r++)
+      for (let c = 0; c < cols; c++) {
+        const rt = (Math.hypot(c * cw - ox, r * lh - oy) / maxD) * span + hash(c, r) * 0.35;
+        if (e < rt) {
+          g.fillRect(c * cw, r * lh, cw + 0.5, lh + 0.5);
+          if (rt - e < 0.45 || hash(r, c + ((e * 12) | 0)) < 0.05) B.ch[r * cols + c] = 1;
+        }
+      }
+    for (let i = 0; i < B.ch.length; i++)
+      if (B.ch[i]) {
+        const c = i % cols,
+          r = (i / cols) | 0,
+          rt = (Math.hypot(c * cw - ox, r * lh - oy) / maxD) * span + hash(c, r) * 0.35;
+        B.ch[i] = SCRAMBLE.charCodeAt((Math.random() * SCRAMBLE.length) | 0);
+        B.lv[i] = clamp(Math.round(9 - (rt - e) * 14), 2, 9);
+        B.sl[i] = 0;
+      }
+    flush();
   }
 
   // ── pointer ──
@@ -543,7 +591,7 @@ export function mountAquarium(root) {
     const pg = padCv.getContext("2d"),
       r = padCv.getBoundingClientRect(),
       d = Math.min(2, devicePixelRatio || 1);
-    const ar = rasterize(toBm(pad.ctx), PCOLS, 1.8);
+    const ar = rasterize(toBm(pad.ctx), PCOLS, 1.8, { detail: true });
     if (padCv.width !== Math.round(r.width * d)) (padCv.width = Math.round(r.width * d)), (padCv.height = Math.round(r.height * d));
     const pcw = r.width / PCOLS,
       plh = r.height / ar.rows,
@@ -688,7 +736,7 @@ export function mountAquarium(root) {
         return true;
       };
       if (b.dataset.light && buy(b.dataset.light, LIGHTS[b.dataset.light].cost)) setLight(b.dataset.light);
-      if (b.dataset.sand && buy(b.dataset.sand, SANDS[b.dataset.sand])) S.sand = b.dataset.sand;
+      if (b.dataset.sand && buy(b.dataset.sand, SANDS[b.dataset.sand])) (S.sand = b.dataset.sand), rebuildScene();
       updateBar();
       save();
       openDecor();
@@ -776,17 +824,29 @@ export function mountAquarium(root) {
   ];
   $('[data-act="sound"]').setAttribute("aria-pressed", audio.on);
 
+  // a slow machine: no glow, 1× resolution
   let raf = 0,
-    last = performance.now();
+    last = performance.now(),
+    lite = false,
+    slow = 0,
+    frames = 0;
   const loop = (now) => {
     raf = requestAnimationFrame(loop);
     if (document.hidden) return;
     const dt = Math.min(0.05, (now - last) / 1000);
+    if (!lite && !intro && ++frames > 30) {
+      slow = slow * 0.97 + (now - last > 26 ? 0.03 : 0);
+      if (slow > 0.6) {
+        lite = true;
+        glow.hidden = true;
+        layout();
+      }
+    }
     last = now;
     ptr.still += dt;
     ptr.speed *= 1 - Math.min(1, dt * 6);
     step(W, dt, ptr);
-    for (const p of W.plants) staticSprite(p, cw, lh, W.k, 240);
+    for (const p of W.plants) staticSprite(p, cw, lh, W.k, PLANT);
     render();
     if ((saveT += dt) > 6) (saveT = 0), save();
   };
@@ -797,8 +857,15 @@ export function mountAquarium(root) {
     load();
     setLight(S.light);
     updateBar();
+    let o = { x: 0.5, y: 0.55 };
+    try {
+      o = JSON.parse(sessionStorage.getItem("aq-origin")) || o;
+      sessionStorage.removeItem("aq-origin");
+    } catch {}
+    if (!reduce) intro = { t0: performance.now(), x: o.x, y: o.y };
     root.classList.add("ready");
     raf = requestAnimationFrame(loop);
+    dispatchEvent(new Event("aquarium:intro"));
   });
 
   return () => {
