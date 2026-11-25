@@ -218,8 +218,10 @@ const archiveObject = {
     `<span class="dsee" aria-hidden="true"><img src="/assets/archive/isee/icon.webp" alt="" draggable="false"><img class="dsee-b" src="/assets/archive/isee/icon-look.webp" alt="" draggable="false"></span>`,
 };
 // One "Projects" folder, bottom right: it opens a window with every project of the portfolio.
+// Its floating pictures are tiny, so they use small copies of the covers (made by tools/build.mjs).
+export const miniCover = (src) => src.replace(/^\/assets\/(.+)\.\w+$/, "/assets/mini/$1.webp");
 const projectsFolder = () =>
-  `<li><a class="desk-icon desk-coll desk-projects-folder" href="/#work" data-open="projects" data-id="projects" draggable="false"><span class="desk-glyph">${floatFolder(work.slice(0, 5).map((p) => p.cover))}</span><span class="desk-label">projects</span></a></li>`;
+  `<li><a class="desk-icon desk-coll desk-projects-folder" href="/#work" data-open="projects" data-id="projects" draggable="false"><span class="desk-glyph">${floatFolder(work.slice(0, 5).map((p) => miniCover(p.cover)))}</span><span class="desk-label">projects</span></a></li>`;
 // The window's content (js/archive-desktop.js shows it).
 export const projectsWindow = () =>
   `<ul class="dw-projects">${work

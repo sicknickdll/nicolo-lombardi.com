@@ -5,7 +5,7 @@
 // with the content already in the HTML so Google can read it.
 //
 // Run after editing js/data.js or template.html:   node tools/build.mjs
-import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync, statSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { build as bundle, transform } from "esbuild";
 import { dirname, join } from "node:path";
@@ -27,11 +27,24 @@ import {
   iseeMarkup,
   projectImages,
   projectMarkup,
+  miniCover,
 } from "../js/views.js";
 
 const SITE = "https://nicolo-lombardi.com";
 const NAME = "Nicoló Lombardi";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+
+// Small copies of the project covers for the Archive's "projects" folder icon (shown ~34 px wide):
+// made once per cover, again only when the cover is newer than its copy.
+{
+  const { default: sharp } = await import("sharp");
+  for (const p of projects) {
+    const src = join(root, p.cover), out = join(root, miniCover(p.cover));
+    if (!existsSync(src) || (existsSync(out) && statSync(out).mtimeMs >= statSync(src).mtimeMs)) continue;
+    mkdirSync(dirname(out), { recursive: true });
+    await sharp(src).resize({ width: 120, height: 120, fit: "inside" }).webp({ quality: 75 }).toFile(out);
+  }
+}
 // Fewer, smaller files: js/app.js and everything it imports is bundled and minified into dist/
 // (the pieces loaded later, like the 3D viewer, become a few shared chunks), and style.css is
 // minified. Names carry a hash, so a visitor never gets a new page with an old script. The
