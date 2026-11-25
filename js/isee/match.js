@@ -38,7 +38,7 @@ export function place(p, vw, vh, cx, cy) {
       dh = p.h * s,
       face = p.size * Math.min(dw, dh); // eye-to-eye, in screen pixels
     if (face < 12) continue;
-    if (face > short * 0.22) break; // closer than a close-up: the face would fill the screen
+    if (face > short * 0.34) break; // closer than a close-up: the face would fill the screen
     // where the eyes can be: the image must cover the screen, and the face stay on it
     const pad = Math.max(short * 0.06, face * 1.5),
       x0 = Math.max(vw - dw + p.eye[0] * dw, pad),

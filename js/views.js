@@ -321,6 +321,7 @@ export function iseeMarkup() {
 <canvas class="is-intro" aria-hidden="true"></canvas>
 <span class="is-load" aria-hidden="true"></span><span class="is-dot" aria-hidden="true"></span>
 <aside class="is-cite" aria-label="About this painting" hidden><h2 class="is-title"></h2><p class="is-artist"></p><dl class="is-facts"><div class="is-f-date"><dt>Date</dt><dd></dd></div><div class="is-f-medium"><dt>Medium</dt><dd></dd></div><div class="is-f-museum"><dt>Collection</dt><dd></dd></div><div class="is-f-acc"><dt>No.</dt><dd></dd></div></dl><a class="is-link" target="_blank" rel="noopener noreferrer">View at the museum</a></aside>
+<p class="is-credit">Credits to <a href="https://pointerpointer.com/" target="_blank" rel="noopener noreferrer">pointerpointer.com</a>, Pluto <a href="https://twitter.com/growpluto" target="_blank" rel="noopener noreferrer">@growpluto</a> on Twitter</p>
 <p class="sr-only is-live" aria-live="polite"></p>
 <noscript><p class="is-noscript">The paintings only turn their heads with JavaScript.</p></noscript></section>`.replace(/\n/g, "");
 }

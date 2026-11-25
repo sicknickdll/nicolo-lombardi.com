@@ -5057,6 +5057,36 @@ html:has(.isee) .header {
   outline: 1px solid #000;
   outline-offset: 3px;
 }
+/* the credit, bottom left, in grey */
+.is-credit {
+  position: absolute;
+  left: max(16px, env(safe-area-inset-left));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  max-width: calc(100% - 32px);
+  margin: 0;
+  padding: 5px 8px;
+  font: 400 11px/1.4 "Montserrat", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #9a9a9a;
+}
+.is-credit a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.is-credit a:hover {
+  color: #555;
+}
+/* over a painting it sits on white, so it stays legible */
+.isee.is-on .is-credit {
+  background: #fff;
+}
+/* on a phone the label takes the bottom: the credit goes to the top */
+@media (max-width: 560px) {
+  .is-credit {
+    top: max(12px, env(safe-area-inset-top));
+    bottom: auto;
+  }
+}
 .is-noscript {
   position: absolute;
   bottom: 24px;

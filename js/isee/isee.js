@@ -17,6 +17,7 @@ export function mountIsee(root) {
     dot = root.querySelector(".is-dot"),
     cite = root.querySelector(".is-cite"),
     live = root.querySelector(".is-live"),
+    credit = root.querySelector(".is-credit"),
     touch = matchMedia("(hover: none)");
   hint.textContent = touch.matches ? "Tap anywhere" : "Hold your cursor still";
   // the opening mosaic of eyes (js/isee/intro.js); until it is over, nothing else happens
@@ -87,7 +88,7 @@ export function mountIsee(root) {
     if (e.pointerType === "touch") return;
     last = { x: e.clientX, y: e.clientY };
     if (intro) return;
-    if (cite.contains(e.target)) return; // reading the caption, reaching for its link
+    if (cite.contains(e.target) || credit.contains(e.target)) return; // reading the label or the credit, reaching for a link
     if (shown && Math.hypot(e.clientX - shown.x, e.clientY - shown.y) <= SLACK) return;
     if (shown || root.classList.contains("is-busy")) hide();
     clearTimeout(timer);
