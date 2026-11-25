@@ -115,7 +115,7 @@ export function bindDesktop(main) {
       return {
         title: "readme.txt",
         w: 380,
-        body: `<div class="dw-doc"><p class="dw-kicker">Archive · Nicoló Lombardi</p><h2 class="caslon">Hello, welcome in.</h2><p>This is my personal archive and playground: things I find and keep, and things I make for fun. Feel free to explore.</p><p class="dw-hint">${touch.matches ? "Tap a folder or an object to open it." : "Hover a folder to peek inside, click to open it."}</p></div>`,
+        body: `<div class="dw-doc"><h2 class="caslon">Hello, welcome in.</h2><p>This is my personal archive and playground: things I find and keep, and things I make for fun. Feel free to explore.</p>${touch.matches ? `<p class="dw-hint">Tap a folder or an object to open it.</p>` : ""}</div>`,
       };
     if (id === "projects") return { title: "projects", w: 460, body: projectsWindow() };
     if (id === "leave")
