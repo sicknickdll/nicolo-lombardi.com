@@ -53,7 +53,7 @@ Pages and addresses:
 | `/archive/` | the archive as a desktop: one folder per collection, draggable windows, taskbar |
 | `/archive/la-barra/` | LA BARRA: diagonal infinite pannable grid of the cut-outs on black, search bar, 3D viewer (editorial layout) (`#<piece id>` opens one) |
 | `/archive/tarot/` | THE TAROT READER: a candlelit table, a fortune teller in the dark, a guided five-card reading (the "tarot" folder on the Archive desktop) |
-| `/archive/aquarium/` | ASCII AQUARIUM: draw a fish, release it, feed it (the tiny tank on the Archive desktop) |
+| `/archive/aquarium/` | ASCII AQUARIUM: draw a fish, release it, feed it (taken off the Archive desktop and the sitemap: `hidden` in `js/archive-data.js`; the page still works) |
 | `/archive/i-see-u/` | I SEE U: hold the cursor still and a painting looks at it (the little framed portrait on the Archive desktop) |
 
 Old links from the previous site (`/#film`, `/#project/lexus`) and the old `/film/` and
@@ -293,9 +293,13 @@ js/aquarium/audio.js  synthesised sounds
 ## I see u (`/archive/i-see-u/`)
 
 After Pointer Pointer (pointerpointer.com), with paintings instead of photos and gazes instead of
-fingers. A white page; hold the cursor still and a painting fills the screen, its sitter looking at
-the cursor; move and it's gone. On a phone, tap. The label bottom right says what it is (title,
-painter, date, medium, museum and inventory number) with a link to the museum's page.
+fingers. It opens with a mosaic of eyes (`js/isee/intro.js`): one painted eye, small, in the middle
+of a white page, then square tiles of other eyes appear around it until they fill the screen, then
+go out; a click, tap or key skips it. Then a single line in Helvetica Light ("Hold your cursor
+still" on a computer, "Tap anywhere" on a phone). Hold the cursor still and a painting fills the
+screen, its sitter looking at the cursor; move and it's gone. The label bottom right, in Montserrat
+(`assets/fonts/`, SIL Open Font License) on a Swiss grid, gives title, painter, date, medium,
+collection and inventory number, with a link to the museum's page.
 
 - **The paintings**: public-domain works from The Cleveland Museum of Art (CC0) and The Metropolitan
   Museum of Art (Open Access), scanned whole: every painting with an image (about 6,900 from Cleveland's
@@ -327,4 +331,6 @@ node tools/build.mjs
 read downward looks too flat): `keep` lists the paintings whose look is right (when
 it is there, only those are kept) and `angle` corrects a direction in degrees (0 = right, 90 = down).
 The face model is at storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task.
-`tools/isee/icon.py` makes the desktop icon: a sitter looking away, and on hover one looking at you.
+`tools/isee/eyes.py [id]` cuts one eye from each painting into the opening's sprite
+(`assets/archive/isee/eyes.webp`, `js/isee/eyes.js`; `id` is the eye shown first): run it after
+export.py. `tools/isee/icon.py` makes the desktop icon: a sitter looking away, and on hover one looking at you.

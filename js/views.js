@@ -235,7 +235,7 @@ export function archiveMarkup() {
       (c) =>
         `<li><a class="desk-icon desk-obj" href="${collectionURL(c)}" data-href="${collectionURL(c)}" data-id="${c.id}" draggable="false"><span class="desk-glyph">${archiveObject[c.id] ? archiveObject[c.id]() : floatFolder(c.items.slice(0, 5).map((i) => i.thumb))}</span><span class="desk-label">${esc(c.title.toLowerCase())}</span></a></li>`,
     ),
-    ...experiences.map(
+    ...experiences.filter((x) => !x.hidden).map(
       (x) =>
         `<li><a class="desk-icon desk-obj desk-${x.id}" href="${collectionURL(x)}" data-href="${collectionURL(x)}" data-id="${x.id}" draggable="false"><span class="desk-glyph">${archiveObject[x.id] ? archiveObject[x.id]() : floatFolder(x.icon)}</span><span class="desk-label">${esc(x.label)}</span></a></li>`,
     ),
@@ -311,16 +311,16 @@ export function aquariumMarkup() {
 }
 
 // /archive/i-see-u/: I SEE U (js/isee/isee.js). A white page; hold the cursor still and a painting
-// covers it, its sitter looking at the cursor; the caption (bottom right) says what it is and
+// covers it, its sitter looking at the cursor; the label (bottom right) says what it is and
 // where it hangs. The list below is for search engines and screen readers.
 export function iseeMarkup() {
   const x = experiences.find((e) => e.id === "i-see-u");
   return `<section class="isee" aria-labelledby="is-h1"><header class="sr-only"><nav aria-label="Breadcrumb"><a href="/archive/">Archive</a></nav><h1 id="is-h1">I see u</h1><p>${esc(x.blurb)}</p><p>Hold the mouse still, or tap the screen, and a painting appears whose sitter looks at that spot. Move to make it go away. Enter or Space asks for one with the keyboard, Escape clears it.</p></header>
 <div class="is-stage" role="application" aria-label="Hold the cursor still"><img class="is-img" alt="" draggable="false" decoding="async"></div>
-<div class="is-empty" aria-hidden="true"><p class="is-name caslon">I see u</p><p class="is-hint">Hold the cursor still.</p></div>
+<div class="is-empty" aria-hidden="true"><p class="is-hint"></p></div>
+<canvas class="is-intro" aria-hidden="true"></canvas>
 <span class="is-load" aria-hidden="true"></span><span class="is-dot" aria-hidden="true"></span>
-<nav class="is-top" aria-label="I see u"><a class="is-back" href="/archive/">Archive</a><span aria-hidden="true">/</span><span>I see u</span></nav>
-<aside class="is-cite" aria-label="About this painting" hidden><p class="is-title caslon"></p><p class="is-artist"></p><p class="is-meta"></p><p class="is-museum"></p><a class="is-link" target="_blank" rel="noopener noreferrer">See it at the museum ↗</a></aside>
+<aside class="is-cite" aria-label="About this painting" hidden><h2 class="is-title"></h2><p class="is-artist"></p><dl class="is-facts"><div class="is-f-date"><dt>Date</dt><dd></dd></div><div class="is-f-medium"><dt>Medium</dt><dd></dd></div><div class="is-f-museum"><dt>Collection</dt><dd></dd></div><div class="is-f-acc"><dt>No.</dt><dd></dd></div></dl><a class="is-link" target="_blank" rel="noopener noreferrer">View at the museum</a></aside>
 <p class="sr-only is-live" aria-live="polite"></p>
 <noscript><p class="is-noscript">The paintings only turn their heads with JavaScript.</p></noscript></section>`.replace(/\n/g, "");
 }

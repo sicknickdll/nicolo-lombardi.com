@@ -4,6 +4,7 @@
 // made by tools/isee/ (see the README); the matching is js/isee/match.js.
 import { PAINTINGS } from "./paintings.js";
 import { pick } from "./match.js";
+import { playIntro } from "./intro.js";
 
 const STILL = 320; // ms the cursor must rest before someone looks
 const SLACK = 6; // px the cursor may drift while a painting is shown
@@ -17,7 +18,12 @@ export function mountIsee(root) {
     cite = root.querySelector(".is-cite"),
     live = root.querySelector(".is-live"),
     touch = matchMedia("(hover: none)");
-  hint.textContent = touch.matches ? "Tap anywhere." : "Hold the cursor still.";
+  hint.textContent = touch.matches ? "Tap anywhere" : "Hold your cursor still";
+  // the opening mosaic of eyes (js/isee/intro.js); until it is over, nothing else happens
+  let intro = null;
+  const hello = () => ((intro = null), root.classList.add("is-hello"));
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) hello();
+  else (intro = playIntro(root.querySelector(".is-intro"))).done.then(hello);
   const recent = [];
   let timer = 0,
     shown = null, // { x, y } where the painting was asked for
@@ -30,11 +36,18 @@ export function mountIsee(root) {
     root.classList.remove("is-on", "is-busy");
     cite.hidden = true;
   };
+  const fact = (name, value) => {
+    const row = cite.querySelector(`.is-f-${name}`);
+    row.querySelector("dd").textContent = value || "";
+    row.hidden = !value;
+  };
   const fill = (p) => {
     cite.querySelector(".is-title").textContent = p.title;
     cite.querySelector(".is-artist").textContent = p.artist;
-    cite.querySelector(".is-meta").textContent = [p.date, p.medium].filter(Boolean).join(" · ");
-    cite.querySelector(".is-museum").textContent = [p.museum, p.accession].filter(Boolean).join(", ");
+    fact("date", p.date);
+    fact("medium", p.medium && p.medium[0].toUpperCase() + p.medium.slice(1));
+    fact("museum", p.museum);
+    fact("acc", p.accession);
     const a = cite.querySelector(".is-link");
     a.href = p.link;
     a.hidden = !p.link;
@@ -73,6 +86,7 @@ export function mountIsee(root) {
   const onMove = (e) => {
     if (e.pointerType === "touch") return;
     last = { x: e.clientX, y: e.clientY };
+    if (intro) return;
     if (cite.contains(e.target)) return; // reading the caption, reaching for its link
     if (shown && Math.hypot(e.clientX - shown.x, e.clientY - shown.y) <= SLACK) return;
     if (shown || root.classList.contains("is-busy")) hide();
@@ -80,6 +94,7 @@ export function mountIsee(root) {
     timer = setTimeout(() => look(last.x, last.y), STILL);
   };
   const onDown = (e) => {
+    if (intro) return intro.skip(); // a click or a tap skips the opening
     if (e.pointerType !== "touch" || cite.contains(e.target) || e.target.closest("a")) return;
     hide();
     look(e.clientX, e.clientY);
@@ -88,6 +103,7 @@ export function mountIsee(root) {
   const onLeave = (e) => e.pointerType === "mouse" && (clearTimeout(timer), hide());
   // the keyboard: Enter or Space asks for a look at the cursor (or the middle of the screen)
   const onKey = (e) => {
+    if (intro) return intro.skip();
     if (e.key === "Escape") return hide();
     if ((e.key === "Enter" || e.key === " ") && !e.target.closest("a")) {
       e.preventDefault();
@@ -104,6 +120,7 @@ export function mountIsee(root) {
   addEventListener("resize", onResize);
   root.classList.add("is-ready");
   return () => {
+    intro?.skip();
     clearTimeout(timer);
     ticket++;
     root.removeEventListener("pointermove", onMove);
