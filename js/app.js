@@ -10,7 +10,7 @@ import { eyeTracking } from "./eye.js";
 import { isMenuOpen, setNavigator } from "./menu.js";
 import { smoothScroll } from "./smooth.js";
 import { bindReveal } from "./reveal.js";
-import { work, homeMarkup, projectMarkup, projectURL, aboutMarkup, archiveMarkup, collectionMarkup, archiveCollections, archiveExperiences, tarotMarkup } from "./views.js";
+import { work, homeMarkup, projectMarkup, projectURL, aboutMarkup, archiveMarkup, collectionMarkup, archiveCollections, archiveExperiences, tarotMarkup, aquariumMarkup } from "./views.js";
 const main = document.querySelector("#main");
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
 let cleanup = () => {};
@@ -117,6 +117,21 @@ function showTarot() {
     off();
   };
 }
+// /archive/aquarium/: the ASCII aquarium. Its scripts load only here.
+function showAquarium() {
+  main.innerHTML = aquariumMarkup();
+  let off = () => {},
+    gone = false;
+  import("./aquarium/tank.js")
+    .then((m) => {
+      if (!gone) off = m.mountAquarium(main.querySelector(".aquarium"));
+    })
+    .catch(() => main.querySelector(".aquarium")?.classList.add("aq-failed"));
+  cleanup = () => {
+    gone = true;
+    off();
+  };
+}
 function showAbout() {
   main.innerHTML = aboutMarkup();
   const stage = main.querySelector(".about-head");
@@ -149,6 +164,7 @@ function render() {
   if (path === "/about/") showAbout();
   else if (path === "/archive/") showArchive();
   else if (path === "/archive/tarot/" || path === "/archive/tarot") showTarot();
+  else if (path === "/archive/aquarium/" || path === "/archive/aquarium") showAquarium();
   else if (collection) showCollection(collection[1]);
   else if (project) showProject(project[1]);
   else showHome();

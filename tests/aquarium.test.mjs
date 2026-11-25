@@ -1,0 +1,60 @@
+// The aquarium's drawing → ASCII rules and its storage format.
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { blank, rasterize, crop, encode, decode, blend } from "../js/aquarium/ascii.js";
+
+const paint = (bm, fn) => {
+  for (let y = 0; y < bm.h; y++) for (let x = 0; x < bm.w; x++) if (fn(x, y)) bm.d[y * bm.w + x] = 255;
+  return bm;
+};
+const glyphs = (r) => new Set(r.chars.filter((c) => c !== " "));
+
+test("an empty drawing is all spaces", () => {
+  const r = rasterize(blank(), 20);
+  assert.equal(r.cols, 20);
+  assert.ok(r.chars.every((c) => c === " "));
+});
+
+test("a solid block becomes dense glyphs", () => {
+  const r = rasterize(paint(blank(), () => true), 16);
+  assert.deepEqual([...glyphs(r)], ["@"]);
+});
+
+test("thin strokes become line glyphs by direction", () => {
+  const h = rasterize(paint(blank(), (x, y) => Math.abs(y - 48) < 2), 20);
+  assert.ok(glyphs(h).has("-") || glyphs(h).has("_"));
+  const v = rasterize(paint(blank(), (x) => Math.abs(x - 80) < 2), 20);
+  assert.ok(glyphs(v).has("|"));
+  const d = rasterize(paint(blank(), (x, y) => Math.abs(x * 0.6 - (96 - y)) < 1.2), 24);
+  assert.ok(glyphs(d).has("/"), [...glyphs(d)].join(""));
+});
+
+test("flip mirrors the drawing", () => {
+  const bm = paint(blank(), (x, y) => x < 40 && y > 30 && y < 60);
+  const a = rasterize(bm, 16),
+    b = rasterize(bm, 16, 1.9, { flip: true });
+  const ink = (r, side) => r.chars.filter((c, i) => c !== " " && (side ? i % r.cols >= r.cols / 2 : i % r.cols < r.cols / 2)).length;
+  assert.ok(ink(a, 0) > 0 && ink(a, 1) === 0);
+  assert.ok(ink(b, 1) > 0 && ink(b, 0) === 0);
+});
+
+test("crop keeps only the ink", () => {
+  const c = crop(paint(blank(), (x, y) => x >= 50 && x < 70 && y >= 10 && y < 20), 2);
+  assert.equal(c.w, 24);
+  assert.equal(c.h, 14);
+  assert.equal(crop(blank()), null);
+});
+
+test("encode / decode round-trips four tones", () => {
+  const bm = blank(13, 7);
+  bm.d.forEach((_, i) => (bm.d[i] = [0, 85, 170, 255][i % 4]));
+  const back = decode(JSON.parse(JSON.stringify(encode(bm))));
+  assert.deepEqual([...back.d], [...bm.d]);
+});
+
+test("a baby has ink from both parents", () => {
+  const a = paint(blank(40, 20), (x) => x < 20),
+    b = paint(blank(40, 20), (x) => x >= 20);
+  const kid = blend(a, b, () => 0.5);
+  assert.ok(kid.d.some((v, i) => v && i % kid.w < 20) && kid.d.some((v, i) => v && i % kid.w >= 20));
+});

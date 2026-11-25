@@ -23,6 +23,7 @@ import {
   archiveCollections,
   archiveExperiences,
   tarotMarkup,
+  aquariumMarkup,
   projectImages,
   projectMarkup,
 } from "../js/views.js";
@@ -286,6 +287,42 @@ write(
   tarotMarkup(),
 );
 
+// The ASCII aquarium: a toy (js/aquarium/). The page holds its description; the tank is drawn
+// by the script.
+const aquarium = archiveExperiences.find((x) => x.id === "aquarium");
+write(
+  "archive/aquarium",
+  head({
+    title: `ASCII Aquarium — Archive, ${NAME}`,
+    description: aquarium.blurb,
+    path: "/archive/aquarium/",
+    image: existsSync(join(root, "assets/og/aquarium.jpg")) ? "/assets/og/aquarium.jpg" : "/assets/og-image.jpg",
+    imageAlt: "ASCII Aquarium: fish drawn in glyphs swimming over a sand floor",
+    schema: [
+      {
+        "@type": "VideoGame",
+        url: `${SITE}/archive/aquarium/`,
+        name: "ASCII Aquarium",
+        description: aquarium.blurb,
+        genre: ["Simulation", "Sandbox"],
+        gamePlatform: "Web browser",
+        playMode: "SinglePlayer",
+        applicationCategory: "Game",
+        inLanguage: "en",
+        author: { "@id": person["@id"] },
+      },
+      breadcrumbs([
+        [NAME, "/"],
+        ["Archive", "/archive/"],
+        ["ASCII Aquarium", "/archive/aquarium/"],
+      ]),
+      person,
+    ],
+  }),
+  aquariumMarkup(),
+  "aquarium-page",
+);
+
 // The Film and Visuals lists now live on the landing page: their old addresses forward there.
 for (const slug of ["film", "visuals"]) {
   const file = join(root, slug, "index.html");
@@ -394,6 +431,7 @@ const pages = [
   ["/archive/", []],
   ...archiveCollections.map((c) => [`/archive/${c.id}/`, c.items.map((i) => i.front)]),
   ["/archive/tarot/", CARDS.filter((c) => DECK_IDS.includes(c.id)).map((c) => c.art)],
+  ["/archive/aquarium/", existsSync(join(root, "assets/og/aquarium.jpg")) ? ["/assets/og/aquarium.jpg"] : []],
   ["/privacy/", []],
   ...projects.map((p) => [`/work/${p.id}/`, [p.cover, ...projectImages(p)]]),
 ];

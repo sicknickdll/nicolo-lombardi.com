@@ -28,6 +28,13 @@ export const experiences = [
       "An interactive tarot reading by candlelight: a fortune teller in the dark, twenty-one Major Arcana illustrated for this archive, a guiding card and a cross of five.",
     icon: ["death", "star", "moon", "magician", "sun"].map((id) => `/assets/archive/tarot/${id}-thumb.webp`),
   },
+  {
+    id: "aquarium",
+    title: "ASCII AQUARIUM",
+    label: "aquarium",
+    blurb: "Draw a fish, drop it in, feed it. An ASCII tank where drawn fish swim, eat, grow, quarrel, fall in love and lay eggs.",
+    icon: [],
+  },
 ];
 
 // Projects named on the Archive landing that have no page yet: their links lead to the 404 page.

@@ -17,6 +17,7 @@ js/particle-text.js the Archive wallpaper: text drawn in dots, glitching into ot
 js/archive.js       archive collection page: infinite pannable grid, search bar, 3D viewer
 js/card3d.js        the 3D card (tilt + glare, drag to turn it over)
 js/tarot/           /archive/tarot/: THE TAROT READER, an interactive reading (see "Tarot Reader" below)
+js/aquarium/        /archive/aquarium/: the ASCII AQUARIUM (see "ASCII Aquarium" below)
 tests/              npm test: the tarot rules and reading engine
 js/head.js          About page: 3D head (follows the cursor, rotates on drag / two-finger scroll, reacts to taps)
 js/vendor/three.js  the parts of three.js the head needs   (npm install && npm run vendor:three)
@@ -50,6 +51,7 @@ Pages and addresses:
 | `/archive/` | the archive as a desktop: one folder per collection, draggable windows, taskbar |
 | `/archive/la-barra/` | LA BARRA: diagonal infinite pannable grid of the cut-outs on black, search bar, 3D viewer (editorial layout) (`#<piece id>` opens one) |
 | `/archive/tarot/` | THE TAROT READER: a candlelit table, a fortune teller in the dark, a guided five-card reading (the "tarot" folder on the Archive desktop) |
+| `/archive/aquarium/` | ASCII AQUARIUM: draw a fish, release it, feed it (the tiny tank on the Archive desktop) |
 
 Old links from the previous site (`/#film`, `/#project/lexus`) and the old `/film/` and
 `/visuals/` pages redirect to the new addresses.
@@ -243,3 +245,28 @@ Same folder, no changes needed:
   moving the domain's nameservers from OVH to Cloudflare (Cloudflare copies the existing records).
 - **Netlify**: drag-and-drop this folder at app.netlify.com/drop, then add the domain and point
   an `A` record to the IP Netlify shows.
+
+## ASCII Aquarium (`/archive/aquarium/`)
+
+A tank drawn in glyphs, after the "Devault" preset of DEVAULT's ASCII generator (near-black,
+white-to-lavender glyphs, Geist Mono, hairlines, square corners). Inspired by Drawquarium.
+
+- **Draw**: paint on the pad (fish face right, plants grow up); it turns into ASCII as you draw.
+  Start from a template or a blank pad. Release: fish splash in; plants go where you click on the sand.
+- **Feed**: click the water. Fish chase flakes, eat, grow; hungry fish slow down and dim.
+- **Touch**: click a fish = poke; drag a fish, plant or decor = move it; drop on `[ × ]` = remove.
+  Hold the cursor still and fish come to look; sweep it fast and they scatter. Plants bend away.
+  Click bubbles to pop them, the chest for a burst.
+- **Life**: fish that meet build a bond. Friends school; rivals quarrel (`#@!%`); soulmates court
+  (`♥`) and lay an egg that hatches a baby: the two drawings blended.
+- **Golden scales** (`◊`): fed fish shed them; click to collect. They buy decor, lights (DEVAULT's
+  presets: mono, old monitor, amber, ice) and sand.
+- Keys: D draw, F feed, M sound, Esc close. The tank is kept on the device (localStorage `nl-aquarium`).
+
+```
+js/aquarium/ascii.js  drawing → ASCII (stroke glyphs by direction, density ramp), crop, blend, storage. Pure, tested.
+js/aquarium/sim.js    the life: swimming, food, bonds, quarrels, eggs, scales, bubbles
+js/aquarium/tank.js   the glyph renderer, input, the draw pad, the decor panel, saving
+js/aquarium/art.js    ← TEMPLATES, DECOR, LIGHTS, TINTS, prices
+js/aquarium/audio.js  synthesised sounds
+```
