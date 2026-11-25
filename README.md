@@ -299,12 +299,16 @@ go out; a click, tap or key skips it. Then a single line in Helvetica Light ("Ho
 still" on a computer, "Tap anywhere" on a phone). Hold the cursor still and a painting fills the
 screen, its sitter looking at the cursor; move and it's gone. The label bottom right, in Montserrat
 (`assets/fonts/`, SIL Open Font License) on a Swiss grid, gives title, painter, date, medium,
-collection and inventory number, with a link to the museum's page.
+collection and inventory number, with a link to the museum's page. Bottom left, in grey, the
+credit: Pointer Pointer (pointerpointer.com) by Pluto, @growpluto on Twitter.
 
 - **The paintings**: public-domain works from The Cleveland Museum of Art (CC0) and The Metropolitan
   Museum of Art (Open Access), scanned whole: every painting with an image (about 6,900 from Cleveland's
   painting collection and the Met's European paintings and American Wing), a face finder run on each,
-  and the clear looks kept after checking them by eye.
+  and the clear looks kept after checking them by eye. Plus Japanese ukiyo-e prints and paintings
+  (Cleveland's Japanese Art department and the Met's Asian Art: kabuki actors by Sharaku and the
+  Utagawa school, beauties by Utamaro): `tools/isee/fetch_japan.py`. The face model finds few
+  stylised faces, so these are fewer, each checked by eye.
 - **Where they look**: MediaPipe's face landmarks give the eyes and the head's pose; the gaze on the
   picture is where the head faces plus how far the irises sit off the middle of the eyes.
 - **Matching** (`js/isee/match.js`): anywhere along the gaze is "looked at", but a gaze is only ever
