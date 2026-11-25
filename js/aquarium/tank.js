@@ -1,6 +1,7 @@
 // /archive/aquarium/: an ASCII tank. Draw a fish, release it, feed it.
 // Everything in the water is glyphs on one canvas; panels are HTML in DEVAULT's style.
-import { rasterize, crop, blank, encode, decode, PAD_W, PAD_H } from "./ascii.js";
+import { PAD_W, PAD_H, PAL, decode, imgToBm, cropImg, encodeImg, decodeImg, bmToImg } from "./ascii.js";
+import { makeLook, hitShape, paintTiles, createTileLayer } from "./tiles.js";
 import { TINTS, GOLD, HEART, FOOD, LIGHTS, SANDS, DECOR, STARTERS } from "./art.js";
 import { buildScene, grid, paint } from "./scene.js";
 import { createWorld, makeFish, fishSprite, staticSprite, step, dropFood, poke, startle, burst, fx, MAX_FISH } from "./sim.js";
@@ -72,6 +73,7 @@ export function mountAquarium(root) {
       oldH = W.H;
     laid = true;
     fs = w < 700 ? 7.5 : w < 1200 ? 8.5 : 9;
+    tileT = w < 700 ? 6 : 8;
     lh = Math.round(fs * 1.22);
     g.font = `${fs}px ${FONT}`;
     cw = g.measureText("M").width || fs * 0.6;
@@ -121,6 +123,9 @@ export function mountAquarium(root) {
     );
     // haze: darker under the surface and on the floor, lighter in the middle distance
     const mk = (u) => rgb(mix(hex(L.bg), stops[0], u));
+    const sm = stops[1];
+    lightMute = L.tint < 0.5 ? [...sm, (1 - L.tint) * 0.55] : null;
+    hazeMute = [...mix(hex(L.bg), stops[0], 0.9), 0.45];
     haze = [
       [0, mk(0.05)],
       [0.45, mk(0.4)],
@@ -167,13 +172,15 @@ export function mountAquarium(root) {
     if (!laid || !palette.length) return;
     scene = buildScene({ cols, rows, cw, lh, fs, font: FONT, palette, dpr, surfRow, sandH, margin: 48, sand: S.sand, haze });
   }
-  function drawFish(f) {
-    const sp = fishSprite(f, cw, lh, W.k),
-      fr = sp.frames[Math.floor(f.phase) & 3][f.dir > 0 ? 0 : 1],
-      far = f.z < 0.62,
-      dim = f.state === "held" || f === hover ? 1.15 : (0.3 + 0.7 * f.z) * (1 - f.hunger * 0.18);
-    sprite(fr, f.x - sp.w / 2, f.y - sp.h / 2, (l) => (1.5 + l * 8) * dim, far ? 0 : 2 + f.tint);
-  }
+  // fish: letter tiles (js/aquarium/tiles.js), far ones muted into the haze
+  const farLayer = createTileLayer(),
+    nearLayer = createTileLayer();
+  let tileT = 6,
+    lightMute = null,
+    hazeMute = null;
+  const look = (f) => f.look || (f.look = makeLook(f.img, f.src));
+  const size = (f) => fishSprite(f, cw, lh, W.k);
+  const drawFishes = (layer, list, far) => layer.draw(g, list, { W: W.W, H: W.H, T: tileT, look, size, mute: far ? hazeMute : lightMute, dim: far ? 0.72 : 1 });
   function render() {
     const t = W.t,
       sandTop = rows - Math.max(...sandH);
@@ -194,8 +201,8 @@ export function mountAquarium(root) {
       const tw = Math.sin(t * 2 + s.ph * 5);
       put(Math.floor(s.x / cw), Math.floor(s.y / lh), tw > 0.85 ? "*" : s.ph > 4 ? "'" : ".", 2 + (1 - s.y / W.H) * 4 + tw * 1.5);
     }
-    for (const f of W.fish) if (f.z < 0.62) drawFish(f);
     flush();
+    drawFishes(farLayer, W.fish.filter((f) => f.z < 0.62), true);
     layerAt(scene?.mid, par * 0.6);
     layerAt(scene?.floor, par);
     // surface
@@ -246,8 +253,8 @@ export function mountAquarium(root) {
       if (s.land && s.t > 80 && Math.floor(s.t * 6) % 2) continue;
       put(Math.floor(s.x / cw), Math.floor(s.y / lh), Math.floor(W.t * 3 + s.x) % 5 === 0 ? "*" : "◊", 9, SLOT.gold);
     }
-    for (const f of W.fish) if (f.z >= 0.62) drawFish(f);
     flush();
+    drawFishes(nearLayer, W.fish.filter((f) => f.z >= 0.62), false);
     layerAt(scene?.near, par * 1.6);
     // over everything
     for (const b of W.bubbles) put(Math.floor(b.x / cw), Math.floor(b.y / lh), "°oO"[b.size], 7);
@@ -321,17 +328,9 @@ export function mountAquarium(root) {
   const fishAt = (x, y) => {
     for (let i = W.fish.length - 1; i >= 0; i--) {
       const f = W.fish[i],
-        sp = fishSprite(f, cw, lh, W.k);
-      if (Math.abs(x - f.x) > sp.w / 2 + cw || Math.abs(y - f.y) > sp.h / 2 + lh * 0.5) continue;
-      const fr = sp.frames[Math.floor(f.phase) & 3][f.dir > 0 ? 0 : 1],
-        c = Math.floor((x - (f.x - sp.w / 2)) / cw),
-        r = Math.floor((y - (f.y - sp.h / 2)) / lh);
-      for (let dr = -1; dr <= 1; dr++)
-        for (let dc = -1; dc <= 1; dc++) {
-          const cc = c + dc,
-            rr = r + dr;
-          if (cc >= 0 && rr >= 0 && cc < fr.cols && rr < fr.rows && fr.chars[rr * fr.cols + cc] !== " ") return f;
-        }
+        sz = size(f);
+      if (Math.abs(x - f.x) > sz.w / 2 + 8 || Math.abs(y - f.y) > sz.h / 2 + 8) continue;
+      if (hitShape(f, sz, x, y)) return f;
     }
     return null;
   };
@@ -494,24 +493,41 @@ export function mountAquarium(root) {
   }
 
   // ── panels ──
-  const pre = (sp) => {
-    let s = "";
-    for (let r = 0; r < sp.rows; r++) s += sp.chars.slice(r * sp.cols, (r + 1) * sp.cols).join("") + "\n";
-    return s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
-  };
-  const paintBm = (fn) => {
+  const toImg = (x) => ({ w: PAD_W, h: PAD_H, px: x.getImageData(0, 0, PAD_W, PAD_H).data });
+  const paintImg = (fn) => {
     const c = document.createElement("canvas");
     c.width = PAD_W;
     c.height = PAD_H;
-    const x = c.getContext("2d");
+    const x = c.getContext("2d", { willReadFrequently: true });
     fn(x);
-    return toBm(x);
+    return toImg(x);
   };
-  const toBm = (x) => {
-    const id = x.getImageData(0, 0, PAD_W, PAD_H).data,
-      bm = blank();
-    for (let i = 0; i < bm.d.length; i++) bm.d[i] = (id[i * 4] * id[i * 4 + 3]) / 255;
-    return bm;
+  // a drawing as tiles on a canvas (pad preview, starter thumbnails)
+  const tileCanvas = (img, cols, T, target) => {
+    const rows = Math.round((cols * PAD_H) / PAD_W),
+      small = document.createElement("canvas");
+    small.width = cols;
+    small.height = rows;
+    const sx = small.getContext("2d", { willReadFrequently: true });
+    sx.drawImage(makeLook(img, imgToBm(img)), 0, 0, cols, rows);
+    const c = target || document.createElement("canvas");
+    if (!target) (c.width = cols * T), (c.height = rows * T);
+    paintTiles(c.getContext("2d"), sx.getImageData(0, 0, cols, rows).data, cols, rows, T, { mute: lightMute });
+    return c;
+  };
+  const nearestTint = (img) => {
+    let r = 0,
+      g2 = 0,
+      b = 0,
+      n = 0;
+    for (let i = 0; i < img.px.length; i += 4) if (img.px[i + 3] > 110) (r += img.px[i]), (g2 += img.px[i + 1]), (b += img.px[i + 2]), n++;
+    let best = 0,
+      bd = Infinity;
+    TINTS.map(hex).forEach(([R, G, B], i) => {
+      const d = (r / n - R) ** 2 + (g2 / n - G) ** 2 + (b / n - B) ** 2;
+      if (d < bd) (bd = d), (best = i);
+    });
+    return best;
   };
   function closePanel() {
     panel.hidden = true;
@@ -530,23 +546,21 @@ export function mountAquarium(root) {
   }
 
   // the drawing pad
-  const pad = { kind: "fish", tone: 255, size: 7, tint: 0, ctx: null, undo: [] };
+  const pad = { kind: "fish", color: PAL[0], size: 7, ctx: null, undo: [] };
   function openDraw() {
     root.classList.add("aq-drawing");
     const tiles = (kind) =>
       Object.keys(STARTERS[kind])
-        .map((n) => `<button type="button" class="aq-tile" data-starter="${n}" aria-label="${n}"><pre>${pre(rasterize(crop(paintBm(STARTERS[kind][n])), 16, 1.9))}</pre></button>`)
+        .map((n) => `<button type="button" class="aq-tile" data-starter="${n}" aria-label="${n}"><img src="${tileCanvas(paintImg(STARTERS[kind][n]), 40, 3).toDataURL()}" alt=""></button>`)
         .join("");
     panel.innerHTML = `<div class="aq-sec"><h3>Kind</h3><div class="aq-seg"><button type="button" data-kind="fish">Fish</button><button type="button" data-kind="plant">Plant</button></div></div>
 <div class="aq-sec"><h3>Start from</h3><div class="aq-tiles aq-starters">${tiles(pad.kind)}</div></div>
-<div class="aq-sec"><h3>Brush</h3><div class="aq-tiles aq-brush"><button type="button" data-tone="255" aria-label="Solid"><pre>@</pre></button><button type="button" data-tone="150" aria-label="Mid"><pre>+</pre></button><button type="button" data-tone="80" aria-label="Light"><pre>.</pre></button><button type="button" data-tone="0" aria-label="Eraser"><pre>×</pre></button></div>
+<div class="aq-sec"><h3>Brush</h3><div class="aq-swatches">${PAL.map((c) => `<button type="button" data-color="${c}" style="--c:${c}" aria-label="Colour ${c}"></button>`).join("")}<button type="button" class="aq-erase" data-color="" aria-label="Eraser">×</button></div>
 <label class="aq-range"><span>Size</span><output>${pad.size}</output><input type="range" min="2" max="18" value="${pad.size}"></label></div>
-<div class="aq-sec"><h3>Tint</h3><div class="aq-swatches">${TINTS.map((t, i) => `<button type="button" data-tint="${i}" style="--c:${t}" aria-label="Tint ${i + 1}"></button>`).join("")}</div></div>
 <div class="aq-foot"><button type="button" data-do="undo">Undo</button><button type="button" data-do="clear">Clear</button><button type="button" class="aq-pri" data-do="release">Release</button></div>`;
     const sync = () => {
       panel.querySelectorAll("[data-kind]").forEach((b) => b.classList.toggle("on", b.dataset.kind === pad.kind));
-      panel.querySelectorAll("[data-tone]").forEach((b) => b.classList.toggle("on", +b.dataset.tone === pad.tone));
-      panel.querySelectorAll("[data-tint]").forEach((b) => b.classList.toggle("on", +b.dataset.tint === pad.tint));
+      panel.querySelectorAll("[data-color]").forEach((b) => b.classList.toggle("on", b.dataset.color === pad.color));
       padTag.textContent = pad.kind === "fish" ? "fish · head →" : "plant · roots ↓";
     };
     panel.onclick = (e) => {
@@ -559,8 +573,7 @@ export function mountAquarium(root) {
         pad.ctx.clearRect(0, 0, PAD_W, PAD_H);
         drawPad();
       }
-      if (b.dataset.tone) pad.tone = +b.dataset.tone;
-      if (b.dataset.tint) (pad.tint = +b.dataset.tint), drawPad();
+      if (b.dataset.color != null) pad.color = b.dataset.color;
       if (b.dataset.starter) {
         snap();
         pad.ctx.clearRect(0, 0, PAD_W, PAD_H);
@@ -588,33 +601,17 @@ export function mountAquarium(root) {
     padTag = padEl.querySelector(".aq-tag");
   const PCOLS = 48;
   function drawPad() {
-    const pg = padCv.getContext("2d"),
-      r = padCv.getBoundingClientRect(),
-      d = Math.min(2, devicePixelRatio || 1);
-    const ar = rasterize(toBm(pad.ctx), PCOLS, 1.8, { detail: true });
+    const r = padCv.getBoundingClientRect(),
+      d = Math.min(2, devicePixelRatio || 1),
+      T = r.width / PCOLS,
+      rows = Math.round((PCOLS * PAD_H) / PAD_W);
     if (padCv.width !== Math.round(r.width * d)) (padCv.width = Math.round(r.width * d)), (padCv.height = Math.round(r.height * d));
-    const pcw = r.width / PCOLS,
-      plh = r.height / ar.rows,
-      pfs = pcw / 0.6;
+    const pg = padCv.getContext("2d");
     pg.setTransform(d, 0, 0, d, 0, 0);
     pg.clearRect(0, 0, r.width, r.height);
-    pg.font = `${pfs}px ${FONT}`;
-    pg.textBaseline = "middle";
-    pg.textAlign = "center";
-    const pal = palette[2 + pad.tint];
-    for (let rr = 0; rr < ar.rows; rr++)
-      for (let c = 0; c < PCOLS; c++) {
-        const k = rr * PCOLS + c,
-          ch = ar.chars[k];
-        const x = (c + 0.5) * pcw,
-          y = (rr + 0.5) * plh;
-        if (ch === " ") {
-          if (c % 3 === 1 && rr % 2 === 1) (pg.fillStyle = "rgba(255,255,255,.09)"), pg.fillText("·", x, y);
-          continue;
-        }
-        pg.fillStyle = pal[clamp(Math.round(2 + ar.lum[k] * 7.5), 0, 9)];
-        pg.fillText(ch, x, y);
-      }
+    pg.fillStyle = "rgba(255,255,255,.07)";
+    for (let y = 0; y < rows; y++) for (let x = 0; x < PCOLS; x++) if (x % 3 === 1 && y % 2 === 1) pg.fillRect((x + 0.5) * T - 1, (y + 0.5) * T - 1, 2, 2);
+    tileCanvas(toImg(pad.ctx), PCOLS, T, padCv);
   }
   const snap = () => (pad.undo.push(pad.ctx.getImageData(0, 0, PAD_W, PAD_H)), pad.undo.length > 30 && pad.undo.shift());
   function mountPad() {
@@ -627,8 +624,8 @@ export function mountAquarium(root) {
     const stroke = (a, b) => {
       const x = pad.ctx;
       x.save();
-      if (!pad.tone) x.globalCompositeOperation = "destination-out";
-      x.strokeStyle = `rgb(${pad.tone || 255},${pad.tone || 255},${pad.tone || 255})`;
+      if (!pad.color) x.globalCompositeOperation = "destination-out";
+      x.strokeStyle = pad.color || "#000";
       x.lineWidth = pad.size;
       x.lineCap = x.lineJoin = "round";
       x.beginPath();
@@ -672,7 +669,7 @@ export function mountAquarium(root) {
     requestAnimationFrame(drawPad);
   }
   function release() {
-    const src = crop(toBm(pad.ctx));
+    const src = cropImg(toImg(pad.ctx));
     if (!src) {
       padEl.classList.remove("no");
       void padEl.offsetWidth;
@@ -681,7 +678,7 @@ export function mountAquarium(root) {
     }
     if (pad.kind === "fish") {
       if (W.fish.length >= MAX_FISH) return deny();
-      const f = makeFish(src, { tint: pad.tint, x: W.W / 2 + rand(-80, 80), y: W.surf + lh * 3 });
+      const f = makeFish(src, { x: W.W / 2 + rand(-80, 80), y: W.surf + lh * 3 });
       f.state = "flee";
       f.fx = f.x;
       f.fy = f.y - 100;
@@ -692,7 +689,7 @@ export function mountAquarium(root) {
       say(`${f.name} released`);
       closePanel();
     } else {
-      placing = { plant: { src, tint: pad.tint } };
+      placing = { plant: { img: src, src: imgToBm(src), tint: nearestTint(src) } };
       root.classList.add("aq-placing");
       closePanel();
     }
@@ -750,13 +747,13 @@ export function mountAquarium(root) {
       localStorage.setItem(
         KEY,
         JSON.stringify({
-          v: 1,
+          v: 2,
           at: Date.now(),
           ...S,
-          fish: W.fish.map((f) => ({ id: f.id, name: f.name, src: encode(f.src), tint: f.tint, size: +f.size.toFixed(3), hunger: +f.hunger.toFixed(3), p: f.p, z: f.z, speed: f.speed, x: f.x / W.W, y: f.y / W.H, born: f.born })),
-          plants: W.plants.map((p) => ({ src: encode(p.src), tint: p.tint, x: p.x / W.W })),
+          fish: W.fish.map((f) => ({ id: f.id, name: f.name, img: encodeImg(f.img), size: +f.size.toFixed(3), hunger: +f.hunger.toFixed(3), p: f.p, z: f.z, speed: f.speed, x: f.x / W.W, y: f.y / W.H, born: f.born })),
+          plants: W.plants.map((p) => ({ img: encodeImg(p.img), tint: p.tint, x: p.x / W.W })),
           decor: W.decor.map((d) => ({ kind: d.kind, x: d.x / W.W })),
-          eggs: W.eggs.map((e) => ({ src: encode(e.src), tint: e.tint, p: e.p, parents: e.parents, x: e.x / W.W, t: e.t })),
+          eggs: W.eggs.map((e) => ({ img: encodeImg(e.img), p: e.p, parents: e.parents, x: e.x / W.W, t: e.t })),
           aff: [...W.aff],
         }),
       );
@@ -767,24 +764,32 @@ export function mountAquarium(root) {
     try {
       d = JSON.parse(localStorage.getItem(KEY));
     } catch {}
-    if (d?.v === 1) {
+    if (d?.v === 1 || d?.v === 2) {
+      // v1 kept grey drawings and one tint: give them their colour
+      const pic = (o) => (o.img ? decodeImg(o.img) : bmToImg(decode(o.src), TINTS[o.tint ?? 0]));
       const away = Math.max(0, (Date.now() - d.at) / 1000);
       Object.assign(S, { scales: d.scales, owned: d.owned, light: d.light, sand: d.sand });
-      W.fish = d.fish.map((f) => makeFish(decode(f.src), { ...f, hunger: Math.min(1, f.hunger + away / 260), x: f.x * W.W, y: f.y * W.H }));
-      W.plants = d.plants.map((p) => ({ src: decode(p.src), tint: p.tint, x: p.x * W.W, ph: rand(0, 6) }));
+      W.fish = d.fish.map((f) => makeFish(pic(f), { ...f, hunger: Math.min(1, f.hunger + away / 260), x: f.x * W.W, y: f.y * W.H }));
+      W.plants = d.plants.map((p) => {
+        const img = pic(p);
+        return { img, src: imgToBm(img), tint: p.tint ?? nearestTint(img), x: p.x * W.W, ph: rand(0, 6) };
+      });
       W.decor = d.decor.map((o) => ({ kind: o.kind, x: o.x * W.W, bubbles: !!DECOR[o.kind]?.bubbles })).filter((o) => DECOR[o.kind]);
-      W.eggs = (d.eggs || []).map((e) => ({ ...e, src: decode(e.src), x: e.x * W.W, y: W.sandY(e.x * W.W) - lh, land: true }));
+      W.eggs = (d.eggs || []).map((e) => ({ ...e, img: pic(e), x: e.x * W.W, y: W.sandY(e.x * W.W) - lh, land: true }));
       W.aff = new Map(d.aff || []);
       return;
     }
     // a first tank
-    const mk = (kind, name, o) => makeFish(crop(paintBm(STARTERS.fish[kind])), { ...o, x: rand(W.W * 0.2, W.W * 0.8), y: rand(W.surf + 120, W.sandY(0) - 120) });
-    W.fish = [mk("classic", 0, { tint: 0, size: 0.95 }), mk("angel", 0, { tint: 1, size: 0.85 }), mk("guppy", 0, { tint: 4, size: 0.7 }), mk("puffer", 0, { tint: 3, size: 0.6 })];
+    const mk = (kind, o) => makeFish(cropImg(paintImg(STARTERS.fish[kind])), { ...o, x: rand(W.W * 0.2, W.W * 0.8), y: rand(W.surf + 120, W.sandY(0) - 120) });
+    W.fish = [mk("goldfish", { size: 1, z: 0.95 }), mk("goldfish", { size: 0.8, z: 0.5 }), mk("classic", { size: 0.85 }), mk("angel", { size: 0.8 }), mk("guppy", { size: 0.7 })];
     W.plants = [
-      { src: crop(paintBm(STARTERS.plant.kelp)), tint: 3, x: W.W * 0.16, ph: 1 },
-      { src: crop(paintBm(STARTERS.plant.fern)), tint: 1, x: W.W * 0.78, ph: 3 },
-      { src: crop(paintBm(STARTERS.plant.coral)), tint: 5, x: W.W * 0.62, ph: 0 },
-    ];
+      ["kelp", 0.16, 1],
+      ["fern", 0.78, 3],
+      ["coral", 0.62, 0],
+    ].map(([k, x, ph]) => {
+      const img = cropImg(paintImg(STARTERS.plant[k]));
+      return { img, src: imgToBm(img), tint: nearestTint(img), x: W.W * x, ph };
+    });
     W.decor = [{ kind: "rock", x: W.W * 0.3 }];
     save();
   }

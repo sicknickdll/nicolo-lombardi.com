@@ -4588,18 +4588,28 @@ html.aquarium-page .header {
   border-radius: 0;
 }
 .aq-swatches {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
   gap: 6px;
 }
 .aq-swatches button {
-  width: 28px;
-  height: 28px;
+  aspect-ratio: 1;
   background: var(--c);
   outline: 1px solid var(--aq-line2);
   outline-offset: 2px;
 }
 .aq-swatches button.on {
   outline-color: var(--aq-ink);
+}
+.aq-swatches .aq-erase {
+  font: 14px/1 var(--mono);
+  color: var(--aq-ink2);
+  background: transparent;
+}
+.aq-starters img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 .aq-presets {
   display: grid;

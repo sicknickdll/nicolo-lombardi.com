@@ -1,5 +1,5 @@
-// The tank's life, in CSS px. No drawing here: js/aquarium/tank.js renders the world as glyphs.
-import { rasterize, blend, blank } from "./ascii.js";
+// The tank's life, in CSS px. No drawing here: js/aquarium/tank.js renders the world.
+import { rasterize, blendImg, imgToBm } from "./ascii.js";
 import { fishName } from "./art.js";
 
 export const MAX_FISH = 28;
@@ -7,19 +7,14 @@ const rand = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const GRAWLIX = "#@!%$&*?";
 
-// Room above and below the drawing for the tail to swing.
-function padY(bm, p) {
-  const out = blank(bm.w, bm.h + p * 2);
-  out.d.set(bm.d, p * bm.w);
-  return out;
-}
-
-export function makeFish(src, o = {}) {
+// img: the colour drawing (RGBA, facing right)
+export function makeFish(img, o = {}) {
+  const dir = Math.random() < 0.5 ? 1 : -1;
   return {
     id: o.id ?? Math.random().toString(36).slice(2, 9),
     name: o.name ?? fishName(),
-    src,
-    bm: padY(src, Math.ceil(src.h * 0.08)),
+    img,
+    src: imgToBm(img),
     tint: o.tint ?? 0,
     size: o.size ?? 1,
     hunger: o.hunger ?? 0.35,
@@ -29,7 +24,10 @@ export function makeFish(src, o = {}) {
     y: o.y ?? 0,
     vx: 0,
     vy: 0,
-    dir: Math.random() < 0.5 ? 1 : -1,
+    dir,
+    face: dir, // follows dir slowly: through 0 the fish is edge-on, mid-turn
+    tilt: 0,
+    beat: rand(0, 6), // burst and glide
     phase: rand(0, 6),
     speed: o.speed ?? rand(38, 72),
     state: "wander",
@@ -44,18 +42,11 @@ export function makeFish(src, o = {}) {
   };
 }
 
+// Size on screen; farther fish are smaller (z: 0.45 far … 1 near).
 export function fishSprite(f, cw, chh, k) {
-  // farther fish are smaller (z: 0.45 far … 1 near)
-  const cols = Math.max(8, Math.round(((f.src.w / 160) * 260 * f.size * (0.55 + 0.45 * f.z) * k) / cw));
-  if (f.spr && f.spr.cols === cols && f.spr.cw === cw && f.spr.chh === chh) return f.spr;
-  const aspect = chh / cw,
-    amp = f.src.h * 0.07,
-    frames = [];
-  for (let i = 0; i < 4; i++) {
-    const wag = amp * Math.sin((i * Math.PI) / 2);
-    frames.push([rasterize(f.bm, cols, aspect, { wag, detail: true, seed: f.p * 97 }), rasterize(f.bm, cols, aspect, { wag, flip: true, detail: true, seed: f.p * 97 })]);
-  }
-  return (f.spr = { cols, rows: frames[0][0].rows, frames, cw, chh, w: cols * cw, h: frames[0][0].rows * chh });
+  const w = Math.max(24, (f.src.w / 160) * 250 * f.size * (0.55 + 0.45 * f.z) * k);
+  if (f.spr && f.spr.w === w) return f.spr;
+  return (f.spr = { w, h: (w * f.src.h) / f.src.w });
 }
 
 export function staticSprite(o, cw, chh, k, width = 150) {
@@ -220,7 +211,7 @@ export function step(w, dt, ptr) {
     }
     if (e.t > 24 && fish.length < MAX_FISH) {
       w.eggs.splice(i, 1);
-      const baby = makeFish(e.src, { tint: e.tint, size: 0.5, hunger: 0.5, p: clamp(e.p + rand(-0.15, 0.15), 0, 1), x: e.x, y: e.y - 30 });
+      const baby = makeFish(e.img, { tint: e.tint, size: 0.5, hunger: 0.5, p: clamp(e.p + rand(-0.15, 0.15), 0, 1), x: e.x, y: e.y - 30 });
       fish.push(baby);
       for (const f of fish) if (e.parents.includes(f.id)) w.aff.set(pairKey(f, baby), 0.9);
       burst(w, e.x, e.y, "*.'`", 10, { speed: 70 });
@@ -292,7 +283,10 @@ function stepFish(w, f, dt, ptr) {
   f.timer -= dt;
   if (f.spin > 0) f.spin -= dt;
   if (f.emote && (f.emote.t += dt) > f.emote.life) f.emote = null;
-  let spd = f.speed * (1.15 - f.hunger * 0.35) * (f.size < 0.8 ? 1.15 : 1);
+  // burst and glide: a few strong beats, then coasting
+  f.beat += dt * (0.7 + f.p * 0.5);
+  const thrust = 0.55 + 0.65 * Math.max(0, Math.sin(f.beat)) ** 2;
+  let spd = f.speed * (1.15 - f.hunger * 0.35) * (f.size < 0.8 ? 1.15 : 1) * thrust * (0.35 + 0.65 * Math.abs(f.face));
   let tx = f.tx,
     ty = f.ty,
     face = 0;
@@ -334,7 +328,7 @@ function stepFish(w, f, dt, ptr) {
     if (f.timer <= 0) {
       f.state = "wander";
       if (f.lead && w.fish.includes(o)) {
-        w.eggs.push({ x: (f.x + o.x) / 2, y: (f.y + o.y) / 2, t: 0, land: false, src: blend(f.src, o.src), tint: Math.random() < 0.5 ? f.tint : o.tint, p: (f.p + o.p) / 2, parents: [f.id, o.id] });
+        w.eggs.push({ x: (f.x + o.x) / 2, y: (f.y + o.y) / 2, t: 0, land: false, img: blendImg(f.img, o.img), tint: Math.random() < 0.5 ? f.tint : o.tint, p: (f.p + o.p) / 2, parents: [f.id, o.id] });
         w.emit("egg", f);
       }
     }
@@ -397,16 +391,22 @@ function stepFish(w, f, dt, ptr) {
     dy = ty - f.y,
     d = Math.hypot(dx, dy) || 1,
     k = Math.min(1, d / 50);
-  const k2 = Math.min(1, dt * (f.state === "flee" ? 6 : 2.2));
+  const k2 = Math.min(1, dt * (f.state === "flee" ? 5 : 1.3));
   f.vx += ((dx / d) * spd * k - f.vx) * k2;
-  f.vy += ((dy / d) * spd * k * 0.6 - f.vy) * k2;
+  f.vy += ((dy / d) * spd * k * 0.5 - f.vy) * k2;
   f.x = clamp(f.x + f.vx * dt, B.x0, B.x1);
-  f.y = clamp(f.y + f.vy * dt, B.y0, B.y1);
+  f.y = clamp(f.y + (f.vy + Math.sin(w.t * 0.9 + f.p * 20) * 3) * dt, B.y0, B.y1);
   if (face) f.dir = face;
-  else if (f.vx > 8) f.dir = 1;
-  else if (f.vx < -8) f.dir = -1;
-  if (f.spin > 0 && Math.random() < dt * 20) f.dir *= -1;
-  f.phase += dt * (2.5 + Math.hypot(f.vx, f.vy) / 10);
+  else if (f.vx > 14) f.dir = 1;
+  else if (f.vx < -14) f.dir = -1;
+  if (f.spin > 0 && Math.random() < dt * 8) f.dir *= -1;
+  // turning takes time; the body leans into a climb or a dive
+  const turn = (f.state === "flee" ? 6 : 2.6) * dt;
+  f.face += clamp(f.dir - f.face, -turn, turn);
+  const tilt = clamp(Math.atan2(f.vy, Math.abs(f.vx) + 25), -0.45, 0.45);
+  f.tilt += (tilt - f.tilt) * Math.min(1, dt * 3);
+  // tail beats follow the thrust
+  f.phase += dt * (1.6 + thrust * 2.2 + Math.hypot(f.vx, f.vy) / 18);
 
   f.scaleT -= dt * (f.hunger < 0.45 ? 1 : 0.2);
   if (f.scaleT <= 0) {
