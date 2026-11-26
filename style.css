@@ -1717,32 +1717,72 @@ html.arch-grid-page body {
   opacity: 0.6;
 }
 
-/* Search bar at the bottom */
+/* Search: at rest a round magnifying-glass button at the bottom; clicked (or "/"), it springs
+   open into the bar (js/archive.js). Only width and corners animate, never a scale, so the icon
+   and the text keep their shape while it grows (after motion.dev's scale-correction example). */
 .arch-search {
   position: fixed;
   z-index: 60;
   left: 50%;
   bottom: max(20px, env(safe-area-inset-bottom));
   transform: translateX(-50%);
-  width: min(560px, calc(100vw - 32px));
+  width: 52px;
+  height: 52px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 18px;
+  overflow: hidden;
   background: rgb(0 0 0 / 0.78);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
   border: 1px solid #333;
-  border-radius: 999px;
-  transition: border-color 0.3s;
+  border-radius: 26px;
+  transition:
+    width 0.6s cubic-bezier(0.3, 1.35, 0.5, 1),
+    border-color 0.3s;
+}
+.arch-search.open {
+  width: min(560px, calc(100vw - 32px));
+  transition:
+    width 0.7s cubic-bezier(0.25, 1.25, 0.4, 1),
+    border-color 0.3s;
 }
 .arch-search:focus-within {
   border-color: #b9b19f;
+}
+.arch-search-btn {
+  flex: none;
+  width: 50px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  color: inherit;
+  cursor: pointer;
+}
+.arch-search-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  transition: transform 0.3s ease;
+}
+.arch-search-btn:hover svg {
+  transform: scale(1.12);
+}
+.arch-search-btn:focus-visible {
+  outline: 1px solid #b9b19f;
+  outline-offset: -6px;
 }
 .arch-search input {
   flex: 1;
   min-width: 0;
   height: 50px;
+  padding: 0 20px 0 0;
   background: transparent;
   border: 0;
   outline: 0;
@@ -1752,22 +1792,21 @@ html.arch-grid-page body {
   font-weight: 400;
   font-size: 16px;
   cursor: text;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
-.arch-search input::placeholder {
-  color: inherit;
-  opacity: 0.45;
+.arch-search.open input {
+  opacity: 1;
+  transition: opacity 0.3s 0.15s;
 }
-.arch-search kbd {
-  font: inherit;
-  font-size: 12px;
-  border: 1px solid #4a463d;
-  border-radius: 5px;
-  padding: 1px 7px;
-  opacity: 0.5;
+.arch-search input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
 }
-@media (hover: none) {
-  .arch-search kbd {
-    display: none;
+@media (prefers-reduced-motion: reduce) {
+  .arch-search,
+  .arch-search.open,
+  .arch-search input {
+    transition: none;
   }
 }
 
