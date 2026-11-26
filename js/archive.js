@@ -2,7 +2,7 @@
 // 3D viewer.
 //   · The grid wraps endlessly in both directions: drag (mouse or finger) or scroll to pan, it
 //     coasts to a stop. Tiles are created and recycled as they come into view.
-//   · Typing in the bar (or pressing "/") keeps only the pieces that match the name, type,
+//   · The magnifying glass (or "/") opens the search bar; typing keeps only the pieces that match the name, type,
 //     country or location; the grid fills with those.
 //   · The grid runs on a diagonal: the tiles stay upright but their rows and columns are tilted.
 //   · Clicking a piece opens it as an interactive 3D card (js/card3d.js) under its name, with
@@ -305,6 +305,25 @@ export function bindCollection(main) {
     layout();
   };
   q.addEventListener("input", filter);
+  // The bar rests as a round magnifying-glass button; a click (or "/") springs it open into the
+  // full bar, and it folds back once it is left empty. Only the width and the corners animate
+  // (style.css), so the icon and the text are never stretched.
+  const bar = wall.querySelector(".arch-search"),
+    btn = bar.querySelector(".arch-search-btn");
+  const openBar = () => {
+    bar.classList.add("open");
+    btn.setAttribute("aria-expanded", "true");
+    q.tabIndex = 0;
+    q.focus({ preventScroll: true });
+  };
+  const closeBar = () => {
+    if (q.value) return;
+    bar.classList.remove("open");
+    btn.setAttribute("aria-expanded", "false");
+    q.tabIndex = -1;
+  };
+  btn.addEventListener("click", () => (bar.classList.contains("open") ? q.focus() : openBar()));
+  q.addEventListener("blur", () => setTimeout(() => !bar.contains(document.activeElement) && closeBar(), 0));
   // Enter opens the first match.
   wall.querySelector(".arch-search").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -392,11 +411,12 @@ export function bindCollection(main) {
       }
     } else if (e.key === "/" && document.activeElement !== q && !e.metaKey && !e.ctrlKey) {
       e.preventDefault();
-      q.focus();
+      openBar();
     } else if (e.key === "Escape" && document.activeElement === q) {
       q.value = "";
       filter();
       q.blur();
+      closeBar();
     }
   };
   addEventListener("keydown", onKey, true);
