@@ -327,7 +327,7 @@ To add a painting, add it to `tools/point-art/pointers.json` and run (Python wit
 ```
 python3 tools/point-art/export.py work/cache          # images + js/point-art/paintings.js
 python3 tools/point-art/fingers.py adam-god            # the opening's tiles (the id shown first)
-python3 tools/point-art/icon.py <at rest> <on hover>   # the desktop icon and the shared picture
+python3 tools/point-art/icon.py adam-god saint-john-the-baptist adam-god   # desktop icon, shared picture
 node tools/build.mjs
 ```
 
