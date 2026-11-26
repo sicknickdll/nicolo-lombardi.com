@@ -37,9 +37,9 @@ export const experiences = [
     hidden: true, // off the Archive desktop and the sitemap; the page still works at its address
   },
   {
-    id: "i-see-u",
-    title: "I SEE U",
-    label: "i see u",
+    id: "point-art",
+    title: "POINT-ART",
+    label: "point-art",
     blurb:
       "Hold your cursor still and a finger from the history of painting points right at it. Michelangelo, Leonardo, Caravaggio and more, the most famous paintings first, each with its title, painter and collection.",
     icon: [],
