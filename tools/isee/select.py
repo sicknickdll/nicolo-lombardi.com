@@ -24,7 +24,7 @@ IRIS_GAIN = 1.6
 MIN_SIZE = 0.045  # eye-to-eye distance over the image's short side
 
 rows = json.load(open(faces_path))
-allf = [f for r in rows for f in r.get("faces", []) if f["size"] > 0.06]
+allf = [f for r in rows for f in r.get("faces", []) if f["size"] > 0.06 and not f.get("manual")]
 bias_head = statistics.median(f["head"][1] for f in allf)
 bias_iris = statistics.median(f["iris"][1] for f in allf)
 print(f"{len(allf)} faces; vertical bias head {bias_head:.3f}, iris {bias_iris:.3f}", file=sys.stderr)
@@ -42,7 +42,7 @@ for r in rows:
     if not fs:
         continue
     f = fs[0]
-    if f["size"] < MIN_SIZE:
+    if f["size"] < MIN_SIZE and not f.get("manual"):  # a face marked by eye is kept at any size
         continue
     # a crowd: the main face should stand out, or nobody knows who is looking
     if len(fs) > 1 and fs[1]["size"] > 0.75 * f["size"] and r["id"] not in keep:
@@ -50,6 +50,8 @@ for r in rows:
     gx = f["head"][0] + IRIS_GAIN * f["iris"][0]
     gy = (f["head"][1] - bias_head) + IRIS_GAIN * (f["iris"][1] - bias_iris)
     s = math.hypot(gx, gy)
+    if f.get("manual"):  # set by eye (famous_faces.py): only its angle counts
+        s = 1
     if r["id"] in angle:
         a = math.radians(angle[r["id"]])
         gx, gy = math.cos(a) * s, math.sin(a) * s

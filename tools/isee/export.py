@@ -57,7 +57,11 @@ def save(r):
     path = os.path.join(OUT, r["id"] + ".webp")
     if not os.path.exists(path) or r["id"] not in trims:
         im = None
-        for url in (r["big"], r["small"]):
+        # a copy already on disk (ISEE_LOCAL=folder with <id>.jpg): for hosts that throttle downloads
+        local = os.path.join(os.environ.get("ISEE_LOCAL", "-"), r["id"] + ".jpg")
+        if os.path.exists(local):
+            im = Image.open(local).convert("RGB")
+        for url in () if im else (r["big"], r["small"]):
             try:
                 res = S.get(url, timeout=180)
                 if res.status_code == 200:
@@ -71,7 +75,7 @@ def save(r):
         if abs(im.width / im.height - r["w"] / r["h"]) > 0.02:
             print(f"{r['id']}: large image is cropped differently, using the small one", file=sys.stderr)
             im = Image.open(io.BytesIO(S.get(r["small"], timeout=60).content)).convert("RGB")
-        box = margins(im)
+        box = r.get("crop") or margins(im)  # a detail of a large scene, or the picture inside its margins
         ex, ey = r["faces"][0]["eye"]
         if not (box[0] < ex < box[2] and box[1] < ey < box[3]):
             box = [0, 0, 1, 1]

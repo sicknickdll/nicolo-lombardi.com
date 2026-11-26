@@ -311,6 +311,14 @@ seen), the eyes turn white too, and the Archive appears as the white lifts.
   (Cleveland's Japanese Art department and the Met's Asian Art: kabuki actors by Sharaku and the
   Utagawa school, beauties by Utamaro): `tools/isee/fetch_japan.py`. The face model finds few
   stylised faces, so these are fewer, each checked by eye.
+- **Famous paintings** (`tools/isee/famous.json`, `fetch_famous.py`, `famous_faces.py`): well-known
+  works from museums without an open API (Leonardo's Lady with an Ermine, Michelangelo's Last
+  Judgment, Delphic Sibyl, Adam and Doni Tondo, Vermeer, Caravaggio, Antonello, Sargent's Madame
+  X…), with photographs from Wikimedia Commons, the Met or the Web Gallery of Art. The face model
+  misses most of them, so their eyes, eye-to-eye distance and gaze are marked by hand in
+  famous.json; entries without an "eye" are listed but not used yet. Only public-domain paintings:
+  painters who died less than 70 years ago (Picasso, Dalí, Magritte…) are still under copyright.
+  Commons throttles downloads hard: `ISEE_LOCAL=folder` makes export.py use images already on disk.
 - **Where they look**: MediaPipe's face landmarks give the eyes and the head's pose; the gaze on the
   picture is where the head faces plus how far the irises sit off the middle of the eyes.
 - **Matching** (`js/isee/match.js`): anywhere along the gaze is "looked at", but a gaze is only ever

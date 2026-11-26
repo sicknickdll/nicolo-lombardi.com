@@ -220,7 +220,19 @@
   "cma-118801",
   "met-908751",
   "cma-122951",
-  "met-45223"
+  "met-45223",
+  "wm-last-judgment",
+  "wm-creation-of-adam",
+  "wm-the-milkmaid",
+  "wm-girl-reading-a-letter",
+  "wm-the-geographer",
+  "wm-delphic-sibyl",
+  "wm-doni-tondo",
+  "wm-judith-beheading-holofernes",
+  "wm-lady-with-an-ermine",
+  "wm-virgin-annunciate",
+  "wm-old-man-and-grandson",
+  "wm-madame-x"
  ],
  "angle": {
   "cma-111676": 0,
@@ -335,6 +347,18 @@
   "met-843993": 5,
   "met-846945": -15,
   "met-904343": 60,
-  "met-908751": 80
+  "met-908751": 80,
+  "wm-creation-of-adam": -5,
+  "wm-delphic-sibyl": 0,
+  "wm-doni-tondo": -60,
+  "wm-girl-reading-a-letter": 105,
+  "wm-judith-beheading-holofernes": 150,
+  "wm-lady-with-an-ermine": -3,
+  "wm-last-judgment": 145,
+  "wm-madame-x": 10,
+  "wm-old-man-and-grandson": 15,
+  "wm-the-geographer": -170,
+  "wm-the-milkmaid": 115,
+  "wm-virgin-annunciate": 165
  }
 }
