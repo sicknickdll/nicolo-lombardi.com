@@ -1,13 +1,14 @@
-// I see u, the opening: one painted eye, small, in the middle of a white page; then other eyes,
-// square tiles cut from the paintings (js/isee/eyes.js), appear around it, ring after ring, until
-// they fill the screen with a mosaic of eyes; then they go out one by one.
+// I see u, the opening: one painted pointing hand, small, in the middle of a white page (God's,
+// from the Creation of Adam); then other pointing hands, square tiles cut from the paintings
+// (js/isee/fingers.js), appear around it, ring after ring, until they fill the screen with a
+// mosaic of fingers; then they go out one by one.
 // playIntro(canvas) resolves when it is over (at once if the sprite can't load); skip() ends it.
-import { EYES } from "./eyes.js";
+import { FINGERS as TILES } from "./fingers.js";
 
-const FIRST = [0, 520]; // the first eye fades in
+const FIRST = [0, 520]; // the first hand fades in
 const FILL = [700, 2300]; // the others appear (start of the first, start of the last)
 const TILE_IN = 240;
-const HOLD = 2750; // the full mosaic, then the eyes go out
+const HOLD = 2750; // the full mosaic, then the hands go out
 const OUT_SPREAD = 520,
   TILE_OUT = 300;
 
@@ -16,7 +17,7 @@ export function playIntro(canvas) {
     finish = () => {};
   const done = new Promise((resolve) => (finish = resolve));
   const sprite = new Image();
-  sprite.src = EYES.src;
+  sprite.src = TILES.src;
   const giveUp = setTimeout(() => end(), 2500);
   function end() {
     clearTimeout(giveUp);
@@ -46,19 +47,19 @@ export function playIntro(canvas) {
     const g = canvas.getContext("2d");
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.imageSmoothingQuality = "high";
-    // every cell of a grid centred on the first eye, nearest first (a little shuffled, so the
+    // every cell of a grid centred on the first hand, nearest first (a little shuffled, so the
     // mosaic grows like a stain rather than in perfect rings)
-    const order = [...Array(EYES.count).keys()].filter((i) => i !== EYES.first).sort(() => Math.random() - 0.5);
+    const order = [...Array(TILES.count).keys()].filter((i) => i !== TILES.first).sort(() => Math.random() - 0.5);
     const cells = [];
     for (let j = -ny; j <= ny; j++)
       for (let i = -nx; i <= nx; i++) if (i || j) cells.push({ i, j, d: Math.hypot(i, j) + Math.random() * 0.9 });
     cells.sort((a, b) => a.d - b.d);
     cells.forEach((c, k) => {
-      c.eye = order[k % order.length];
+      c.tile = order[k % order.length];
       c.at = FILL[0] + (FILL[1] - FILL[0]) * Math.pow(k / Math.max(1, cells.length - 1), 0.8);
       c.out = HOLD + Math.random() * OUT_SPREAD;
     });
-    cells.unshift({ i: 0, j: 0, eye: EYES.first, at: FIRST[0], first: true, out: HOLD + OUT_SPREAD * 0.5 });
+    cells.unshift({ i: 0, j: 0, tile: TILES.first, at: FIRST[0], first: true, out: HOLD + OUT_SPREAD * 0.5 });
     const t0 = performance.now(),
       endAt = HOLD + OUT_SPREAD + TILE_OUT;
     const frame = (now) => {
@@ -72,10 +73,10 @@ export function playIntro(canvas) {
           s = T * grow,
           x = cx + c.i * T - s / 2,
           y = cy + c.j * T - s / 2,
-          sx = (c.eye % EYES.cols) * EYES.tile,
-          sy = Math.floor(c.eye / EYES.cols) * EYES.tile;
+          sx = (c.tile % TILES.cols) * TILES.tile,
+          sy = Math.floor(c.tile / TILES.cols) * TILES.tile;
         g.globalAlpha = a;
-        g.drawImage(sprite, sx, sy, EYES.tile, EYES.tile, x, y, s, s);
+        g.drawImage(sprite, sx, sy, TILES.tile, TILES.tile, x, y, s, s);
       }
       g.globalAlpha = 1;
       if (t < endAt) raf = requestAnimationFrame(frame);

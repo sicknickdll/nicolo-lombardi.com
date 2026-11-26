@@ -1,29 +1,40 @@
 #!/usr/bin/env python3
-"""I see u: the two faces of its icon on the Archive desktop.
+"""I see u: its icon on the Archive desktop, and the picture shown when the page is shared.
 
-icon.webp is a sitter looking away; icon-look.webp, shown on hover, one looking straight out.
-Each is a crop around the face (eyes a third of the way down), 76 × 96 px.
+icon.webp is a hand from one painting, icon-look.webp (shown on hover) a finger pointing out of
+another: each a crop around the hand, 76 × 96 px. assets/og/i-see-u.jpg (1200 × 630) is the
+first painting, framed on its hand. Run after export.py:
 
-    python3 tools/isee/icon.py work/faces.json <away id> <looking id>
+    python3 tools/isee/icon.py <id at rest> <id on hover> [<id for the shared picture>]
 """
-import io
 import json
 import os
 import sys
 
-import requests
 from PIL import Image
 
-OUT = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "archive", "isee")
-W, H = 76, 96
-rows = {r["id"]: r for r in json.load(open(sys.argv[1]))}
-for rid, name in ((sys.argv[2], "icon.webp"), (sys.argv[3], "icon-look.webp")):
-    r = rows[rid]
-    im = Image.open(io.BytesIO(requests.get(r["small"], timeout=60, headers={"User-Agent": "isee-archive/1.0"}).content)).convert("RGB")
-    f = max(r["faces"], key=lambda f: f["size"])
-    ex, ey = f["eye"][0] * im.width, f["eye"][1] * im.height
-    span = f["size"] * min(im.size) * 3.2  # crop width: a little more than the head
-    w, h = span, span * H / W
-    box = [ex - w / 2, ey - h / 3, ex + w / 2, ey + h * 2 / 3]
-    im.crop([round(v) for v in box]).resize((W, H), Image.LANCZOS).save(os.path.join(OUT, name), "WEBP", quality=82)
-    print(name, rid, r["title"])
+ROOT = os.path.join(os.path.dirname(__file__), "..", "..")
+OUT = os.path.join(ROOT, "assets", "archive", "isee")
+src = open(os.path.join(ROOT, "js", "isee", "paintings.js")).read()
+P = {p["id"]: p for p in (json.loads(l.strip().rstrip(",")) for l in src.splitlines() if l.strip().startswith("{"))}
+
+
+def framed(p, w, h, span):
+    """A w × h crop centred a little behind the fingertip, `span` finger lengths wide."""
+    im = Image.open(os.path.join(ROOT, p["src"].lstrip("/"))).convert("RGB")
+    f = p["size"] * min(im.size)
+    cx = p["tip"][0] * im.width - p["dir"][0] * f * 0.5
+    cy = p["tip"][1] * im.height - p["dir"][1] * f * 0.5
+    cw = min(f * span, im.width, im.height * w / h)
+    ch = cw * h / w
+    x = min(max(cx - cw / 2, 0), im.width - cw)
+    y = min(max(cy - ch / 2, 0), im.height - ch)
+    return im.crop((round(x), round(y), round(x + cw), round(y + ch))).resize((w, h), Image.LANCZOS)
+
+
+for pid, name in ((sys.argv[1], "icon.webp"), (sys.argv[2], "icon-look.webp")):
+    framed(P[pid], 76, 96, 2.6).save(os.path.join(OUT, name), "WEBP", quality=82)
+    print(name, pid, P[pid]["title"])
+og = P[sys.argv[3] if len(sys.argv) > 3 else sys.argv[2]]
+framed(og, 1200, 630, 7).save(os.path.join(ROOT, "assets", "og", "i-see-u.jpg"), quality=86)
+print("og", og["id"], og["title"])

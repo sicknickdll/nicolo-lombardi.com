@@ -327,7 +327,7 @@ write(
   "aquarium-page",
 );
 
-// I see u: paintings that look at the cursor (js/isee/). The page holds its description; the
+// I see u: paintings that point at the cursor (js/isee/). The page holds its description; the
 // paintings are placed by the script.
 const isee = archiveExperiences.find((x) => x.id === "i-see-u");
 write(
@@ -337,7 +337,7 @@ write(
     description: isee.blurb,
     path: "/archive/i-see-u/",
     image: existsSync(join(root, "assets/og/i-see-u.jpg")) ? "/assets/og/i-see-u.jpg" : "/assets/og-image.jpg",
-    imageAlt: "I see u: a portrait from the history of painting looking at the cursor",
+    imageAlt: "I see u: a finger from the history of painting pointing at the cursor",
     schema: [
       {
         "@type": "CreativeWork",

@@ -4921,7 +4921,7 @@ html:has(.isee) .header {
 .isee.is-on .is-empty {
   visibility: hidden;
 }
-/* the opening mosaic of eyes (js/isee/intro.js) */
+/* the opening mosaic of pointing hands (js/isee/intro.js) */
 .is-intro {
   position: absolute;
   inset: 0;
@@ -5107,7 +5107,7 @@ html:has(.isee) .header {
   outline: 1px solid #111;
   outline-offset: -4px;
 }
-/* leaving: white closes in on the sitter's eyes, then everything turns white and lifts off the
+/* leaving: white closes in on the pointing finger, then everything turns white and lifts off the
    Archive (js/isee/isee.js). The window's huge white shadow is the white page around it. */
 .is-exit {
   position: fixed;
@@ -5158,7 +5158,7 @@ html:has(.isee) .header {
   }
 }
 
-/* I see u on the Archive desktop: a small framed portrait; on hover the sitter looks at you */
+/* I see u on the Archive desktop: a small framed painting of a hand; on hover a finger points at you */
 .dsee {
   position: relative;
   display: block;

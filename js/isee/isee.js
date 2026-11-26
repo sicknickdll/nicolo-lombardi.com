@@ -1,13 +1,13 @@
-// /archive/i-see-u/: I SEE U. Hold the cursor still and a painting appears whose sitter looks
+// /archive/i-see-u/: I SEE U. Hold the cursor still and a painting appears whose finger points
 // right at it. Move, and the painting is gone. After Pointer Pointer (pointerpointer.com), with
-// gazes instead of fingers: the paintings and where each one looks are in js/isee/paintings.js,
-// made by tools/isee/ (see the README); the matching is js/isee/match.js.
+// paintings instead of photographs: the paintings and where each finger points are in
+// js/isee/paintings.js, made by tools/isee/ (see the README); the matching is js/isee/match.js.
 import { PAINTINGS } from "./paintings.js";
 import { pick } from "./match.js";
 import { playIntro } from "./intro.js";
 import { navigateTo } from "../menu.js";
 
-const STILL = 320; // ms the cursor must rest before someone looks
+const STILL = 320; // ms the cursor must rest before someone points
 const SLACK = 6; // px the cursor may drift while a painting is shown
 
 export function mountIsee(root) {
@@ -22,7 +22,7 @@ export function mountIsee(root) {
     exitBtn = root.querySelector(".is-x"),
     touch = matchMedia("(hover: none)");
   hint.textContent = touch.matches ? "Tap anywhere" : "Hold your cursor still";
-  // the opening mosaic of eyes (js/isee/intro.js); until it is over, nothing else happens
+  // the opening mosaic of pointing hands (js/isee/intro.js); until it is over, nothing else happens
   let intro = null;
   const hello = () => ((intro = null), root.classList.add("is-hello"));
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) hello();
@@ -55,9 +55,10 @@ export function mountIsee(root) {
     fact("acc", p.accession);
     const a = cite.querySelector(".is-link");
     a.href = p.link;
+    a.textContent = p.museumLink === false ? "More about it" : "View at the museum";
     a.hidden = !p.link;
   };
-  const look = (x, y) => {
+  const point = (x, y) => {
     const r = stage.getBoundingClientRect(),
       hit = pick(PAINTINGS, r.width, r.height, x, y, recent);
     if (!hit) return;
@@ -83,14 +84,14 @@ export function mountIsee(root) {
         root.classList.remove("is-busy");
         root.classList.add("is-on");
         seen = { p, at };
-        live.textContent = `${p.title}, by ${p.artist}, looks at you.`;
+        live.textContent = `${p.title}, by ${p.artist}, points at you.`;
         recent.push(p.id);
         if (recent.length > 24) recent.shift();
       });
   };
 
-  // the X: white closes in on the eyes of the painting on screen (or the last one seen, put back),
-  // the window turns white, and the Archive appears as the white lifts
+  // the X: white closes in on the pointing finger of the painting on screen (or the last one seen,
+  // put back), the window turns white, and the Archive appears as the white lifts
   const exit = (e) => {
     e.preventDefault();
     if (leaving) return;
@@ -120,12 +121,18 @@ export function mountIsee(root) {
     const later = (ms, fn) => setTimeout(fn, ms);
     let t = 60;
     if (seen) {
-      const f = Math.max(28, seen.at.face),
-        w = f * 2.7,
-        h = Math.max(f * 1.05, 34);
+      // a window around the finger, from a little past the tip back to the knuckles
+      const f = Math.max(30, seen.at.finger),
+        n = Math.hypot(...seen.p.dir),
+        dx = seen.p.dir[0] / n,
+        dy = seen.p.dir[1] / n,
+        cx = seen.at.tx - dx * f * 0.45,
+        cy = seen.at.ty - dy * f * 0.45,
+        w = Math.abs(dx) * f * 1.5 + f * 0.75,
+        h = Math.abs(dy) * f * 1.5 + f * 0.75;
       void win.offsetWidth; // start from the full screen
-      box(seen.at.ex - w / 2, seen.at.ey - h / 2, w, h);
-      t = 750 + 650; // close in, then hold on the eyes
+      box(cx - w / 2, cy - h / 2, w, h);
+      t = 750 + 650; // close in, then hold on the finger
     }
     later(t, () => veil.classList.add("is-white"));
     later(t + 520, () => {
@@ -144,18 +151,18 @@ export function mountIsee(root) {
     if (shown && Math.hypot(e.clientX - shown.x, e.clientY - shown.y) <= SLACK) return;
     if (shown || root.classList.contains("is-busy")) hide();
     clearTimeout(timer);
-    timer = setTimeout(() => look(last.x, last.y), STILL);
+    timer = setTimeout(() => point(last.x, last.y), STILL);
   };
   const onDown = (e) => {
     if (leaving || exitBtn.contains(e.target)) return;
     if (intro) return intro.skip(); // a click or a tap skips the opening
     if (e.pointerType !== "touch" || cite.contains(e.target) || e.target.closest("a")) return;
     hide();
-    look(e.clientX, e.clientY);
+    point(e.clientX, e.clientY);
   };
   // the mouse leaving the window (a finger lifting also "leaves": that keeps the painting)
   const onLeave = (e) => e.pointerType === "mouse" && (clearTimeout(timer), hide());
-  // the keyboard: Enter or Space asks for a look at the cursor (or the middle of the screen)
+  // the keyboard: Enter or Space asks for a finger at the cursor (or the middle of the screen)
   const onKey = (e) => {
     if (intro) return intro.skip();
     if (e.key === "Escape") return hide();
@@ -163,7 +170,7 @@ export function mountIsee(root) {
       e.preventDefault();
       const r = stage.getBoundingClientRect();
       hide();
-      look(last ? last.x : r.width / 2, last ? last.y : r.height / 2);
+      point(last ? last.x : r.width / 2, last ? last.y : r.height / 2);
     }
   };
   const onResize = () => hide();

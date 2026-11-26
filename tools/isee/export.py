@@ -1,35 +1,99 @@
 #!/usr/bin/env python3
-"""I see u, step 4: put the chosen paintings on the site.
+"""I see u: put the pointing paintings on the site.
 
-For each candidate of select.py, downloads the museum's large image, trims the plain margins some
-museum photographs have around the painting (black or flat grey: they would show once the page
-crops and slides the painting), saves it as assets/archive/isee/<id>.webp (2400 px on the long side,
-so it can be enlarged) and writes js/isee/paintings.js: what the painting is, where it hangs, where
-the eyes are and where they look. The trims are remembered next to the candidates file.
+Reads tools/isee/pointers.json, the list checked by eye: for each painting where its image comes
+from (a Wikimedia Commons file, The Met or The Cleveland Museum of Art), an optional crop, and where
+the pointing finger is: tip and base (the knuckle where the index finger leaves the hand), as
+fractions of the whole image. Downloads each image (or takes it from a cache folder), crops it,
+trims the plain margins some photographs have around the painting, saves it as
+assets/archive/isee/<id>.webp (2400 px on the long side, so it can be enlarged) and writes
+js/isee/paintings.js: what the painting is, where it hangs, where the fingertip is, where it points,
+how long the finger is and how famous the painting is (from the number of Wikipedia languages that
+have an article on it).
 
-    python3 tools/isee/export.py work/candidates.json
+    python3 tools/isee/export.py [cache folder]
+
+Wikimedia's servers throttle bulk downloads: the script waits as long as they ask (Retry-After),
+one file at a time; with a cache folder, every image is only downloaded once.
 """
+import hashlib
 import io
 import json
+import math
 import os
 import sys
-from concurrent.futures import ThreadPoolExecutor
+import time
+import urllib.parse
 
 import numpy as np
 import requests
 from PIL import Image
 
 Image.MAX_IMAGE_PIXELS = None
-ROOT = os.path.join(os.path.dirname(__file__), "..", "..")
+HERE = os.path.dirname(__file__)
+ROOT = os.path.join(HERE, "..", "..")
 OUT = os.path.join(ROOT, "assets", "archive", "isee")
-LONG, QUALITY = 2400, 62
+LONG, QUALITY = 2400, 64
+FAMOUS = 60  # Wikipedia languages for full fame
 os.makedirs(OUT, exist_ok=True)
+CACHE = sys.argv[1] if len(sys.argv) > 1 else None
 S = requests.Session()
-S.headers["User-Agent"] = "isee-archive/1.0 (portfolio art project)"
+S.headers["User-Agent"] = "isee-archive/1.0 (portfolio art project; static site build)"
 
-rows = json.load(open(sys.argv[1]))
-TRIM_PATH = os.path.splitext(sys.argv[1])[0] + ".trim.json"
-trims = json.load(open(TRIM_PATH)) if os.path.exists(TRIM_PATH) else {}
+
+def commons_url(name, width=None):
+    n = name.replace(" ", "_")
+    h = hashlib.md5(n.encode()).hexdigest()
+    q = urllib.parse.quote(n)
+    if width:
+        return f"https://upload.wikimedia.org/wikipedia/commons/thumb/{h[0]}/{h[:2]}/{q}/{width}px-{q}"
+    return f"https://upload.wikimedia.org/wikipedia/commons/{h[0]}/{h[:2]}/{q}"
+
+
+def get(url):
+    for i in range(40):
+        try:
+            r = S.get(url, timeout=180)
+        except requests.RequestException:
+            time.sleep(20)
+            continue
+        if r.status_code != 429:
+            return r
+        time.sleep(max(int(r.headers.get("retry-after") or 30), min(300, 30 * (i + 1))))
+    return r
+
+
+def source_urls(src):
+    if "commons" in src:
+        # the original, or a 3840 px rendering of it when the original is enormous
+        both = [commons_url(src["commons"]), commons_url(src["commons"], 3840)]
+        return both[::-1] if src.get("huge") else both
+    if "met" in src:
+        a = get(f"https://collectionapi.metmuseum.org/public/collection/v1/objects/{src['met']}").json()
+        return [a["primaryImage"], a["primaryImageSmall"]]
+    if "cma" in src:
+        a = get(f"https://openaccess-api.clevelandart.org/api/artworks/{src['cma']}").json()["data"]
+        img = a["images"]
+        return [(img.get("print") or img["web"])["url"], img["web"]["url"]]
+    return [src["url"]]
+
+
+def load(p):
+    key = p.get("image") or p["id"]
+    path = CACHE and os.path.join(CACHE, key + ".jpg")
+    if path and os.path.exists(path):
+        return Image.open(path).convert("RGB")
+    for url in source_urls(p["source"]):
+        r = get(url)
+        if r.status_code == 200 and r.headers.get("content-type", "").startswith("image"):
+            im = Image.open(io.BytesIO(r.content)).convert("RGB")
+            if max(im.size) > 4000:
+                im.thumbnail((4000, 4000), Image.LANCZOS)
+            if path:
+                im.save(path, quality=92)
+            return im
+        time.sleep(3)
+    raise SystemExit(f"{p['id']}: no image")
 
 
 def margins(im):
@@ -39,8 +103,8 @@ def margins(im):
     g = np.asarray(g, dtype=float)
     h, w = g.shape
 
-    def plain(line):  # flat grey, or near black
-        return line.std() < 4 or (line.mean() < 9 and line.std() < 5)
+    def plain(line):  # flat, or near black / white
+        return line.std() < 4 or (line.mean() < 12 and line.std() < 6) or (line.mean() > 243 and line.std() < 6)
 
     def scan(line, n):
         k = 0
@@ -53,81 +117,65 @@ def margins(im):
     return [l / w, t / h, 1 - r / w, 1 - b / h]
 
 
-def save(r):
-    path = os.path.join(OUT, r["id"] + ".webp")
-    if not os.path.exists(path) or r["id"] not in trims:
-        im = None
-        for url in (r["big"], r["small"]):
-            try:
-                res = S.get(url, timeout=180)
-                if res.status_code == 200:
-                    im = Image.open(io.BytesIO(res.content)).convert("RGB")
-                    break
-            except Exception:
-                pass
-        if im is None:
-            return None
-        # the face was found on the small image: the large one must be the same picture
-        if abs(im.width / im.height - r["w"] / r["h"]) > 0.02:
-            print(f"{r['id']}: large image is cropped differently, using the small one", file=sys.stderr)
-            im = Image.open(io.BytesIO(S.get(r["small"], timeout=60).content)).convert("RGB")
-        box = margins(im)
-        ex, ey = r["faces"][0]["eye"]
-        if not (box[0] < ex < box[2] and box[1] < ey < box[3]):
-            box = [0, 0, 1, 1]
-        trims[r["id"]] = [round(v, 5) for v in box]
-        if box != [0, 0, 1, 1]:
-            im = im.crop((round(box[0] * im.width), round(box[1] * im.height), round(box[2] * im.width), round(box[3] * im.height)))
-        im.thumbnail((LONG, LONG), Image.LANCZOS)
-        im.save(path, "WEBP", quality=QUALITY, method=6)
-    with Image.open(path) as im:
-        return im.size
-
-
-with ThreadPoolExecutor(6) as ex:
-    sizes = list(ex.map(save, rows))
-json.dump(trims, open(TRIM_PATH, "w"), indent=0)
-
-out = []
-for r, size in zip(rows, sizes):
-    if not size:
-        print(f"{r['id']}: no image", file=sys.stderr)
-        continue
-    f = r["faces"][0]
-    # eyes and size measured on the untrimmed picture: move them into the trimmed one
-    l, t, rr, b = trims.get(r["id"], [0, 0, 1, 1])
-    eye = [round((f["eye"][0] - l) / (rr - l), 4), round((f["eye"][1] - t) / (b - t), 4)]
-    fsize = round(f["size"] * min(r["w"], r["h"]) / min(r["w"] * (rr - l), r["h"] * (b - t)), 4)
+pointers = json.load(open(os.path.join(HERE, "pointers.json")))
+out, done = [], {}
+for p in pointers:
+    key = p.get("image") or p["id"]
+    if key not in done:
+        im = load(p)
+        crop = p.get("crop") or [0, 0, 1, 1]
+        c = im.crop((round(crop[0] * im.width), round(crop[1] * im.height), round(crop[2] * im.width), round(crop[3] * im.height)))
+        m = margins(c)
+        box = [crop[0] + m[0] * (crop[2] - crop[0]), crop[1] + m[1] * (crop[3] - crop[1]),
+               crop[0] + m[2] * (crop[2] - crop[0]), crop[1] + m[3] * (crop[3] - crop[1])]
+        c = im.crop((round(box[0] * im.width), round(box[1] * im.height), round(box[2] * im.width), round(box[3] * im.height)))
+        c.thumbnail((LONG, LONG), Image.LANCZOS)
+        c.save(os.path.join(OUT, key + ".webp"), "WEBP", quality=QUALITY, method=6)
+        done[key] = (box, c.size, im.size)
+        print(f"{key}: {c.size[0]}×{c.size[1]}", file=sys.stderr)
+    box, size, full = done[key]
+    # tip and knuckle, from the whole image into the cropped one
+    fx = lambda v: (v - box[0]) / (box[2] - box[0])
+    fy = lambda v: (v - box[1]) / (box[3] - box[1])
+    tip = [fx(p["tip"][0]), fy(p["tip"][1])]
+    base = [fx(p["base"][0]), fy(p["base"][1])]
+    assert 0 < tip[0] < 1 and 0 < tip[1] < 1, p["id"]
+    vx, vy = (tip[0] - base[0]) * size[0], (tip[1] - base[1]) * size[1]
+    n = math.hypot(vx, vy)
+    links = p.get("links", 0)
     out.append({
-        "id": r["id"],
-        "src": f"/assets/archive/isee/{r['id']}.webp",
+        "id": p["id"],
+        "src": f"/assets/archive/isee/{key}.webp",
         "w": size[0],
         "h": size[1],
-        "eye": eye,
-        "dir": f["dir"],
-        "size": fsize,
-        "title": r["title"],
-        "artist": r["artist"],
-        "date": r["date"],
-        "medium": r["medium"],
-        "museum": r["museum"],
-        "accession": r["accession"],
-        "link": r["link"],
+        "tip": [round(tip[0], 4), round(tip[1], 4)],
+        "dir": [round(vx / n, 4), round(vy / n, 4)],
+        "size": round(n / min(size), 4),
+        "fame": round(min(1, math.log1p(links) / math.log1p(FAMOUS)), 2),
+        "title": p["title"],
+        "artist": p["artist"],
+        "date": p.get("date", ""),
+        "medium": p.get("medium", ""),
+        "museum": p.get("museum", ""),
+        "accession": p.get("accession", ""),
+        "link": p.get("link", ""),
+        **({"museumLink": False} if p.get("museumLink") is False else {}),
     })
-out.sort(key=lambda p: p["id"])
-keep = {p["id"] + ".webp" for p in out} | {"icon.webp", "icon-look.webp", "eyes.webp"}
+
+out.sort(key=lambda p: (-p["fame"], p["id"]))
+keep = {os.path.basename(p["src"]) for p in out} | {"icon.webp", "icon-look.webp", "fingers.webp"}
 for name in os.listdir(OUT):
     if name not in keep:
         os.remove(os.path.join(OUT, name))
 with open(os.path.join(ROOT, "js", "isee", "paintings.js"), "w") as fh:
     fh.write(
-        "// GENERATED by tools/isee/export.py: don't edit by hand (see the README, \"I see u\").\n"
-        "// Public-domain paintings from The Cleveland Museum of Art (CC0) and The Metropolitan Museum of\n"
-        "// Art (Open Access). eye: between the eyes, as fractions of the image; dir: where they look\n"
-        "// (unit vector, y down); size: eye-to-eye distance over the image's short side.\n"
+        "// GENERATED by tools/isee/export.py from tools/isee/pointers.json: don't edit by hand (see the\n"
+        "// README, \"I see u\"). Public-domain paintings, most famous first. tip: the tip of the pointing\n"
+        "// finger, as fractions of the image; dir: where it points (unit vector, y down); size: the\n"
+        "// finger's length, knuckle to tip, over the image's short side; fame: 0 to 1.\n"
         "export const PAINTINGS = [\n"
         + "".join("  " + json.dumps(p, ensure_ascii=False) + ",\n" for p in out)
         + "];\n"
     )
-total = sum(os.path.getsize(os.path.join(OUT, p["id"] + ".webp")) for p in out)
-print(f"{len(out)} paintings, {total / 1e6:.1f} MB", file=sys.stderr)
+total = sum(os.path.getsize(os.path.join(OUT, k + ".webp")) for k in done)
+print(f"{len(out)} pointing fingers in {len(done)} paintings, {total / 1e6:.1f} MB", file=sys.stderr)

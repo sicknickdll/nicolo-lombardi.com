@@ -213,7 +213,7 @@ const archiveObject = {
   // the aquarium: a tiny ASCII tank; on hover its fish swims across
   aquarium: () =>
     `<span class="daq" aria-hidden="true"><span class="daq-w">~-~~-~~-~</span><span class="daq-f">&gt;&lt;(((°&gt;</span><span class="daq-b">°</span><span class="daq-s">.:,.:.,:</span></span>`,
-  // I see u: a small framed portrait whose sitter glances at you on hover
+  // I see u: a small framed painting, a hand; on hover a finger points at you
   "i-see-u": () =>
     `<span class="dsee" aria-hidden="true"><img src="/assets/archive/isee/icon.webp" alt="" draggable="false"><img class="dsee-b" src="/assets/archive/isee/icon-look.webp" alt="" draggable="false"></span>`,
 };
@@ -311,11 +311,11 @@ export function aquariumMarkup() {
 }
 
 // /archive/i-see-u/: I SEE U (js/isee/isee.js). A white page; hold the cursor still and a painting
-// covers it, its sitter looking at the cursor; the label (bottom right) says what it is and
+// covers it, its finger pointing at the cursor; the label (bottom right) says what it is and
 // where it hangs. The list below is for search engines and screen readers.
 export function iseeMarkup() {
   const x = experiences.find((e) => e.id === "i-see-u");
-  return `<section class="isee" aria-labelledby="is-h1"><header class="sr-only"><nav aria-label="Breadcrumb"><a href="/archive/">Archive</a></nav><h1 id="is-h1">I see u</h1><p>${esc(x.blurb)}</p><p>Hold the mouse still, or tap the screen, and a painting appears whose sitter looks at that spot. Move to make it go away. Enter or Space asks for one with the keyboard, Escape clears it.</p></header>
+  return `<section class="isee" aria-labelledby="is-h1"><header class="sr-only"><nav aria-label="Breadcrumb"><a href="/archive/">Archive</a></nav><h1 id="is-h1">I see u</h1><p>${esc(x.blurb)}</p><p>Hold the mouse still, or tap the screen, and a painting appears whose finger points at that spot. Move to make it go away. Enter or Space asks for one with the keyboard, Escape clears it.</p></header>
 <div class="is-stage" role="application" aria-label="Hold the cursor still"><img class="is-img" alt="" draggable="false" decoding="async"></div>
 <div class="is-empty" aria-hidden="true"><p class="is-hint"></p></div>
 <canvas class="is-intro" aria-hidden="true"></canvas>
