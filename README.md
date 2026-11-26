@@ -314,11 +314,12 @@ turns white too, and the Archive appears as the white lifts.
   optional crop, the fingertip and the knuckle the finger starts from (fractions of the whole
   image, placed by eye on close-ups), and how famous it is (`links`: the number of Wikipedia
   languages with an article on it, from Wikidata).
-- **Matching** (`js/point-art/match.js`): the fingertip goes just short of the cursor (ideally 0.4
-  finger lengths, never more than 2.2), its finger in line with it. Each painting is slid within
-  what still covers the screen to do that; when the fingertip can't come close, the painting is
-  enlarged (cropped), but never past 1.5 screen px per image px (`MAX_UP`), so the paint stays
-  sharp. Fame wins ties (`FAME`); the best few are drawn at random, skipping the latest shown.
+- **Matching** (`js/point-art/match.js`): as on Pointer Pointer, the fingertip touches the cursor
+  (1–2 px behind its point, along the finger) and the knuckle stays on screen. Each painting is
+  slid within what still covers the screen to do that, and enlarged (cropped) when its fingertip
+  can't reach, or when its finger would look small, but never past 1.5 screen px per image px
+  (`MAX_UP`), so the paint stays sharp. Fame wins ties (`FAME`); the best few are drawn at random,
+  skipping the latest shown. The tips in `pointers.json` sit on the very end of each finger.
 - **Images**: 2400 px on the long side (WebP), so there is room to enlarge.
 
 To add a painting, add it to `tools/point-art/pointers.json` and run (Python with

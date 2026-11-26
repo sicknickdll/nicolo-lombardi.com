@@ -25,7 +25,7 @@ test("a finger pointing right points at a cursor on the right", () => {
   const at = place(pointsRight, 1440, 900, 700, 380);
   assert.ok(at && at.err < 1, `err ${at?.err}`);
   check(pointsRight, at, 1440, 900, 700, 380);
-  assert.ok(at.tx < 700, "the tip stops short of the cursor");
+  assert.ok(at.tx < 700 && at.tx > 690, "the tip touches the cursor from the left");
 });
 
 test("a cursor behind the finger can't be pointed at", () => {
@@ -34,24 +34,24 @@ test("a cursor behind the finger can't be pointed at", () => {
 });
 
 test("diagonal finger on a phone screen", () => {
-  const at = place(pointsDownLeft, 390, 844, 120, 500);
+  const at = place(pointsDownLeft, 390, 844, 120, 420);
   assert.ok(at && at.err < 3, `err ${at?.err}`);
-  check(pointsDownLeft, at, 390, 844, 120, 500);
+  check(pointsDownLeft, at, 390, 844, 120, 420);
 });
 
-test("the fingertip ends close to the cursor, as on Pointer Pointer", () => {
+test("the fingertip touches the cursor, as on Pointer Pointer", () => {
   const at = place(pointsRight, 1440, 900, 1000, 300);
   assert.ok(at && at.err < 1, `err ${at?.err}`);
   check(pointsRight, at, 1440, 900, 1000, 300);
-  assert.ok(at.dist <= at.finger * 2.3, `tip ${(at.dist / at.finger).toFixed(1)} finger lengths away`);
+  assert.ok(Math.hypot(1000 - at.tx, 300 - at.ty) <= 2.5, `tip ${Math.hypot(1000 - at.tx, 300 - at.ty).toFixed(1)} px away`);
 });
 
 test("a far cursor brings the painting closer: it is enlarged until the finger is near", () => {
   // pointing right from the left of a wide picture; the cursor at the far right of the screen
   const p = { id: "big", w: 2400, h: 1600, tip: [0.35, 0.45], dir: [1, 0], size: 0.03 };
-  const at = place(p, 1440, 900, 1380, 400);
+  const at = place(p, 1440, 900, 1100, 400);
   assert.ok(at && at.err < 1, `err ${at?.err}`);
-  check(p, at, 1440, 900, 1380, 400);
+  check(p, at, 1440, 900, 1100, 400);
   assert.ok(at.w > 1440 * 1.3, "enlarged");
 });
 
@@ -72,9 +72,8 @@ test("pick prefers the famous painting when both fit as well", () => {
   assert.equal(got.p.id, "famous");
 });
 
-// Everywhere on the screen some painting points at the cursor, from close by (a couple of finger
-// lengths at most), and sharp. Corners and edges need fingers pointing into them from a hand that
-// can sit just inside the screen: a little slack there.
+// Everywhere on the screen some painting's fingertip touches the cursor, and sharp. Corners and
+// edges need fingers pointing into them from a hand that can sit just inside the screen.
 test("the collection covers the whole screen", () => {
   assert.ok(PAINTINGS.length >= 30, `${PAINTINGS.length} paintings`);
   let seed = 1;
@@ -97,7 +96,7 @@ test("the collection covers the whole screen", () => {
           continue;
         }
         check(hit.p, hit.at, vw, vh, x * vw, y * vh);
-        assert.ok(hit.at.dist <= hit.at.finger * 2.5, `${vw}×${vh}: tip ${(hit.at.dist / hit.at.finger).toFixed(1)} finger lengths away`);
+        assert.ok(Math.hypot(x * vw - hit.at.tx, y * vh - hit.at.ty) <= 2.5, `${vw}×${vh}: tip not touching the cursor`);
         assert.ok(hit.at.scale <= 2.4, `${vw}×${vh}: ${hit.p.id} enlarged ${hit.at.scale.toFixed(2)}×`);
       }
     assert.ok(miss / n <= 0.08, `${vw}×${vh}: ${miss}/${n} spots without a finger`);
