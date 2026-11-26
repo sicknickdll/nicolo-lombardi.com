@@ -22,7 +22,7 @@ const IDEAL = 0.4; // the gap that reads best: almost touching
 const FAR = 2.2; // furthest
 const MIN_FINGER = 14; // px on screen: smaller, the gesture can't be read
 const MAX_FINGER = 0.3; // of the screen's short side: larger, the hand fills the screen
-const FAME = 2.5; // score bonus for the most famous paintings
+const FAME = 5; // score bonus for the most famous paintings (about 3° of aim)
 const STEPS = 10;
 
 // Places painting p on a vw × vh screen so its finger points at (cx, cy).
