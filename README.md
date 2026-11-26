@@ -18,8 +18,8 @@ js/archive.js       archive collection page: infinite pannable grid, search bar,
 js/card3d.js        the 3D card (tilt + glare, drag to turn it over)
 js/tarot/           /archive/tarot/: THE TAROT READER, an interactive reading (see "Tarot Reader" below)
 js/aquarium/        /archive/aquarium/: the ASCII AQUARIUM (see "ASCII Aquarium" below)
-js/isee/            /archive/i-see-u/: I SEE U, paintings that look at the cursor (see "I see u" below)
-tools/isee/         collects the I see u paintings from the museums and finds where each one looks
+js/point-art/            /archive/point-art/: POINT-ART, paintings that point at the cursor (see "Point-art" below)
+tools/point-art/         makes the Point-art paintings, their fingers and the opening mosaic from tools/point-art/pointers.json
 tests/              npm test: the tarot rules and reading engine
 js/head.js          About page: 3D head (follows the cursor, rotates on drag / two-finger scroll, reacts to taps)
 js/vendor/three.js  the parts of three.js the head needs   (npm install && npm run vendor:three)
@@ -54,7 +54,7 @@ Pages and addresses:
 | `/archive/la-barra/` | LA BARRA: diagonal infinite pannable grid of the cut-outs on black, search bar, 3D viewer (editorial layout) (`#<piece id>` opens one) |
 | `/archive/tarot/` | THE TAROT READER: a candlelit table, a fortune teller in the dark, a guided five-card reading (the "tarot" folder on the Archive desktop) |
 | `/archive/aquarium/` | ASCII AQUARIUM: draw a fish, release it, feed it (taken off the Archive desktop and the sitemap: `hidden` in `js/archive-data.js`; the page still works) |
-| `/archive/i-see-u/` | I SEE U: hold the cursor still and a painting looks at it (the little framed portrait on the Archive desktop) |
+| `/archive/point-art/` | POINT-ART: hold the cursor still and a finger from a painting points at it (the little framed hand on the Archive desktop) |
 
 Old links from the previous site (`/#film`, `/#project/lexus`) and the old `/film/` and
 `/visuals/` pages redirect to the new addresses.
@@ -182,9 +182,9 @@ js/tarot/outline.js     GENERATED card silhouette (die-cut notch) for the 3D car
 
 ## Tests
 
-`npm test` runs the tarot engine tests (`tests/tarot.test.mjs`), the aquarium's and I see u's
-(`tests/isee.test.mjs`: the chosen painting covers the screen and its gaze hits the cursor, and the
-collection has a good match almost everywhere on a laptop and a phone), with Node's built-in test runner.
+`npm test` runs the tarot engine tests (`tests/tarot.test.mjs`), the aquarium's and Point-art's
+(`tests/point-art.test.mjs`: the chosen painting covers the screen and its finger points at the cursor from
+close by, famous paintings win ties, and the collection has a finger almost everywhere on a laptop and a phone), with Node's built-in test runner.
 
 ## SEO checklist (after the site is live)
 
@@ -290,53 +290,52 @@ js/aquarium/art.js    ← TEMPLATES, DECOR, LIGHTS, TINTS, prices
 js/aquarium/audio.js  synthesised sounds
 ```
 
-## I see u (`/archive/i-see-u/`)
+## Point-art (`/archive/point-art/`)
 
-After Pointer Pointer (pointerpointer.com), with paintings instead of photos and gazes instead of
-fingers. It opens with a mosaic of eyes (`js/isee/intro.js`): one painted eye, small, in the middle
-of a white page, then square tiles of other eyes appear around it until they fill the screen, then
-go out; a click, tap or key skips it. Then a single line in Helvetica Light ("Hold your cursor
-still" on a computer, "Tap anywhere" on a phone). Hold the cursor still and a painting fills the
-screen, its sitter looking at the cursor; move and it's gone. The label bottom right, in Montserrat
-(`assets/fonts/`, SIL Open Font License) on a Swiss grid, gives title, painter, date, medium,
-collection and inventory number, with a link to the museum's page. At the bottom, small and grey,
-the credit: Pointer Pointer (pointerpointer.com) by Pluto, @growpluto on Twitter. The X top left
-goes back to the Archive: white closes in on the eyes of the painting on screen (or the last one
-seen), the eyes turn white too, and the Archive appears as the white lifts.
+After Pointer Pointer (pointerpointer.com), with paintings instead of photographs: hold the cursor
+still and a painting fills the screen, one of its figures pointing right at the cursor, the
+fingertip stopping just short of it; move and it's gone. It opens with a mosaic of pointing hands
+(`js/point-art/intro.js`): God's hand from the Creation of Adam, small, in the middle of a white page,
+then square tiles of other pointing hands appear around it until they fill the screen, then go out;
+a click, tap or key skips it. Then a single line in Helvetica Light ("Hold your cursor still" on a
+computer, "Tap anywhere" on a phone). The label bottom right, in Montserrat (`assets/fonts/`, SIL
+Open Font License) on a Swiss grid, gives title, painter, date, medium, collection and inventory
+number, with a link to the museum's page (or to the painting's Wikipedia article when there is no
+museum page for it). At the bottom, small and grey, the credit: Pointer Pointer
+(pointerpointer.com) by Pluto, @growpluto on Twitter. The X top left goes back to the Archive:
+white closes in on the pointing finger of the painting on screen (or the last one seen), the finger
+turns white too, and the Archive appears as the white lifts.
 
-- **The paintings**: public-domain works from The Cleveland Museum of Art (CC0) and The Metropolitan
-  Museum of Art (Open Access), scanned whole: every painting with an image (about 6,900 from Cleveland's
-  painting collection and the Met's European paintings and American Wing), a face finder run on each,
-  and the clear looks kept after checking them by eye. Plus Japanese ukiyo-e prints and paintings
-  (Cleveland's Japanese Art department and the Met's Asian Art: kabuki actors by Sharaku and the
-  Utagawa school, beauties by Utamaro): `tools/isee/fetch_japan.py`. The face model finds few
-  stylised faces, so these are fewer, each checked by eye.
-- **Where they look**: MediaPipe's face landmarks give the eyes and the head's pose; the gaze on the
-  picture is where the head faces plus how far the irises sit off the middle of the eyes.
-- **Matching** (`js/isee/match.js`): anywhere along the gaze is "looked at", but a gaze is only ever
-  a few degrees exact, so the eyes are kept close to the cursor (about 2½ to 8 eye-widths, ideally
-  4½). Each painting is slid within what still covers the screen to put its line of sight through
-  the cursor; when the cursor is too far from where its eyes can sit, the painting is enlarged
-  (cropped) until they come close, but never past 1.5 screen px per image px (`MAX_UP`), so the paint
-  stays sharp. The best few are drawn at random, skipping the latest shown.
-- **Images**: 2400 px on the long side (WebP, quality 62), so there is room to enlarge.
+- **The paintings**: all kinds (frescoes, altarpieces, portraits, genre scenes, drawings), the most
+  famous first (the Creation of Adam, Leonardo, Raphael, Caravaggio, David, Poussin…), then less
+  famous ones from The Met and The Cleveland Museum of Art, so that some finger can point at every
+  corner of the screen. All public domain; images from Wikimedia Commons, The Met (Open Access)
+  and Cleveland (CC0). `tools/point-art/pointers.json` holds each one: where its image comes from, an
+  optional crop, the fingertip and the knuckle the finger starts from (fractions of the whole
+  image, placed by eye on close-ups), and how famous it is (`links`: the number of Wikipedia
+  languages with an article on it, from Wikidata).
+- **Matching** (`js/point-art/match.js`): the fingertip goes just short of the cursor (ideally 0.4
+  finger lengths, never more than 2.2), its finger in line with it. Each painting is slid within
+  what still covers the screen to do that; when the fingertip can't come close, the painting is
+  enlarged (cropped), but never past 1.5 screen px per image px (`MAX_UP`), so the paint stays
+  sharp. Fame wins ties (`FAME`); the best few are drawn at random, skipping the latest shown.
+- **Images**: 2400 px on the long side (WebP), so there is room to enlarge.
 
-To add paintings or redo the selection (Python with `pip install mediapipe pillow numpy requests`;
-`work/` is any scratch folder, it is not committed):
+To add a painting, add it to `tools/point-art/pointers.json` and run (Python with
+`pip install pillow numpy requests`; `work/` is any scratch folder, it is not committed):
 
 ```
-python3 tools/isee/fetch_meta.py work/meta.json             # 1. list the museums' paintings
-python3 tools/isee/detect.py work/meta.json work/faces.json face_landmarker.task   # 2. faces and gazes
-python3 tools/isee/select.py work/faces.json work/candidates.json 0.42           # 3. the clear looks
-python3 tools/isee/sheet.py work/candidates.json work/sheets                       #    contact sheets to check
-python3 tools/isee/export.py work/candidates.json            # 4. images + js/isee/paintings.js
+python3 tools/point-art/export.py work/cache          # images + js/point-art/paintings.js
+python3 tools/point-art/fingers.py adam-god            # the opening's tiles (the id shown first)
+python3 tools/point-art/icon.py adam-god saint-john-the-baptist adam-god   # desktop icon, shared picture
 node tools/build.mjs
 ```
 
-`tools/isee/review.json` is the check by eye, made on close-ups of each face (the detector tends to
-read downward looks too flat): `keep` lists the paintings whose look is right (when
-it is there, only those are kept) and `angle` corrects a direction in degrees (0 = right, 90 = down).
-The face model is at storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task.
-`tools/isee/eyes.py [id]` cuts one eye from each painting into the opening's sprite
-(`assets/archive/isee/eyes.webp`, `js/isee/eyes.js`; `id` is the eye shown first): run it after
-export.py. `tools/isee/icon.py` makes the desktop icon: a sitter looking away, and on hover one looking at you.
+Wikimedia throttles bulk downloads: export.py waits as long as it is asked to, one file at a time,
+and with a cache folder each image is downloaded only once.
+
+To look for more in the museums' open collections (adds `pip install mediapipe`; the hand model is
+at storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task):
+`tools/point-art/fetch_meta.py work/meta.json` lists every open-access painting of Cleveland and The Met,
+`tools/point-art/scan.py work/meta.json work/hands.json hand_landmarker.task` finds the pointing hands
+in them (index straight and out, the other fingers folded); check each by eye before adding it.

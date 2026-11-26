@@ -10,7 +10,7 @@ import { eyeTracking } from "./eye.js";
 import { isMenuOpen, setNavigator } from "./menu.js";
 import { smoothScroll } from "./smooth.js";
 import { bindReveal } from "./reveal.js";
-import { work, homeMarkup, projectMarkup, projectURL, aboutMarkup, archiveMarkup, collectionMarkup, archiveCollections, archiveExperiences, tarotMarkup, aquariumMarkup, iseeMarkup } from "./views.js";
+import { work, homeMarkup, projectMarkup, projectURL, aboutMarkup, archiveMarkup, collectionMarkup, archiveCollections, archiveExperiences, tarotMarkup, aquariumMarkup, pointArtMarkup } from "./views.js";
 const main = document.querySelector("#main");
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
 let cleanup = () => {};
@@ -132,16 +132,16 @@ function showAquarium() {
     off();
   };
 }
-// /archive/i-see-u/: I SEE U. Its scripts and the list of paintings load only here.
-function showIsee() {
-  main.innerHTML = iseeMarkup();
+// /archive/point-art/: POINT-ART. Its scripts and the list of paintings load only here.
+function showPointArt() {
+  main.innerHTML = pointArtMarkup();
   let off = () => {},
     gone = false;
-  import("./isee/isee.js")
+  import("./point-art/point-art.js")
     .then((m) => {
-      if (!gone) off = m.mountIsee(main.querySelector(".isee"));
+      if (!gone) off = m.mountPointArt(main.querySelector(".pointart"));
     })
-    .catch(() => main.querySelector(".isee")?.classList.add("is-failed"));
+    .catch(() => main.querySelector(".pointart")?.classList.add("is-failed"));
   cleanup = () => {
     gone = true;
     off();
@@ -180,7 +180,9 @@ function render() {
   else if (path === "/archive/") showArchive();
   else if (path === "/archive/tarot/" || path === "/archive/tarot") showTarot();
   else if (path === "/archive/aquarium/" || path === "/archive/aquarium") showAquarium();
-  else if (path === "/archive/i-see-u/" || path === "/archive/i-see-u") showIsee();
+  else if (path === "/archive/point-art/" || path === "/archive/point-art") showPointArt();
+  // its first name, I see u
+  else if (path === "/archive/i-see-u/" || path === "/archive/i-see-u") (history.replaceState(null, "", "/archive/point-art/"), showPointArt());
   else if (collection) showCollection(collection[1]);
   else if (project) showProject(project[1]);
   else showHome();

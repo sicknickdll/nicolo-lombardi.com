@@ -24,7 +24,7 @@ import {
   archiveExperiences,
   tarotMarkup,
   aquariumMarkup,
-  iseeMarkup,
+  pointArtMarkup,
   projectImages,
   projectMarkup,
 } from "../js/views.js";
@@ -327,23 +327,23 @@ write(
   "aquarium-page",
 );
 
-// I see u: paintings that look at the cursor (js/isee/). The page holds its description; the
+// Point-art: paintings that point at the cursor (js/point-art/). The page holds its description; the
 // paintings are placed by the script.
-const isee = archiveExperiences.find((x) => x.id === "i-see-u");
+const pointArt = archiveExperiences.find((x) => x.id === "point-art");
 write(
-  "archive/i-see-u",
+  "archive/point-art",
   head({
-    title: `I see u — Archive, ${NAME}`,
-    description: isee.blurb,
-    path: "/archive/i-see-u/",
-    image: existsSync(join(root, "assets/og/i-see-u.jpg")) ? "/assets/og/i-see-u.jpg" : "/assets/og-image.jpg",
-    imageAlt: "I see u: a portrait from the history of painting looking at the cursor",
+    title: `Point-art — Archive, ${NAME}`,
+    description: pointArt.blurb,
+    path: "/archive/point-art/",
+    image: existsSync(join(root, "assets/og/point-art.jpg")) ? "/assets/og/point-art.jpg" : "/assets/og-image.jpg",
+    imageAlt: "Point-art: a finger from the history of painting pointing at the cursor",
     schema: [
       {
         "@type": "CreativeWork",
-        url: `${SITE}/archive/i-see-u/`,
-        name: "I see u",
-        description: isee.blurb,
+        url: `${SITE}/archive/point-art/`,
+        name: "Point-art",
+        description: pointArt.blurb,
         genre: "Interactive experience",
         inLanguage: "en",
         author: { "@id": person["@id"] },
@@ -351,12 +351,33 @@ write(
       breadcrumbs([
         [NAME, "/"],
         ["Archive", "/archive/"],
-        ["I see u", "/archive/i-see-u/"],
+        ["Point-art", "/archive/point-art/"],
       ]),
       person,
     ],
   }),
-  iseeMarkup(),
+  pointArtMarkup(),
+);
+
+// POINT-ART was first called I see u: its old address forwards to the new one.
+mkdirSync(join(root, "archive", "i-see-u"), { recursive: true });
+writeFileSync(
+  join(root, "archive", "i-see-u", "index.html"),
+  `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="robots" content="noindex" />
+    <title>POINT-ART — Archive, ${NAME}</title>
+    <link rel="canonical" href="${SITE}/archive/point-art/" />
+    <meta http-equiv="refresh" content="0; url=/archive/point-art/" />
+    <script>location.replace("/archive/point-art/");</script>
+  </head>
+  <body>
+    <p><a href="/archive/point-art/">POINT-ART</a></p>
+  </body>
+</html>
+`,
 );
 
 // The Film and Visuals lists now live on the landing page: their old addresses forward there.
@@ -467,7 +488,7 @@ const pages = [
   ["/archive/", []],
   ...archiveCollections.map((c) => [`/archive/${c.id}/`, c.items.map((i) => i.front)]),
   ["/archive/tarot/", CARDS.filter((c) => DECK_IDS.includes(c.id)).map((c) => c.art)],
-  ["/archive/i-see-u/", existsSync(join(root, "assets/og/i-see-u.jpg")) ? ["/assets/og/i-see-u.jpg"] : []],
+  ["/archive/point-art/", existsSync(join(root, "assets/og/point-art.jpg")) ? ["/assets/og/point-art.jpg"] : []],
   ["/privacy/", []],
   ...projects.map((p) => [`/work/${p.id}/`, [p.cover, ...projectImages(p)]]),
 ];

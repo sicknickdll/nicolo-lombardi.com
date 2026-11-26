@@ -4858,19 +4858,19 @@ html.aquarium-page .header {
   opacity: 0;
 }
 
-/* ── /archive/i-see-u/: I SEE U (js/isee/) ─────────────────────────────────
+/* ── /archive/point-art/: POINT-ART (js/point-art/) ─────────────────────────────────
    After Pointer Pointer: a plain white page; hold the cursor still and a painting fills it, its
    sitter looking at the cursor. The caption sits bottom right, like a museum label. */
-html:has(.isee),
-html:has(.isee) body {
+html:has(.pointart),
+html:has(.pointart) body {
   overflow: hidden;
   overscroll-behavior: none;
   background: #fff;
 }
-html:has(.isee) .header {
+html:has(.pointart) .header {
   display: none;
 }
-.isee {
+.pointart {
   position: fixed;
   inset: 0;
   overflow: hidden;
@@ -4895,7 +4895,7 @@ html:has(.isee) .header {
   visibility: hidden;
   pointer-events: none;
 }
-.isee.is-on .is-img {
+.pointart.is-on .is-img {
   visibility: visible;
 }
 .is-empty {
@@ -4915,13 +4915,13 @@ html:has(.isee) .header {
   opacity: 0;
   transition: opacity 0.7s ease;
 }
-.isee.is-hello .is-hint {
+.pointart.is-hello .is-hint {
   opacity: 1;
 }
-.isee.is-on .is-empty {
+.pointart.is-on .is-empty {
   visibility: hidden;
 }
-/* the opening mosaic of eyes (js/isee/intro.js) */
+/* the opening mosaic of pointing hands (js/point-art/intro.js) */
 .is-intro {
   position: absolute;
   inset: 0;
@@ -4950,7 +4950,7 @@ html:has(.isee) .header {
   opacity: 0;
   animation: is-turn 0.7s linear infinite;
 }
-.isee.is-busy .is-load::before {
+.pointart.is-busy .is-load::before {
   opacity: 1;
   transition: opacity 0.2s 0.15s;
 }
@@ -4974,8 +4974,8 @@ html:has(.isee) .header {
   opacity: 0;
 }
 @media (hover: none) {
-  .isee.is-on .is-dot::before,
-  .isee.is-busy .is-dot::before {
+  .pointart.is-on .is-dot::before,
+  .pointart.is-busy .is-dot::before {
     opacity: 1;
   }
 }
@@ -5107,8 +5107,8 @@ html:has(.isee) .header {
   outline: 1px solid #111;
   outline-offset: -4px;
 }
-/* leaving: white closes in on the sitter's eyes, then everything turns white and lifts off the
-   Archive (js/isee/isee.js). The window's huge white shadow is the white page around it. */
+/* leaving: white closes in on the pointing finger, then everything turns white and lifts off the
+   Archive (js/point-art/point-art.js). The window's huge white shadow is the white page around it. */
 .is-exit {
   position: fixed;
   z-index: 10000;
@@ -5140,10 +5140,10 @@ html:has(.isee) .header {
   text-align: center;
   color: #8a8a8a;
 }
-.isee.is-failed .is-hint {
+.pointart.is-failed .is-hint {
   opacity: 1;
 }
-.isee.is-failed .is-hint::after {
+.pointart.is-failed .is-hint::after {
   content: "The paintings could not load. Reload to try again.";
 }
 @media (max-width: 560px) {
@@ -5158,7 +5158,7 @@ html:has(.isee) .header {
   }
 }
 
-/* I see u on the Archive desktop: a small framed portrait; on hover the sitter looks at you */
+/* Point-art on the Archive desktop: a small framed painting of a hand; on hover a finger points at you */
 .dsee {
   position: relative;
   display: block;
